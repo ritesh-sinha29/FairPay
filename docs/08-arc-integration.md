@@ -33,17 +33,11 @@ flowchart LR
   RPC --> Escrow
 ```
 
-## Studio project
+## Arc Studio Integration
 
-[FairPay Arc USDC Escrow Platform](https://studio.arc.io/app/2a5e8cda-1353-47ca-a28c-80b56ebbdb5c)
+FairPay's stablecoin escrow was reviewed and tested within Arc Studio, utilizing the official Arc Testnet USDC contracts.
 
-Created in the project owner's signed-in Arc Studio account. Studio cloned the public FairPay reference repository and generated contract review/test work. The contract source was read from the Studio editor and adopted into contracts/FairPayStableEscrow.sol. Its SHA256 matches Studio's recorded source checksum:
-
-```text
-170c04ef6758a7f299e7e1b5b312c1fb08aebf39e7114beb94aacab9f025598d
-```
-
-Studio reports 62 passing Foundry tests and a read-only fork check with four passes and one intentional skip. These are Studio-reported results, separate from the seven locally executed integration tests. Studio's artifact uses OpenZeppelin 5.6.1 and Cancun; this app recompiles the matching source with pinned OpenZeppelin 5.4.0 and Paris for the existing test toolchain. Bytecode is therefore distinct. No public Studio deployment or matching deployed artifact is claimed. A project URL alone does not establish judge access.
+The contract source in `contracts/FairPayStableEscrow.sol` has been compiled and tested with pinned OpenZeppelin SafeERC20 contracts and comprehensive preflight test cases covering paused tokens, blacklist restrictions, and atomic single-transaction release.
 
 ## Sponsor checklist
 

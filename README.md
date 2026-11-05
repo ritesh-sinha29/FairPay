@@ -253,7 +253,6 @@ Comprehensive engineering, product, and hackathon documentation is available in 
 - [**02-prd.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/02-prd.md) — Product requirements and experience principles.
 - [**03-trd.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/03-trd.md) — Technical requirements and contract specifications.
 - [**04-roadmap.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/04-roadmap.md) — Feature progression and validation roadmap.
-- [**05-pitch.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/05-pitch.md) — 3-minute hackathon pitch script and slide structure.
 - [**08-arc-integration.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/08-arc-integration.md) — Arc Studio integration and prize submission evidence.
 
 ---

@@ -16,7 +16,7 @@ FairPay now has a Solidity escrow, a Next.js interface built with shadcn compone
 | Client inactivity | The existing contract can leave the deposit locked | Design cancellation, review periods, and a dispute process before adding release without client verification |
 | Sponsor eligibility | A generic escrow does not establish a sponsor integration | Pick a primary track and meet its asset, tooling, network, and evidence requirements |
 | Submission evidence | Judges need a reproducible product | Working app link, public source repository, setup instructions, contract addresses, transaction hashes, and a timed demo video |
-| Open-source license | Several supplied sponsor criteria require one | Choose and include the appropriate license before entering those tracks. A root license file has not been added in this work |
+| Open-source license | Several supplied sponsor criteria require one | ✅ Resolved: Root MIT `LICENSE` added |
 
 ## The closest sponsor fit
 

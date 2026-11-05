@@ -81,9 +81,6 @@ stateDiagram-v2
 | **Block Explorer**| [explorer.testnet.arc.io](https://explorer.testnet.arc.io) | [sepolia.etherscan.io](https://sepolia.etherscan.io) |
 | **Faucet** | [Circle Faucet](https://faucet.circle.com) | [Sepolia PoW Faucet](https://sepolia-faucet.pk910.de) |
 
-> [!NOTE]
-> Arc Studio integration checksum matches the verified source checksum: `170c04ef6758a7f299e7e1b5b312c1fb08aebf39e7114beb94aacab9f025598d` with pinned OpenZeppelin contracts and deterministic compiler outputs.
-
 ---
 
 ## 🚀 Quick Start Guide

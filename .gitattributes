@@ -1,0 +1,2 @@
+# Keep the Studio source checksum and compiler input stable across platforms.
+contracts/FairPayStableEscrow.sol text eol=lf

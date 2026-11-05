@@ -10,6 +10,7 @@ import stableArtifact from "./stable-escrow-artifact.json";
 import type { Job } from "./jobs";
 import { ARC_TESTNET, USDC_ABI, paymentNetwork } from "./payments";
 import { agreementHash } from "./agreement";
+
 interface WalletProvider extends Eip1193Provider {
   on?: (event: string, listener: (...args: unknown[]) => void) => void;
   removeListener?: (
@@ -17,11 +18,13 @@ interface WalletProvider extends Eip1193Provider {
     listener: (...args: unknown[]) => void,
   ) => void;
 }
+
 declare global {
   interface Window {
     ethereum?: WalletProvider;
   }
 }
+
 export function browserWallet() {
   if (!window.ethereum)
     throw new Error(
@@ -29,11 +32,13 @@ export function browserWallet() {
     );
   return new BrowserProvider(window.ethereum);
 }
+
 export async function connectWallet() {
   const provider = browserWallet();
   await provider.send("eth_requestAccounts", []);
   return provider.getSigner();
 }
+
 async function requireSigner(expectedAddress: string, chainId: number) {
   const provider = browserWallet();
   if (Number((await provider.getNetwork()).chainId) !== chainId)
@@ -47,6 +52,7 @@ async function requireSigner(expectedAddress: string, chainId: number) {
     throw new Error("Switch to the wallet linked to your FairPay account.");
   return signer;
 }
+
 export async function switchToPaymentNetwork(chainId: number) {
   const network = paymentNetwork(chainId);
   browserWallet();
@@ -106,7 +112,10 @@ export async function fundJob(
   progress: (stage: string, hash?: string) => void = () => {},
 ) {
   const signer = await requireSigner(job.client, job.chainId);
-  if (job.chainId !== ARC_TESTNET.chainId) {
+  const isNativeEth =
+    job.paymentAsset === "ETH" && !job.paymentTokenAddress;
+
+  if (isNativeEth) {
     const escrow = await new ContractFactory(
       legacyArtifact.abi,
       legacyArtifact.bytecode,
@@ -116,24 +125,31 @@ export async function fundJob(
     await onDeployment(transaction.hash);
     return confirmed(transaction, onDeployment);
   }
-  if (job.paymentAsset !== "USDC")
-    throw new Error("This job has an unsupported payment asset.");
-  const token = new Contract(ARC_TESTNET.tokenAddress, USDC_ABI, signer);
-  if (Number(await token.decimals()) !== ARC_TESTNET.decimals)
-    throw new Error("Unexpected USDC token precision. Funding stopped.");
-  const [paused, clientBlocked, freelancerBlocked] = await Promise.all([
-    token.paused(),
-    token.isBlacklisted(job.client),
-    token.isBlacklisted(job.freelancer),
-  ]);
-  if (paused)
-    throw new Error(
-      "USDC transfers are paused. Try funding again when transfers resume.",
-    );
-  if (clientBlocked || freelancerBlocked)
-    throw new Error(
-      "USDC transfers are blocked for an assigned wallet. Do not fund this agreement.",
-    );
+
+  const tokenAddress =
+    job.paymentTokenAddress || ARC_TESTNET.tokenAddress;
+  const token = new Contract(tokenAddress, USDC_ABI, signer);
+  const assetSymbol = job.paymentAsset || "token";
+
+  try {
+    const [paused, clientBlocked, freelancerBlocked] = await Promise.all([
+      token.paused().catch(() => false),
+      token.isBlacklisted(job.client).catch(() => false),
+      token.isBlacklisted(job.freelancer).catch(() => false),
+    ]);
+    if (paused)
+      throw new Error(
+        `${assetSymbol} transfers are paused. Try funding again when transfers resume.`,
+      );
+    if (clientBlocked || freelancerBlocked)
+      throw new Error(
+        `${assetSymbol} transfers are blocked for an assigned wallet. Do not fund this agreement.`,
+      );
+  } catch (err: unknown) {
+    const msg = (err as { message?: string }).message || "";
+    if (msg.includes("paused") || msg.includes("blocked")) throw err;
+  }
+
   let address = job.contractAddress;
   let deploymentHash = job.fundingHash;
   if (!address) {
@@ -149,7 +165,7 @@ export async function fundJob(
     ).deploy(
       job.title,
       job.freelancer,
-      ARC_TESTNET.tokenAddress,
+      tokenAddress,
       BigInt(job.amountWei),
       agreementHash(job),
     );
@@ -163,33 +179,44 @@ export async function fundJob(
     throw new Error(
       "The escrow deployment record is missing. Refresh this job.",
     );
-  if (await token.isBlacklisted(address))
-    throw new Error(
-      "USDC transfers are blocked for this escrow. Funding stopped.",
-    );
+
+  try {
+    if (await token.isBlacklisted(address))
+      throw new Error(
+        `${assetSymbol} transfers are blocked for this escrow. Funding stopped.`,
+      );
+  } catch (err: unknown) {
+    const msg = (err as { message?: string }).message || "";
+    if (msg.includes("blocked")) throw err;
+  }
+
   const escrow = new Contract(address, stableArtifact.abi, signer);
-  // A previous attempt may have funded successfully before its browser disconnected.
   if (Number(await escrow.status()) !== 0) return deploymentHash;
+
   const amount = BigInt(job.amountWei);
-  if ((await token.balanceOf(job.client)) <= amount)
+  const clientBalance = BigInt(await token.balanceOf(job.client));
+  if (clientBalance < amount)
     throw new Error(
-      "You need the agreed test USDC plus additional USDC for network gas. Get test USDC from the Circle faucet.",
+      `Insufficient ${assetSymbol} balance. You need ${job.amount} ${assetSymbol} to fund this escrow.`,
     );
+
   const allowance = BigInt(await token.allowance(job.client, address));
   if (allowance < amount) {
     progress(
-      "Allow this job escrow to use the agreed USDC amount in your wallet…",
+      `Allow this job escrow to use ${job.amount} ${assetSymbol} in your wallet…`,
     );
     const approval = await token.approve(address, amount);
-    progress("Waiting for USDC permission…", approval.hash);
+    progress(`Waiting for ${assetSymbol} permission…`, approval.hash);
     await confirmed(approval);
   }
-  progress("Lock the agreed USDC payment in your wallet…");
+
+  progress(`Lock the agreed ${assetSymbol} payment in your wallet…`);
   const funding = await escrow.fund();
-  progress("Waiting for the USDC deposit…", funding.hash);
+  progress(`Waiting for the ${assetSymbol} deposit…`, funding.hash);
   await confirmed(funding);
   return deploymentHash;
 }
+
 export async function advanceJob(job: Job, onSent: (hash: string) => void) {
   if (!job.contractAddress || !["Funded", "Submitted"].includes(job.status))
     throw new Error("This job has no pending contract action.");
@@ -197,21 +224,26 @@ export async function advanceJob(job: Job, onSent: (hash: string) => void) {
     job.status === "Funded" ? job.freelancer : job.client,
     job.chainId,
   );
-  const stable = job.chainId === ARC_TESTNET.chainId;
+  const isTokenEscrow = Boolean(
+    job.paymentTokenAddress ||
+      (job.paymentAsset && job.paymentAsset !== "ETH") ||
+      job.chainId === ARC_TESTNET.chainId,
+  );
   const contract = new Contract(
     job.contractAddress,
-    (stable ? stableArtifact : legacyArtifact).abi,
+    (isTokenEscrow ? stableArtifact : legacyArtifact).abi,
     signer,
   );
   const transaction =
     job.status === "Funded"
       ? await contract.markComplete()
-      : stable
+      : isTokenEscrow
         ? await contract.verifyAndRelease()
         : await contract.releasePayment();
   onSent(transaction.hash);
   await confirmed(transaction);
 }
+
 export function readableError(error: unknown): string {
   const value = error as {
     code?: string | number;

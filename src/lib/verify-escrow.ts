@@ -14,14 +14,20 @@ export async function verifyEscrowState(
     freelancerAddress: string;
     amountWei: string;
     chainId: number;
-    paymentAsset?: "USDC";
+    paymentAsset?: string;
+    paymentTokenAddress?: string;
   },
   fundingHash: string,
 ) {
   const network = paymentNetwork(job.chainId);
-  const stable = job.chainId === ARC_TESTNET.chainId;
-  if (stable !== (job.paymentAsset === "USDC"))
+  const isArc = job.chainId === ARC_TESTNET.chainId;
+  if (isArc && !job.paymentAsset && !job.paymentTokenAddress)
     throw new Error("Job asset and network do not match.");
+  const isTokenEscrow = Boolean(
+    job.paymentTokenAddress ||
+      (job.paymentAsset && job.paymentAsset !== "ETH") ||
+      isArc,
+  );
   if (Number(await provider.send("eth_chainId", [])) !== job.chainId)
     throw new Error("The payment RPC returned the wrong network.");
   if (!/^0x[a-fA-F0-9]{64}$/.test(fundingHash))
@@ -40,12 +46,16 @@ export async function verifyEscrowState(
     transaction.to !== null
   )
     throw new Error("Use a successful escrow contract-creation transaction.");
-  const artifact = stable ? stableArtifact : legacyArtifact;
-  const args = stable
+  const artifact = isTokenEscrow ? stableArtifact : legacyArtifact;
+  const tokenAddress =
+    job.paymentTokenAddress ||
+    network.tokenAddress ||
+    ARC_TESTNET.tokenAddress;
+  const args = isTokenEscrow
     ? [
         job.title,
         job.freelancerAddress,
-        network.tokenAddress,
+        tokenAddress,
         BigInt(job.amountWei),
         agreementHash(job),
       ]
@@ -55,7 +65,7 @@ export async function verifyEscrowState(
     transaction.data.toLowerCase() !==
       `${artifact.bytecode}${encoded.slice(2)}`.toLowerCase() ||
     transaction.from.toLowerCase() !== job.clientAddress.toLowerCase() ||
-    transaction.value !== (stable ? 0n : BigInt(job.amountWei))
+    transaction.value !== (isTokenEscrow ? 0n : BigInt(job.amountWei))
   )
     throw new Error(
       "Deployment does not match this job’s contract, agreed terms, client, freelancer, asset, and amount.",
@@ -66,13 +76,13 @@ export async function verifyEscrowState(
   const contractAddress = receipt.contractAddress.toLowerCase();
   const escrow = new Contract(contractAddress, artifact.abi, provider);
   const rawStatus = Number(await escrow.status({ blockTag: block }));
-  const statuses = stable
+  const statuses = isTokenEscrow
     ? (["Draft", "Funded", "Submitted", "Paid"] as const)
     : (["Funded", "Submitted", "Paid"] as const);
   const status = statuses[rawStatus];
   if (!status) throw new Error("Unsupported contract status.");
-  if (stable && (status === "Funded" || status === "Submitted")) {
-    const token = new Contract(network.tokenAddress!, ERC20_ABI, provider);
+  if (isTokenEscrow && (status === "Funded" || status === "Submitted")) {
+    const token = new Contract(tokenAddress, ERC20_ABI, provider);
     if (
       (await token.balanceOf(contractAddress, { blockTag: block })) <
       BigInt(job.amountWei)

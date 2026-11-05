@@ -12,7 +12,7 @@ export const ARC_TESTNET = {
   tokenAddress: "0x3600000000000000000000000000000000000000",
 } as const;
 
-const SEPOLIA = {
+export const SEPOLIA = {
   chainId: 11155111,
   name: "Sepolia",
   rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com",
@@ -23,6 +23,60 @@ const SEPOLIA = {
   tokenAddress: undefined,
 } as const;
 
+export interface TokenPreset {
+  id: string;
+  name: string;
+  symbol: string;
+  chainId: number;
+  decimals: number;
+  isNative: boolean;
+  tokenAddress?: string;
+  networkName: string;
+}
+
+export const SUPPORTED_PAYMENT_TOKENS: TokenPreset[] = [
+  {
+    id: "arc-usdc",
+    name: "USDC (Arc Testnet)",
+    symbol: "USDC",
+    chainId: ARC_TESTNET.chainId,
+    decimals: 6,
+    isNative: false,
+    tokenAddress: ARC_TESTNET.tokenAddress,
+    networkName: "Arc Testnet",
+  },
+  {
+    id: "sepolia-eth",
+    name: "ETH (Sepolia Native)",
+    symbol: "ETH",
+    chainId: SEPOLIA.chainId,
+    decimals: 18,
+    isNative: true,
+    tokenAddress: undefined,
+    networkName: "Sepolia",
+  },
+  {
+    id: "arc-sharp",
+    name: "SHARP Token (Arc)",
+    symbol: "SHARP",
+    chainId: ARC_TESTNET.chainId,
+    decimals: 18,
+    isNative: false,
+    tokenAddress: "0x8900000000000000000000000000000000000001",
+    networkName: "Arc Testnet",
+  },
+  {
+    id: "custom-erc20",
+    name: "Custom ERC-20 Token (Any Token)",
+    symbol: "CUSTOM",
+    chainId: ARC_TESTNET.chainId,
+    decimals: 18,
+    isNative: false,
+    tokenAddress: "",
+    networkName: "Arc Testnet / Sepolia",
+  },
+];
+
 export function paymentNetwork(chainId: number) {
   if (chainId === ARC_TESTNET.chainId) return ARC_TESTNET;
   if (chainId === SEPOLIA.chainId) return SEPOLIA;
@@ -30,6 +84,8 @@ export function paymentNetwork(chainId: number) {
 }
 
 export const ERC20_ABI = [
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
   "function decimals() view returns (uint8)",
   "function balanceOf(address) view returns (uint256)",
   "function allowance(address,address) view returns (uint256)",

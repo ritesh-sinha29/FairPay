@@ -18,7 +18,9 @@ export interface Job {
   freelancerName: string;
   amount: string;
   amountWei: string;
-  paymentAsset?: "USDC";
+  paymentAsset?: string;
+  paymentTokenAddress?: string;
+  tokenDecimals?: number;
   status: JobStatus;
   acceptedAt?: number;
   createdAt: string;

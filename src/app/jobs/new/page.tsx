@@ -3,11 +3,17 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { parseUnits } from "ethers";
-import { ARC_TESTNET } from "@/lib/payments";
+import { isAddress, parseUnits } from "ethers";
+import {
+  ARC_TESTNET,
+  SEPOLIA,
+  SUPPORTED_PAYMENT_TOKENS,
+  type TokenPreset,
+} from "@/lib/payments";
 import {
   ArrowLeft,
   ArrowRight,
+  Coins,
   Copy,
   LoaderCircle,
   ShieldCheck,
@@ -43,8 +49,38 @@ export default function NewJobPage() {
   const [description, setDescription] = useState("");
   const [freelancerId, setFreelancerId] = useState("");
   const [amount, setAmount] = useState("");
+  const [selectedAssetId, setSelectedAssetId] = useState("arc-usdc");
+  const [customTokenAddress, setCustomTokenAddress] = useState("");
+  const [customTokenSymbol, setCustomTokenSymbol] = useState("SHARP");
+  const [customTokenDecimals, setCustomTokenDecimals] = useState("18");
+  const [customNetwork, setCustomNetwork] = useState<"5042002" | "11155111">(
+    "5042002",
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const selectedPreset: TokenPreset | undefined = SUPPORTED_PAYMENT_TOKENS.find(
+    (item) => item.id === selectedAssetId,
+  );
+  const isCustom = selectedAssetId === "custom-erc20";
+
+  const activeSymbol = isCustom
+    ? customTokenSymbol.trim().toUpperCase() || "TOKEN"
+    : selectedPreset?.symbol ?? "USDC";
+
+  const activeDecimals = isCustom
+    ? Number(customTokenDecimals) || 18
+    : selectedPreset?.decimals ?? 6;
+
+  const activeChainId = isCustom
+    ? Number(customNetwork)
+    : selectedPreset?.chainId ?? ARC_TESTNET.chainId;
+
+  const activeTokenAddress = isCustom
+    ? customTokenAddress.trim()
+    : selectedPreset?.isNative
+      ? undefined
+      : selectedPreset?.tokenAddress;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -53,18 +89,39 @@ export default function NewJobPage() {
     setBusy(true);
     try {
       if (!freelancerId) throw new Error("Choose a freelancer for this job.");
-      if (
-        !/^\d+(\.\d{1,6})?$/.test(amount) ||
-        parseUnits(amount, ARC_TESTNET.decimals) <= 0n
-      )
+
+      if (isCustom) {
+        if (!isAddress(customTokenAddress))
+          throw new Error("Enter a valid ERC-20 token contract address.");
+        if (!customTokenSymbol.trim())
+          throw new Error("Enter a token symbol (e.g. SHARP, DAI).");
+        if (
+          !customTokenDecimals ||
+          isNaN(Number(customTokenDecimals)) ||
+          Number(customTokenDecimals) < 0 ||
+          Number(customTokenDecimals) > 36
+        )
+          throw new Error("Enter token decimals between 0 and 36.");
+      }
+
+      if (!/^\d+(\.\d+)?$/.test(amount))
         throw new Error(
-          "Enter a positive USDC payment with up to 6 decimal places.",
+          `Enter a positive ${activeSymbol} payment amount (e.g. 25.00).`,
         );
+
+      const parsedWei = parseUnits(amount, activeDecimals);
+      if (parsedWei <= 0n)
+        throw new Error(`Enter a positive payment amount.`);
+
       const id = await create({
         title,
         description,
         freelancerId: freelancerId as Id<"users">,
-        amountWei: parseUnits(amount, ARC_TESTNET.decimals).toString(),
+        amountWei: parsedWei.toString(),
+        paymentAsset: activeSymbol,
+        paymentTokenAddress: activeTokenAddress,
+        tokenDecimals: activeDecimals,
+        chainId: activeChainId,
       });
       router.push(`/jobs/${id}`);
     } catch (error) {
@@ -87,6 +144,7 @@ export default function NewJobPage() {
         </Button>
       </div>
     );
+
   return (
     <div className="page-wrap max-w-5xl">
       <Link
@@ -102,8 +160,8 @@ export default function NewJobPage() {
             Create a job<span className="text-blue-400">.</span>
           </h1>
           <p className="page-description">
-            Propose the scope and payment to your freelancer. Fund the escrow
-            after they agree.
+            Propose the scope and payment terms. You can pay in USDC, ETH, SHARP,
+            or any custom ERC-20 token. Fund escrow once your freelancer agrees.
           </p>
         </div>
       </div>
@@ -121,7 +179,7 @@ export default function NewJobPage() {
                   value={title}
                   onChange={(event) => setTitle(event.target.value)}
                   maxLength={160}
-                  placeholder="e.g. Design a brand identity"
+                  placeholder="e.g. Full-Stack Web3 DApp Development"
                   required
                   disabled={busy}
                 />
@@ -129,6 +187,7 @@ export default function NewJobPage() {
                   The title will be public on the blockchain after funding.
                 </p>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="job-description">
                   Scope and expected delivery
@@ -140,7 +199,7 @@ export default function NewJobPage() {
                   minLength={20}
                   maxLength={6000}
                   rows={5}
-                  placeholder="Describe the deliverables, acceptance criteria, and anything the freelancer should know."
+                  placeholder="Describe the deliverables, milestone acceptance criteria, and specific requirements."
                   required
                   disabled={busy}
                 />
@@ -148,6 +207,7 @@ export default function NewJobPage() {
                   The brief is visible to you and the assigned freelancer.
                 </p>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="freelancer-select">Freelancer</Label>
                 <Select
@@ -200,32 +260,143 @@ export default function NewJobPage() {
                   </Alert>
                 )}
               </div>
+
+              {/* Payment Currency Selector */}
               <div className="space-y-2">
-                <Label htmlFor="job-amount">Agreed payment in USDC</Label>
+                <Label htmlFor="asset-select">Payment Currency / Asset</Label>
+                <Select
+                  value={selectedAssetId}
+                  onValueChange={setSelectedAssetId}
+                  disabled={busy}
+                >
+                  <SelectTrigger id="asset-select" className="w-full">
+                    <SelectValue placeholder="Choose payment asset" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_PAYMENT_TOKENS.map((token) => (
+                      <SelectItem value={token.id} key={token.id}>
+                        {token.name} ({token.symbol}) · {token.networkName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  Select a pre-configured token or enter any ERC-20 smart contract.
+                </p>
+              </div>
+
+              {/* Custom Token Configuration */}
+              {isCustom && (
+                <div className="space-y-4 rounded-lg border border-border/80 bg-muted/30 p-4">
+                  <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+                    <Coins size={14} className="text-blue-400" /> Custom ERC-20
+                    Token Settings
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-network">Blockchain Network</Label>
+                    <Select
+                      value={customNetwork}
+                      onValueChange={(val) =>
+                        setCustomNetwork(val as "5042002" | "11155111")
+                      }
+                      disabled={busy}
+                    >
+                      <SelectTrigger id="custom-network" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5042002">
+                          Arc Testnet (Chain ID 5042002)
+                        </SelectItem>
+                        <SelectItem value="11155111">
+                          Ethereum Sepolia (Chain ID 11155111)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-token-address">
+                      ERC-20 Token Contract Address
+                    </Label>
+                    <Input
+                      id="custom-token-address"
+                      value={customTokenAddress}
+                      onChange={(e) => setCustomTokenAddress(e.target.value)}
+                      placeholder="0x..."
+                      required={isCustom}
+                      disabled={busy}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-token-symbol">Token Symbol</Label>
+                      <Input
+                        id="custom-token-symbol"
+                        value={customTokenSymbol}
+                        onChange={(e) => setCustomTokenSymbol(e.target.value)}
+                        placeholder="e.g. SHARP, DAI"
+                        required={isCustom}
+                        disabled={busy}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="custom-token-decimals">Decimals</Label>
+                      <Input
+                        id="custom-token-decimals"
+                        type="number"
+                        min="0"
+                        max="36"
+                        value={customTokenDecimals}
+                        onChange={(e) =>
+                          setCustomTokenDecimals(e.target.value)
+                        }
+                        placeholder="18"
+                        required={isCustom}
+                        disabled={busy}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Amount Input */}
+              <div className="space-y-2">
+                <Label htmlFor="job-amount">
+                  Agreed payment amount in {activeSymbol}
+                </Label>
                 <Input
                   id="job-amount"
                   inputMode="decimal"
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
-                  placeholder="25.00"
+                  placeholder={activeDecimals === 6 ? "25.00" : "1.5"}
                   required
                   disabled={busy}
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Use test USDC on Arc Testnet. Keep additional USDC for network
-                  gas.
+                  Escrow holds exactly {amount || "0"} {activeSymbol} on{" "}
+                  {activeChainId === ARC_TESTNET.chainId
+                    ? "Arc Testnet"
+                    : "Sepolia"}
+                  . Make sure your wallet holds native gas to fund the transaction.
                 </p>
               </div>
+
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
+
               <p className="text-[11px] leading-6 text-muted-foreground">
-                Sending this proposal confirms the scope and payment from your
-                side. The assigned freelancer must agree before you lock the
-                deposit.
+                Sending this proposal confirms the scope and {activeSymbol}{" "}
+                payment from your side. The assigned freelancer must agree
+                before you lock the deposit into escrow.
               </p>
+
               <Button
                 className="w-full"
                 disabled={busy || !freelancers?.length}
@@ -235,31 +406,52 @@ export default function NewJobPage() {
                 ) : (
                   <ArrowRight size={15} />
                 )}
-                {busy ? "Sending your proposal…" : "Send job proposal"}
+                {busy ? "Sending your proposal…" : `Send ${activeSymbol} Proposal`}
               </Button>
             </form>
           </CardContent>
         </Card>
-        <div className="space-y-6 py-3">
-          <ShieldCheck size={32} className="text-blue-300" />
-          <h2 className="text-2xl font-medium leading-9 tracking-tight">
-            Clear scope.
-            <br />A payment set aside.
-          </h2>
-          <p className="text-xs leading-7 text-muted-foreground">
-            Your proposal is saved in Convex. Once the freelancer agrees, you
-            lock the full payment in escrow. Work begins after funding is
-            confirmed. When you verify the delivery, the contract releases
-            payment.
-          </p>
+
+        {/* Right Info Column */}
+        <aside className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Universal Escrow Terms</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-xs leading-6 text-muted-foreground">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-1 text-emerald-400" size={16} />
+                <p>
+                  <strong>Multi-Token Support:</strong> Supports native ETH,
+                  USDC, SHARP, and any standard ERC-20 token on Arc Testnet or
+                  Ethereum Sepolia.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-1 text-blue-400" size={16} />
+                <p>
+                  <strong>Single-Transaction Verification:</strong> When the client
+                  verifies the freelancer’s deliverable, the smart contract
+                  automatically pays out the tokens in the same transaction.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-1 text-purple-400" size={16} />
+                <p>
+                  <strong>Immutable Terms:</strong> A canonical agreement
+                  fingerprint commits to the scope, tokens, and parties so no
+                  terms can be altered after agreement.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
           <Alert>
             <AlertDescription className="text-xs leading-7">
-              Verifying the work releases payment to the freelancer. The current
-              contract has no refund, deadline, or dispute process. Agree on the
-              work before depositing funds.
+              Verifying the work releases payment to the freelancer. Ensure
+              both parties agree on deliverables and currency before depositing funds.
             </AlertDescription>
           </Alert>
-        </div>
+        </aside>
       </div>
     </div>
   );

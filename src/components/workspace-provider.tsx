@@ -78,10 +78,12 @@ export function WorkspaceProvider({
     freelancerName: record.freelancerName,
     amount: formatUnits(
       record.amountWei,
-      paymentNetwork(record.chainId).decimals,
+      record.tokenDecimals ?? paymentNetwork(record.chainId).decimals,
     ),
     amountWei: record.amountWei,
     paymentAsset: record.paymentAsset,
+    paymentTokenAddress: record.paymentTokenAddress,
+    tokenDecimals: record.tokenDecimals,
     status: record.status,
     acceptedAt: record.acceptedAt,
     createdAt: new Date(record._creationTime).toISOString(),

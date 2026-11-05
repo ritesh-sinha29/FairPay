@@ -60,6 +60,10 @@ export const create = mutation({
     title: v.string(),
     description: v.string(),
     amountWei: v.string(),
+    paymentAsset: v.optional(v.string()),
+    paymentTokenAddress: v.optional(v.string()),
+    tokenDecimals: v.optional(v.number()),
+    chainId: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const client = await requireUser(ctx);
@@ -88,8 +92,10 @@ export const create = mutation({
       title,
       description,
       amountWei: BigInt(args.amountWei).toString(),
-      chainId: ARC_TESTNET.chainId,
-      paymentAsset: "USDC",
+      chainId: args.chainId ?? ARC_TESTNET.chainId,
+      paymentAsset: args.paymentAsset ?? "USDC",
+      paymentTokenAddress: args.paymentTokenAddress,
+      tokenDecimals: args.tokenDecimals,
       status: "Draft",
       updatedAt: Date.now(),
     });

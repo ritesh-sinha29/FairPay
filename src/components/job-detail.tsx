@@ -421,7 +421,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
                             <AlertDescription className="text-xs leading-6">
                               {job.contractAddress
                                 ? "Your escrow is created, but payment is not locked yet. Continue funding on this same contract."
-                                : "Funding uses three wallet transactions: create the escrow, allow the exact USDC amount, then lock the deposit. Work begins only after the deposit confirms."}
+                                : `Funding uses wallet transactions: create the escrow, allow the exact ${job.paymentAsset ?? "token"} amount, then lock the deposit. Work begins only after the deposit confirms.`}
                             </AlertDescription>
                           </Alert>
                         )}
@@ -602,14 +602,16 @@ export function JobDetail({ jobId }: { jobId: string }) {
                     The escrow commits to this job’s scope, parties, payment,
                     and network.
                   </p>
-                  <a
-                    className="mt-3 inline-flex items-center gap-2 text-xs text-blue-300"
-                    href="https://faucet.circle.com"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Get test USDC <ExternalLink size={12} />
-                  </a>
+                  {job.paymentAsset === "USDC" && (
+                    <a
+                      className="mt-3 inline-flex items-center gap-2 text-xs text-blue-300"
+                      href="https://faucet.circle.com"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Get test USDC <ExternalLink size={12} />
+                    </a>
+                  )}
                 </div>
               )}
               {error && (

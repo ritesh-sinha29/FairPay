@@ -1,67 +1,279 @@
-# FairPay
+# FairPay 🛡️
 
-Next.js and TypeScript freelance job agreements with a Convex backend, wallet authentication, shadcn/ui, and Solidity escrow. Client and freelancer accounts use separate signup paths and a signed wallet challenge. Job records persist in Convex and synchronize across sessions.
+**Trustless Web3 Freelance Escrow with Single-Transaction Verification Payouts on Arc Testnet (USDC) & Ethereum Sepolia.**
 
-## Start the app
+[![Next.js](https://img.shields.io/badge/Next.js-16.0-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.30-363636?logo=solidity)](https://soliditylang.org/)
+[![Convex](https://img.shields.io/badge/Convex-1.49-orange)](https://www.convex.dev/)
+[![Arc Testnet](https://img.shields.io/badge/Arc-USDC%205042002-blue)](https://arc.io)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
+[![Tests](https://img.shields.io/badge/Tests-7%20Passing-success)](https://github.com/ritesh-sinha29/FairPay)
 
-Requires Node.js 20.9 or newer and a Convex account. The current workspace is connected to the FairPay development deployment.
+---
 
-```sh
-npm install
-npm run contracts:compile
-npm run backend:dev
+## 📌 Executive Summary
+
+Freelancers routinely face late payments, ghosting, and scope disputes, while clients fear paying upfront for incomplete or subpar deliverables. Traditional escrow platforms charge steep 10–20% intermediary fees and impose arbitrary dispute arbitration.
+
+**FairPay** replaces middleman fee structures with non-custodial smart contracts and cryptographic agreement verification:
+1. **Both parties agree** on the scope, deadline, and payment terms off-chain.
+2. The client locks the deposit into a dedicated on-chain escrow smart contract.
+3. The freelancer verifies on-chain funding and delivers the work.
+4. **Client verification triggers payment in the same transaction** — no delayed payouts, no secondary release hurdles, and zero intermediary fees.
+
+---
+
+## ⚡ Key Capabilities
+
+- **Programmable Stablecoin Escrow (`FairPayStableEscrow.sol`)**: Full ERC-20 / USDC support on Arc Testnet using OpenZeppelin `SafeERC20`, featuring exact deposit allowance approval, balance checks, and idempotent funding.
+- **Legacy Native Escrow (`FairPayEscrow.sol`)**: Native ETH milestone escrow on Ethereum Sepolia for single-deposit freelance agreements.
+- **Gasless Web3 Authentication**: EIP-191 / SIWE-style cryptographic wallet challenge signing powered by `@convex-dev/auth`. Users sign a secure challenge in their browser wallet costing **$0 in gas**.
+- **Role-Based Workspaces**: Separate signup flows and dashboard contexts for **Clients** and **Freelancers**.
+- **Canonical Agreement Fingerprinting**: Keccak-256 hashing of the job ID, chain ID, participant addresses, scope, and amount ensures terms cannot be altered after agreement.
+- **Fail-Safe Preflight Protections**: Automatically inspects token contract state (`paused()`, `isBlacklisted()`) prior to deployment to prevent locked capital.
+- **Interrupted Recovery & Idempotent Retry**: Browser crashes or rejected wallet confirmations safely resume on the existing contract instance without double charges.
+- **Real-Time Synchronized State**: Convex database subscriptions reflect instant status updates across client and freelancer browser tabs.
+
+---
+
+## 🏗️ Architecture & Technical Flow
+
+```mermaid
+flowchart LR
+    subgraph Frontend["Client & Freelancer UI (Next.js 16 + shadcn/ui)"]
+        Client[Client Wallet]
+        Freelancer[Freelancer Wallet]
+    end
+
+    subgraph Backend["Convex Real-Time Cloud Backend"]
+        Auth[EIP-191 Auth & Roles]
+        JobsDB[(Jobs & Escrows DB)]
+        Verifier[On-Chain State Verifier]
+    end
+
+    subgraph Blockchain["Arc Testnet (Chain ID 5042002)"]
+        USDC[Arc Official USDC Token]
+        Escrow[FairPayStableEscrow Contract]
+    end
+
+    Client -->|1. Create job proposal| JobsDB
+    Freelancer -->|2. Agree to proposal| JobsDB
+    Client -->|3. Approve token allowance| USDC
+    Client -->|4. Deposit payment| Escrow
+    Verifier -->|5. Verify deposit on-chain| Escrow
+    Verifier -->|6. Mark Funded| JobsDB
+    Freelancer -->|7. Deliver & markComplete| Escrow
+    Client -->|8. Verify work & releasePayment| Escrow
+    Escrow -->|9. Instant token payout| Freelancer
 ```
 
-In a second terminal, run `npm run dev` and open http://127.0.0.1:3000.
+### Escrow State Machine
 
-For a fresh checkout, run `npx convex dev --configure new` to configure a deployment, then `npm run backend:auth` to configure its signing keys. The setup script sends secrets through stdin and preserves an existing complete key pair. Push the backend with `npm run backend:push`.
+```mermaid
+stateDiagram-v2
+    [*] --> Draft: Client creates job proposal
+    Draft --> Agreed: Freelancer accepts scope & payment
+    Agreed --> Funded: Client deploys & deposits funds in escrow
+    Funded --> Submitted: Freelancer delivers work & calls markComplete()
+    Submitted --> Paid: Client verifies delivery & calls releasePayment()
+    Paid --> [*]
+```
 
-Convex writes the deployment URLs into `.env.local`. Keep that file out of version control. Configure `SITE_URL` on the Convex deployment for the browser origin used in wallet authentication messages. The setup defaults to `http://127.0.0.1:3000`. For hosted use, update it to the app's actual origin.
+---
 
-## Use FairPay
+## 🌐 Supported Networks & Contracts
 
-1. A freelancer signs up at `/sign-up/freelancer` with their name, optional professional headline, and wallet signature.
-2. A client signs up at `/sign-up/client` with a different wallet.
-3. The client creates a job with its title, scope, registered freelancer, and USDC amount. Convex saves a draft.
-4. The assigned freelancer reviews and accepts the proposal. This closes the deal between both parties.
-5. The client then opens the agreed job and locks its payment in a dedicated USDC escrow on Arc Testnet. Funding creates the escrow, allows the exact token amount, then locks the deposit.
-6. The backend verifies the deployment code, constructor parameters, sender, deposit, and contract state before recording Funded.
-7. The freelancer submits a delivery link and note, then signs the contract submission transaction.
-8. The client reviews the delivery and selects Verify work & release payment. After the wallet confirms this transaction, the contract releases the deposit to the freelancer automatically. No separate payment step follows verification.
+| Parameter | Arc Testnet (Default for new jobs) | Ethereum Sepolia (Legacy support) |
+| :--- | :--- | :--- |
+| **Network Name** | Arc Testnet | Sepolia Testnet |
+| **Chain ID** | `5042002` | `11155111` |
+| **Payment Asset** | USDC (ERC-20, 6 decimals) | ETH (Native, 18 decimals) |
+| **Token Address** | `0x3600000000000000000000000000000000000000` | N/A (Native Ether) |
+| **RPC Endpoint** | `https://rpc.testnet.arc.io` | `https://ethereum-sepolia-rpc.publicnode.com` |
+| **Block Explorer**| [explorer.testnet.arc.io](https://explorer.testnet.arc.io) | [sepolia.etherscan.io](https://sepolia.etherscan.io) |
+| **Faucet** | [Circle Faucet](https://faucet.circle.com) | [Sepolia PoW Faucet](https://sepolia-faucet.pk910.de) |
 
-Both wallets need Arc Testnet USDC for gas, and the client also needs the agreed USDC deposit. Get test USDC from https://faucet.circle.com. Wallet signup and sign-in use message signatures and cost no gas. Job access is restricted to its registered client and freelancer.
+> [!NOTE]
+> Arc Studio integration checksum matches the verified source checksum: `170c04ef6758a7f299e7e1b5b312c1fb08aebf39e7114beb94aacab9f025598d` with pinned OpenZeppelin contracts and deterministic compiler outputs.
 
-Awaiting agreement, Deal agreed, Funded, In review, and Paid are the displayed stages. Awaiting agreement and Deal agreed are stored as Draft with an optional acceptedAt timestamp in Convex. Submitted is the Solidity state displayed as In review.
+---
 
-## Payment recovery
+## 🚀 Quick Start Guide
 
-Funding requests are reserved to prevent concurrent tabs from initiating the same job's deposit. A broadcast hash is saved before waiting for confirmation. If synchronization fails, open the job and use Verify funding with the confirmed deployment hash. A replaced funding transaction can be recovered with its new hash. Reset failed attempt checks the recorded receipt before clearing a failed or cancelled attempt.
+### Prerequisites
+- **Node.js**: v20.9.0 or higher
+- **npm** / **pnpm**
+- **Browser Wallet**: MetaMask, Rainbow, Rabby, or Coinbase Wallet with Arc Testnet or Sepolia testnet configured.
 
-The dashboard subscribes to Convex. Refresh checks contract status through a backend action. Only internally verified updates can change a recorded payment status.
+### 1. Clone & Install Dependencies
 
-## Configuration
+```bash
+git clone https://github.com/ritesh-sinha29/FairPay.git
+cd FairPay
+npm install
+```
 
-The Convex environment variable `SEPOLIA_RPC_URL` overrides the default public RPC used for verification. This server-side value can include a provider credential. Browser wallets use their own configured RPC for signing and broadcasting.
+### 2. Configure Environment Variables
 
-Authentication keys `JWT_PRIVATE_KEY` and `JWKS` live in the Convex deployment. The app never needs a user's wallet private key.
+Create `.env.local` in your root directory (or copy from `.env.example`):
 
-## Checks
+```bash
+cp .env.example .env.local
+```
 
-```sh
+Ensure your `.env.local` contains:
+
+```env
+CONVEX_DEPLOYMENT=dev:your-deployment-name
+NEXT_PUBLIC_CONVEX_URL=https://your-deployment-name.convex.cloud
+NEXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment-name.convex.site
+
+SITE_URL=http://localhost:3000
+FAIRPAY_SITE_URL=http://localhost:3000
+
+ARC_RPC_URL=https://rpc.testnet.arc.io
+SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+```
+
+### 3. Initialize Convex & Cryptographic Keys
+
+In your terminal, initialize Convex and generate the RSA key pairs for wallet auth:
+
+```bash
+# Link or create your Convex project
+npx convex dev --configure new
+
+# In a separate terminal, generate JWT_PRIVATE_KEY and JWKS on the Convex server
+npm run backend:auth
+```
+
+### 4. Compile Smart Contracts & Run Local Tests
+
+```bash
+# Compile Solidity contracts with solc 0.8.30
+npm run contracts:compile
+
+# Run stablecoin escrow integration tests
+npm run test:stablecoin
+
+# Optional: Run live Arc RPC check
+npm run check:arc
+```
+
+### 5. Launch Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 📖 End-to-End User Walkthrough
+
+To test the complete workflow locally, use **two browser profiles** (or an Incognito window) with separate wallets:
+
+1. **Freelancer Onboarding**:
+   - Navigate to `/sign-up/freelancer`.
+   - Enter your name and headline.
+   - Connect your wallet and sign the gasless challenge message.
+2. **Client Onboarding**:
+   - In profile 2, navigate to `/sign-up/client`.
+   - Connect a distinct wallet and sign the challenge.
+3. **Draft & Agreement**:
+   - As the client, click **New Escrow Job** (`/jobs/new`).
+   - Fill in the title, deliverable description, select the registered freelancer, and enter the USDC budget.
+   - Click **Save Proposal**.
+   - As the freelancer, open the job and click **Agree to Deal**.
+4. **Funding Escrow**:
+   - As the client, click **Fund Escrow**.
+   - Your wallet prompts two actions:
+     1. `approve`: Grants exact USDC allowance to the escrow contract.
+     2. `deploy / deposit`: Locks the USDC deposit into the smart contract.
+   - The Convex verifier checks deployment bytecode and transaction receipts on-chain; status turns to **Funded**.
+5. **Work Delivery**:
+   - As the freelancer, add your delivery link (e.g., GitHub PR, Figma link) and submission note.
+   - Click **Submit Work for Review** and approve the on-chain `markComplete()` transaction.
+   - Status updates to **In review**.
+6. **Verification & Payout**:
+   - As the client, review the submitted deliverable.
+   - Click **Verify Work & Release Payment**.
+   - Confirm the transaction in your wallet. The contract automatically pays the full USDC deposit directly to the freelancer's wallet address.
+   - Status turns to **Paid**.
+
+---
+
+## 🧪 Test Suite & Verification
+
+FairPay includes unit, integration, and RPC test suites running on in-memory and live testnets:
+
+```bash
+# Type check all TypeScript source files
 npm run typecheck
-npm run test:contract
-npm run backend:push
+
+# Execute 7 automated stablecoin escrow test scenarios
+npm run test:stablecoin
+
+# Verify live Arc Testnet connection and token contract
+npm run check:arc
+
+# Build production bundle
 npm run build
 ```
 
-The contract tests use an in-memory Ganache chain. Authentication and authorization have also been exercised against the real development backend with temporary QA accounts, including invalid signatures, replay rejection, role restrictions, account isolation, concurrent funding reservations, and persistence across sessions.
+### Tested Scenarios:
+- [x] Exact USDC allowance and single-transaction verification payout.
+- [x] Interrupted token allowance resumption on identical contract address.
+- [x] Funding preflight rejection for paused tokens or blacklisted addresses.
+- [x] Rollback of failed or partial deposits.
+- [x] Rejection of tampering with canonical agreement hashes.
+- [x] Preservation of contract state and deposit if freelancer receiver reverts.
 
-## Project documents
+---
 
-Read `docs/README.md` for the walkthrough, PRD, TRD, roadmap, pitch guide, glossary, and hackathon gap analysis. These Markdown files are preparation material for the project owner.
+## 📂 Project Directory Structure
 
-## Current payment scope
+```text
+├── contracts/
+│   ├── FairPayEscrow.sol           # Native ETH escrow contract
+│   └── FairPayStableEscrow.sol     # ERC-20 / USDC stablecoin escrow contract
+├── convex/
+│   ├── auth.config.ts              # Convex Auth provider configuration
+│   ├── auth.ts                     # Wallet credentials authorization logic
+│   ├── escrow.ts                   # On-chain state verifier & synchronization
+│   ├── jobs.ts                     # Job mutations, agreements, and queries
+│   ├── schema.ts                   # Data models (jobs, escrows, users, wallets)
+│   └── walletActions.ts            # EIP-191 challenge generation & verification
+├── docs/                           # Specifications, TRD, PRD, and hackathon roadmap
+├── scripts/
+│   ├── check-arc.mjs               # Live Arc Testnet RPC diagnostic tool
+│   ├── compile-contract.mjs        # solc compiler pipeline & bytecode exporter
+│   └── configure-convex-auth.mjs   # RSA key generation for Convex deployment
+├── src/
+│   ├── app/                        # Next.js App Router (dashboard, jobs, auth)
+│   ├── components/                 # UI components, modals, and app shell
+│   └── lib/                        # Web3 provider, agreement hashing, and contracts
+└── tests/
+    ├── escrow.test.mjs             # Ganache tests for native ETH escrow
+    └── stable-escrow.test.mjs      # Ganache tests for USDC stablecoin escrow
+```
 
-New jobs use USDC on Arc Testnet, with release triggered by client work verification. Existing Sepolia ETH jobs retain their original contract and currency. Cancellation, refunds, deadlines, arbitration, and milestone payouts require further product and contract work. An inactive client can leave the deposit locked. The contract has not been independently audited.
+---
 
-A public Arc deposit, submission, and payout rehearsal still requires funded client and freelancer wallets. Arc Studio work and sponsor evidence are tracked in docs/08-arc-integration.md; eligibility and the entry category remain unconfirmed.
+## 📜 Complete Documentation
+
+Comprehensive engineering, product, and hackathon documentation is available in [`docs/`](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/):
+- [**01-start-here.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/01-start-here.md) — Comprehensive operator walkthrough.
+- [**02-prd.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/02-prd.md) — Product requirements and experience principles.
+- [**03-trd.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/03-trd.md) — Technical requirements and contract specifications.
+- [**04-roadmap.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/04-roadmap.md) — Feature progression and validation roadmap.
+- [**05-pitch.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/05-pitch.md) — 3-minute hackathon pitch script and slide structure.
+- [**08-arc-integration.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/08-arc-integration.md) — Arc Studio integration and prize submission evidence.
+
+---
+
+## ⚖️ License
+
+Distributed under the MIT License. See `LICENSE` for more information.

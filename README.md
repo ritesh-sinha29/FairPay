@@ -40,32 +40,19 @@ Freelancers routinely face late payments, ghosting, and scope disputes, while cl
 ## 🏗️ Architecture & Technical Flow
 
 ```mermaid
-flowchart LR
-    subgraph Frontend["Client & Freelancer UI (Next.js 16 + shadcn/ui)"]
-        Client[Client Wallet]
-        Freelancer[Freelancer Wallet]
-    end
+flowchart TD
+    Client["Client Wallet"]
+    Freelancer["Freelancer Wallet"]
+    Convex["Convex Backend (EIP-191 Auth & Jobs DB)"]
+    Escrow["FairPayStableEscrow (Arc Testnet USDC)"]
 
-    subgraph Backend["Convex Real-Time Cloud Backend"]
-        Auth[EIP-191 Auth & Roles]
-        JobsDB[(Jobs & Escrows DB)]
-        Verifier[On-Chain State Verifier]
-    end
-
-    subgraph Blockchain["Arc Testnet (Chain ID 5042002)"]
-        USDC[Arc Official USDC Token]
-        Escrow[FairPayStableEscrow Contract]
-    end
-
-    Client -->|1. Create job proposal| JobsDB
-    Freelancer -->|2. Agree to proposal| JobsDB
-    Client -->|3. Approve token allowance| USDC
-    Client -->|4. Deposit payment| Escrow
-    Verifier -->|5. Verify deposit on-chain| Escrow
-    Verifier -->|6. Mark Funded| JobsDB
-    Freelancer -->|7. Deliver & markComplete| Escrow
-    Client -->|8. Verify work & releasePayment| Escrow
-    Escrow -->|9. Instant token payout| Freelancer
+    Client -->|"1. Create proposal"| Convex
+    Freelancer -->|"2. Accept deal"| Convex
+    Client -->|"3. Approve allowance & deposit"| Escrow
+    Escrow -.->|"4. Verify on-chain state"| Convex
+    Freelancer -->|"5. Submit deliverable"| Escrow
+    Client -->|"6. Verify work & release payment"| Escrow
+    Escrow -->|"7. Instant USDC payout"| Freelancer
 ```
 
 ### Escrow State Machine

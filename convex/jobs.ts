@@ -84,6 +84,9 @@ export const create = mutation({
       throw new ConvexError("Describe the job in 20 to 6,000 characters.");
     if (!/^\d{1,60}$/.test(args.amountWei) || BigInt(args.amountWei) <= 0n)
       throw new ConvexError("Enter a positive payment amount.");
+    const targetChainId = args.chainId ?? ARC_TESTNET.chainId;
+    if (![ARC_TESTNET.chainId, 11155111].includes(targetChainId))
+      throw new ConvexError("Unsupported blockchain payment network.");
     return ctx.db.insert("jobs", {
       clientId: client._id,
       freelancerId: freelancer._id,
@@ -92,7 +95,7 @@ export const create = mutation({
       title,
       description,
       amountWei: BigInt(args.amountWei).toString(),
-      chainId: args.chainId ?? ARC_TESTNET.chainId,
+      chainId: targetChainId,
       paymentAsset: args.paymentAsset ?? "USDC",
       paymentTokenAddress: args.paymentTokenAddress,
       tokenDecimals: args.tokenDecimals,

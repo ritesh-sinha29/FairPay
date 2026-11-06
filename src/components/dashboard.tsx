@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatUnits } from "ethers";
 import { paymentNetwork } from "@/lib/payments";
 import {
@@ -9,6 +9,7 @@ import {
   BriefcaseBusiness,
   CircleCheck,
   Clock3,
+  Database,
   Download,
   LockKeyhole,
   Plus,
@@ -17,6 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "./workspace-provider";
 import { StatusBadge } from "./status-badge";
 import { jobUrl } from "@/lib/jobs";
+import { fetchArkivJobs, type ArkivJobEntity } from "@/lib/arkiv";
 
 export function Dashboard({
   view,
@@ -34,6 +37,48 @@ export function Dashboard({
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const isClient = user.role === "client";
+  const [userArkivJobs, setUserArkivJobs] = useState<ArkivJobEntity[]>([]);
+
+  async function loadArkivListings() {
+    if (typeof window === "undefined") return;
+    try {
+      // 1. Fetch live entities directly from Arkiv DB-Chain
+      const res = await fetchArkivJobs({}, user?.walletAddress);
+
+      // 2. Load locally cached entities
+      const raw = localStorage.getItem("fairpay_arkiv_user_entities");
+      const localList: ArkivJobEntity[] = raw ? JSON.parse(raw) : [];
+
+      const combined = [...localList, ...(res.entities || [])];
+      const seen = new Set<string>();
+      const myJobs = combined.filter((item) => {
+        if (!item || !item.title || item.title === "Arkiv Milestone RFP") return false;
+        const key = item.key || item.title;
+        if (seen.has(key)) return false;
+        seen.add(key);
+
+        if (!user?.walletAddress) return true;
+        const w = user.walletAddress.toLowerCase();
+        return (
+          item.clientAddress?.toLowerCase() === w ||
+          item.owner?.toLowerCase() === w ||
+          localList.some((l) => l.key === item.key)
+        );
+      });
+
+      setUserArkivJobs(myJobs);
+    } catch (e) {
+      console.warn("Could not load Arkiv jobs in dashboard:", e);
+    }
+  }
+
+  useEffect(() => {
+    void loadArkivListings();
+  }, [user?.walletAddress, ready]);
+
+  async function handleRefresh() {
+    await Promise.allSettled([refresh(), loadArkivListings()]);
+  }
   const funded = jobs.filter((job) =>
     ["Funded", "Submitted"].includes(job.status),
   );
@@ -62,6 +107,14 @@ export function Dashboard({
     (job) =>
       (filter === "All" || job.status === filter) &&
       `${job.title} ${job.clientName} ${job.freelancerName}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
+  const filteredArkiv = userArkivJobs.filter(
+    (item) =>
+      (filter === "All" || filter === "Open RFP") &&
+      view !== "payments" &&
+      `${item.title} ${item.category} ${item.description}`
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
@@ -104,8 +157,12 @@ export function Dashboard({
     },
     {
       label: "Your jobs",
-      value: String(jobs.length).padStart(2, "0"),
-      detail: isClient ? "Created by you" : "Assigned to you",
+      value: String(jobs.length + (isClient ? userArkivJobs.length : 0)).padStart(2, "0"),
+      detail: isClient
+        ? userArkivJobs.length > 0
+          ? `${jobs.length} agreement(s) · ${userArkivJobs.length} Arkiv RFP(s)`
+          : "Created by you"
+        : "Assigned to you",
       icon: BriefcaseBusiness,
     },
     {
@@ -243,13 +300,70 @@ export function Dashboard({
           </Card>
         </div>
       )}
+      {isClient && userArkivJobs.length > 0 && view !== "payments" && (
+        <section className="mt-8 rounded-xl border border-blue-950/40 bg-blue-950/10 p-5">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Database size={16} className="text-blue-400" />
+                <h2 className="text-sm font-semibold text-white">Your Arkiv DB-Chain RFPs</h2>
+                <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-300 text-[10px]">
+                  {userArkivJobs.length} Live on Rabdi
+                </Badge>
+              </div>
+              <p className="mt-1 text-[11px] text-neutral-400">
+                Open decentralized milestone RFPs indexed on Arkiv. Freelancers can view and submit proposals.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-neutral-800 self-start sm:self-auto">
+              <Link href="/arkiv">
+                Manage on Arkiv Board <ArrowRight size={13} />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {userArkivJobs.map((item) => (
+              <div
+                key={item.key}
+                className="rounded-lg border border-neutral-800/80 bg-neutral-900/60 p-4 space-y-2.5 hover:border-neutral-700 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="text-xs font-semibold text-white line-clamp-1">{item.title}</h4>
+                  <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Open for bids
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-400 line-clamp-2 leading-relaxed">
+                  {item.description || "Milestone deliverable requirements on Arkiv DB-Chain."}
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-neutral-800/60 text-[11px]">
+                  <span className="font-mono text-emerald-300 font-semibold">
+                    {item.budgetEth} ETH / USDC
+                  </span>
+                  <Link
+                    href="/arkiv"
+                    className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium"
+                  >
+                    View proposals <ArrowRight size={11} />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       <section className="mt-9">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-medium">
-              {view === "payments" ? "Released payments" : "Job agreements"}{" "}
+              {view === "payments"
+                ? "Released payments"
+                : isClient && userArkivJobs.length > 0
+                  ? "Job agreements & RFPs"
+                  : "Job agreements"}{" "}
               <span className="ml-2 text-muted-foreground">
-                {records.length}
+                {records.length + (view !== "payments" ? userArkivJobs.length : 0)}
               </span>
             </h2>
             <p className="mt-2 text-[11px] text-muted-foreground">
@@ -260,7 +374,7 @@ export function Dashboard({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => void refresh()}
+            onClick={() => void handleRefresh()}
             disabled={refreshing}
           >
             <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
@@ -272,14 +386,23 @@ export function Dashboard({
             <TabsList>
               {(view === "payments"
                 ? ["All"]
-                : ["All", "Draft", "Funded", "Submitted", "Paid"]
+                : [
+                    "All",
+                    "Draft",
+                    "Funded",
+                    "Submitted",
+                    "Paid",
+                    ...(userArkivJobs.length > 0 ? ["Open RFP"] : []),
+                  ]
               ).map((status) => (
                 <TabsTrigger key={status} value={status} className="text-xs">
                   {status === "Draft"
                     ? "Agreement"
                     : status === "Submitted"
                       ? "In review"
-                      : status}
+                      : status === "Open RFP"
+                        ? "Arkiv RFPs"
+                        : status}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -353,9 +476,76 @@ export function Dashboard({
                   </td>
                 </tr>
               ))}
+              {filteredArkiv.map((item) => (
+                <tr
+                  key={item.key || item.title}
+                  className="bg-blue-950/5 hover:bg-blue-950/15 transition-colors"
+                >
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <Database size={13} className="text-blue-400 shrink-0" />
+                      <Link
+                        className="font-medium hover:text-blue-300"
+                        href="/arkiv"
+                      >
+                        {item.title}
+                      </Link>
+                      <Badge
+                        variant="outline"
+                        className="border-blue-500/30 bg-blue-500/10 text-blue-300 text-[10px] py-0 px-1.5"
+                      >
+                        Arkiv RFP
+                      </Badge>
+                    </div>
+                  </td>
+                  <td className="text-muted-foreground italic text-xs">
+                    Open for bids
+                  </td>
+                  <td className="whitespace-nowrap font-medium text-emerald-400">
+                    {item.budgetEth}{" "}
+                    <span className="text-muted-foreground font-normal">
+                      ETH
+                    </span>
+                  </td>
+                  <td>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border border-blue-500/30 bg-blue-500/10 text-blue-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                      Open RFP
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap text-muted-foreground">
+                    {new Date(item.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </td>
+                  <td className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <a
+                        href={item.txHash ? `https://rabdi.explorer.arkiv.network/tx/${item.txHash}` : `https://rabdi.explorer.arkiv.network/entity/${item.key}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center h-7 px-2 rounded border border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:text-white text-[10px] gap-1 transition-colors"
+                        title="View onchain log in Arkiv Explorer"
+                      >
+                        <span>Log</span>
+                        <ArrowUpRight size={12} />
+                      </a>
+                      <Button asChild variant="ghost" size="icon-sm">
+                        <Link
+                          href="/arkiv"
+                          aria-label={`Open Arkiv RFP ${item.title}`}
+                        >
+                          <ArrowRight size={14} />
+                        </Link>
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-          {(!ready || !filtered.length) && (
+          {(!ready || (!filtered.length && !filteredArkiv.length)) && (
             <div className="px-5 py-14 text-center">
               <BriefcaseBusiness
                 className="mx-auto mb-4 text-muted-foreground"

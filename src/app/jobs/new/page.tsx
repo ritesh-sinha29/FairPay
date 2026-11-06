@@ -140,6 +140,12 @@ export default function NewJobPage() {
           `Enter a positive ${activeSymbol} payment amount (e.g. 25.00).`,
         );
 
+      const decimalsCount = amount.includes(".") ? amount.split(".")[1].length : 0;
+      if (decimalsCount > activeDecimals)
+        throw new Error(
+          `${activeSymbol} allows at most ${activeDecimals} decimal places.`,
+        );
+
       const parsedWei = parseUnits(amount, activeDecimals);
       if (parsedWei <= 0n)
         throw new Error(`Enter a positive payment amount.`);
@@ -509,32 +515,56 @@ export default function NewJobPage() {
                   Simultaneously stores an open milestone RFP on the Arkiv Rabdi testnet. Stale or abandoned proposals automatically prune off the public index when the deadline expires.
                 </p>
 
-                {syncToArkiv && (
-                  <div className="pt-2 border-t border-blue-500/10 space-y-1.5">
-                    <Label className="text-[11px] text-neutral-300 flex items-center justify-between">
-                      <span>Bidding Window Expiration</span>
-                      <Clock className="w-3 h-3 text-blue-400" />
-                    </Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {getExpirationOptions().slice(0, 3).map((opt) => (
+                {(jobMode === "open" || syncToArkiv) && (
+                  <div className="pt-2 border-t border-blue-500/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[11px] text-neutral-300 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-blue-400" />
+                        <span>Auto-Deletion Duration</span>
+                      </Label>
+                      <span className="text-[11px] text-emerald-400 font-medium">
+                        Expires in {arkivDays} {arkivDays === 1 ? "day" : "days"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {[1, 3, 7, 14, 30].map((daysVal) => (
                         <button
-                          key={opt.value}
+                          key={daysVal}
                           type="button"
-                          onClick={() => setArkivDays(opt.value)}
-                          className={`p-2 rounded-lg border text-left transition-all ${
-                            arkivDays === opt.value
-                              ? "bg-blue-600/20 border-blue-500 text-white font-medium"
-                              : "bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-neutral-200"
+                          onClick={() => setArkivDays(daysVal)}
+                          className={`py-1.5 px-2 rounded-md border text-center transition-all text-xs ${
+                            arkivDays === daysVal
+                              ? "bg-blue-600 border-blue-500 text-white font-semibold"
+                              : "bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700"
                           }`}
                         >
-                          <div className="text-xs font-semibold">
-                            {opt.value} {opt.value === 1 ? "Day" : "Days"}
-                          </div>
-                          <div className="text-[10px] text-neutral-500 truncate">
-                            {opt.value === 7 ? "Default" : "Sprint"}
-                          </div>
+                          {daysVal}d
                         </button>
                       ))}
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <div className="relative flex-1">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={90}
+                          value={arkivDays}
+                          onChange={(e) => {
+                            const val = Math.max(1, Math.min(90, Number(e.target.value) || 1));
+                            setArkivDays(val);
+                          }}
+                          placeholder="Custom days (1-90)"
+                          className="bg-neutral-900/70 border-neutral-800 text-xs text-white h-8.5 pr-12"
+                        />
+                        <span className="absolute right-3 top-2 text-[11px] text-neutral-400 pointer-events-none">
+                          Days
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-neutral-500 shrink-0">
+                        (Custom 1-90 days)
+                      </span>
                     </div>
                   </div>
                 )}

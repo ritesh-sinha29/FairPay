@@ -23,7 +23,16 @@ export const issue = internalMutation({
       throw new ConvexError(
         "Please wait a moment before requesting another signature.",
       );
-    for (const challenge of previous) await ctx.db.delete(challenge._id);
+    const active = previous.filter((challenge) => challenge.expiresAt > Date.now());
+    if (active.length >= 5)
+      throw new ConvexError(
+        "Too many pending signature requests. Please complete or wait for them to expire.",
+      );
+    for (const challenge of previous) {
+      if (challenge.expiresAt <= Date.now()) {
+        await ctx.db.delete(challenge._id);
+      }
+    }
     const existing = await ctx.db
       .query("users")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.address))
@@ -54,6 +63,13 @@ export const consume = internalMutation({
         "Your signature request expired or was already used. Please try again.",
       );
     await ctx.db.delete(args.id);
+    const remaining = await ctx.db
+      .query("walletChallenges")
+      .withIndex("by_address", (q) => q.eq("address", challenge.address))
+      .collect();
+    for (const c of remaining) {
+      await ctx.db.delete(c._id);
+    }
     return challenge;
   },
 });

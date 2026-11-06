@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAuthenticatedNextjs } from "@convex-dev/auth/nextjs/server";
 import {
   createWalletClient,
   defineSchema,
@@ -9,7 +10,7 @@ import {
   ExpirationTime,
 } from "@arkiv-network/sdk";
 import { rabdi } from "@arkiv-network/sdk/chains";
-import { http } from "viem";
+import { http, isAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
 const ArkivJobSchema = defineSchema({
@@ -24,8 +25,21 @@ const ArkivJobSchema = defineSchema({
   createdAt: u64().indexed(),
 });
 
+const ALLOWED_CATEGORIES = new Set([
+  "smart-contracts",
+  "frontend",
+  "fullstack",
+  "security-audit",
+  "design",
+]);
+
 export async function POST(request: Request) {
   try {
+    const isAuthed = await isAuthenticatedNextjs();
+    if (!isAuthed) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+    }
+
     const body = await request.json();
     const {
       title,
@@ -37,8 +51,49 @@ export async function POST(request: Request) {
       days = 7,
     } = body;
 
-    if (!title) {
-      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    if (!title || typeof title !== "string" || title.trim().length < 3 || title.trim().length > 160) {
+      return NextResponse.json(
+        { error: "Title must be between 3 and 160 characters." },
+        { status: 400 },
+      );
+    }
+
+    if (!ALLOWED_CATEGORIES.has(category)) {
+      return NextResponse.json(
+        { error: "Invalid category selected." },
+        { status: 400 },
+      );
+    }
+
+    const parsedBudget = Number(budgetEth);
+    if (!Number.isFinite(parsedBudget) || parsedBudget <= 0 || parsedBudget > 100000) {
+      return NextResponse.json(
+        { error: "Budget must be a positive number." },
+        { status: 400 },
+      );
+    }
+
+    const parsedMilestones = Math.floor(Number(milestonesCount));
+    if (!Number.isInteger(parsedMilestones) || parsedMilestones < 1 || parsedMilestones > 20) {
+      return NextResponse.json(
+        { error: "Milestones count must be between 1 and 20." },
+        { status: 400 },
+      );
+    }
+
+    const parsedDays = Math.floor(Number(days));
+    if (!Number.isInteger(parsedDays) || parsedDays < 1 || parsedDays > 90) {
+      return NextResponse.json(
+        { error: "Expiration must be between 1 and 90 days." },
+        { status: 400 },
+      );
+    }
+
+    if (clientAddress && !isAddress(clientAddress)) {
+      return NextResponse.json(
+        { error: "Invalid client Ethereum wallet address." },
+        { status: 400 },
+      );
     }
 
     const accessKey =

@@ -79,23 +79,24 @@ export function buildArkivQuery(filters?: {
   clientAddress?: string;
 }): string {
   const parts: string[] = [];
+  const sanitize = (val: string) => val.replace(/['"\\]/g, "");
 
   if (filters?.status && filters.status !== "all") {
-    parts.push(`status = str('${filters.status}')`);
+    parts.push(`status = str('${sanitize(filters.status)}')`);
   } else {
     parts.push(`status = str('open')`);
   }
 
   if (filters?.category && filters.category !== "all") {
-    parts.push(`category = str('${filters.category}')`);
+    parts.push(`category = str('${sanitize(filters.category)}')`);
   }
 
-  if (filters?.minBudget && filters.minBudget > 0) {
+  if (filters?.minBudget && filters.minBudget > 0 && Number.isFinite(filters.minBudget)) {
     parts.push(`budgetEth >= dec('${filters.minBudget.toFixed(2)}')`);
   }
 
   if (filters?.clientAddress) {
-    parts.push(`clientAddress = addr('${filters.clientAddress}')`);
+    parts.push(`clientAddress = addr('${sanitize(filters.clientAddress)}')`);
   }
 
   return parts.length > 0 ? parts.join(" AND ") : "";
@@ -273,15 +274,21 @@ export async function publishJobToArkiv(data: {
     throw new Error(json.error || "Failed to publish entity to Arkiv DB-Chain");
   }
 
-  // Persist to user session
+  // Persist to user session safely
   if (typeof window !== "undefined") {
-    const existing: ArkivJobEntity[] = JSON.parse(
-      localStorage.getItem("fairpay_arkiv_user_entities") || "[]",
-    );
-    localStorage.setItem(
-      "fairpay_arkiv_user_entities",
-      JSON.stringify([json.entity, ...existing]),
-    );
+    try {
+      const raw = localStorage.getItem("fairpay_arkiv_user_entities");
+      const existing: ArkivJobEntity[] = raw ? JSON.parse(raw) : [];
+      const updated = Array.isArray(existing) ? [json.entity, ...existing] : [json.entity];
+      localStorage.setItem("fairpay_arkiv_user_entities", JSON.stringify(updated));
+    } catch {
+      // Safe fallback if localStorage is unavailable or corrupted
+      try {
+        localStorage.setItem("fairpay_arkiv_user_entities", JSON.stringify([json.entity]));
+      } catch {
+        // QuotaExceededError or disabled cookies/localStorage
+      }
+    }
   }
 
   return json.entity;

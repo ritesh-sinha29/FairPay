@@ -14,6 +14,27 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  if (address && !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    return NextResponse.json(
+      { error: "Invalid Ethereum address format." },
+      { status: 400 }
+    );
+  }
+
+  if (txHash && !/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+    return NextResponse.json(
+      { error: "Invalid transaction hash format." },
+      { status: 400 }
+    );
+  }
+
+  if (![11155111, 5042002].includes(chainId)) {
+    return NextResponse.json(
+      { error: "Unsupported blockchain network." },
+      { status: 400 }
+    );
+  }
+
   try {
     if (txHash) {
       const tx = await fetchBlockscoutTx(chainId, txHash);

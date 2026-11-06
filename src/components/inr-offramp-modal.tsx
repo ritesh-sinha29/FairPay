@@ -82,6 +82,10 @@ export function InrOfframpModal({
             Convert your earned {symbol} directly into Indian Rupees via UPI or IMPS.
             Powered by FIU-IND compliant partners (Onmeta / Transak).
           </DialogDescription>
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-300 flex items-center gap-1.5 mt-2">
+            <Info size={13} className="shrink-0" />
+            <span>Testnet Demo Preview: Simulated off-ramp for evaluation.</span>
+          </div>
         </DialogHeader>
 
         {status === "success" ? (

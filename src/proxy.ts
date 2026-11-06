@@ -13,7 +13,9 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
     pathname === "/" ||
     pathname === "/web" ||
     pathname.startsWith("/web") ||
-    pathname.startsWith("/api") ||
+    pathname === "/api/auth" ||
+    pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/blockscout") ||
     isAuthPage;
 
   const authenticated = await convexAuth.isAuthenticated();
@@ -22,8 +24,11 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   if (isAuthPage && authenticated)
     return nextjsMiddlewareRedirect(request, "/jobs");
 
-  // If not authenticated and trying to access a protected app page, redirect to /web
+  // If not authenticated and trying to access a protected app page or API
   if (!publicRoute && !authenticated) {
+    if (pathname.startsWith("/api")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/web", request.url));
   }
 });

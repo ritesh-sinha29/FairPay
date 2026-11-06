@@ -21,7 +21,7 @@ export const BLOCKSCOUT_NETWORKS: Record<number, { name: string; baseUrl: string
 const DEFAULT_API_KEY =
   process.env.NEXT_PUBLIC_BLOCKSCOUT_API_KEY ||
   process.env.BLOCKSCOUT_API_KEY ||
-  "proapi_eGLUIW2IxlQlmhUUJdz1KZz92CmeGCJWgXnlB2BNsEJWVkJDEYZxPJQ0hg3OC3dm_eLiBzF";
+  "";
 
 export function getBlockscoutBaseUrl(chainId: number): string {
   return BLOCKSCOUT_NETWORKS[chainId]?.baseUrl || "https://eth-sepolia.blockscout.com";
@@ -69,7 +69,8 @@ export async function fetchBlockscoutContract(
     const config = BLOCKSCOUT_NETWORKS[chainId];
     if (!config) return null;
 
-    const url = `${config.apiUrl}/smart-contracts/${address}?apikey=${DEFAULT_API_KEY}`;
+    const queryParam = DEFAULT_API_KEY ? `?apikey=${encodeURIComponent(DEFAULT_API_KEY)}` : "";
+    const url = `${config.apiUrl}/smart-contracts/${address}${queryParam}`;
     const res = await fetch(url, { headers: { Accept: "application/json" }, next: { revalidate: 30 } });
     
     if (!res.ok) {
@@ -106,7 +107,8 @@ export async function fetchBlockscoutTx(
     const config = BLOCKSCOUT_NETWORKS[chainId];
     if (!config) return null;
 
-    const url = `${config.apiUrl}/transactions/${txHash}?apikey=${DEFAULT_API_KEY}`;
+    const queryParam = DEFAULT_API_KEY ? `?apikey=${encodeURIComponent(DEFAULT_API_KEY)}` : "";
+    const url = `${config.apiUrl}/transactions/${txHash}${queryParam}`;
     const res = await fetch(url, { headers: { Accept: "application/json" }, next: { revalidate: 15 } });
 
     if (!res.ok) return null;

@@ -181,13 +181,14 @@ export async function fundJob(
     );
 
   try {
-    if (await token.isBlacklisted(address))
+    const isEscrowBlocked = await token.isBlacklisted(address).catch(() => false);
+    if (isEscrowBlocked)
       throw new Error(
         `${assetSymbol} transfers are blocked for this escrow. Funding stopped.`,
       );
   } catch (err: unknown) {
     const msg = (err as { message?: string }).message || "";
-    if (msg.includes("blocked")) throw err;
+    if (msg.includes("Funding stopped")) throw err;
   }
 
   const escrow = new Contract(address, stableArtifact.abi, signer);

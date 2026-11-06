@@ -1,7 +1,14 @@
 "use node";
 
 import { randomBytes } from "node:crypto";
-import { getAddress, isAddress, verifyMessage } from "ethers";
+import {
+  getAddress,
+  isAddress,
+  verifyMessage,
+  hashMessage,
+  Contract,
+  JsonRpcProvider,
+} from "ethers";
 import { action, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v, ConvexError } from "convex/values";
@@ -65,13 +72,50 @@ export const verify = internalAction({
       throw new ConvexError(
         "Your signature request expired. Please try again.",
       );
-    let signer: string;
+    let isValid = false;
     try {
-      signer = verifyMessage(challenge.message, args.signature).toLowerCase();
+      const signer = verifyMessage(challenge.message, args.signature).toLowerCase();
+      if (signer === challenge.address) {
+        isValid = true;
+      }
     } catch {
-      throw new ConvexError("The wallet signature could not be verified.");
+      // ECDSA verification failed, might be a smart contract wallet (EIP-1271)
     }
-    if (signer !== challenge.address)
+
+    if (!isValid) {
+      try {
+        const hash = hashMessage(challenge.message);
+        const rpcUrl =
+          process.env.SEPOLIA_RPC_URL ||
+          "https://ethereum-sepolia-rpc.publicnode.com";
+        const provider = new JsonRpcProvider(rpcUrl, 11155111, {
+          staticNetwork: true,
+        });
+        try {
+          const code = await provider.getCode(challenge.address);
+          if (code && code !== "0x") {
+            const contract = new Contract(
+              challenge.address,
+              ["function isValidSignature(bytes32,bytes) view returns (bytes4)"],
+              provider,
+            );
+            const magicValue = await contract.isValidSignature(
+              hash,
+              args.signature,
+            );
+            if (magicValue === "0x1626ba7e") {
+              isValid = true;
+            }
+          }
+        } finally {
+          provider.destroy();
+        }
+      } catch {
+        // Not a valid EIP-1271 contract signature
+      }
+    }
+
+    if (!isValid)
       throw new ConvexError(
         "The signature does not match the selected wallet.",
       );

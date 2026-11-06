@@ -50,7 +50,12 @@ export function WorkspaceProvider({
         ]);
         if (active) {
           setAccount((accounts as string[])[0] || "");
-          setChainId(Number(chain));
+          const parsedChain = chain
+            ? typeof chain === "string" && chain.startsWith("0x")
+              ? parseInt(chain, 16)
+              : Number(chain)
+            : null;
+          setChainId(parsedChain && Number.isFinite(parsedChain) ? parsedChain : null);
         }
       } catch {
         if (active) {
@@ -110,14 +115,18 @@ export function WorkspaceProvider({
     if (refreshing) return;
     setRefreshing(true);
     try {
-      const results = await Promise.allSettled(
-        jobs
-          .filter((job) => job.contractAddress || job.fundingHash)
-          .map((job) => synchronize({ jobId: job.id })),
+      const syncJobs = jobs.filter(
+        (job) => job.contractAddress || job.fundingHash,
       );
-      const failed = results.filter(
-        (result) => result.status === "rejected",
-      ).length;
+      const batchSize = 4;
+      let failed = 0;
+      for (let i = 0; i < syncJobs.length; i += batchSize) {
+        const batch = syncJobs.slice(i, i + batchSize);
+        const results = await Promise.allSettled(
+          batch.map((job) => synchronize({ jobId: job.id })),
+        );
+        failed += results.filter((res) => res.status === "rejected").length;
+      }
       notify(
         failed
           ? `${failed} job(s) could not be refreshed. Open a job to check its transaction.`

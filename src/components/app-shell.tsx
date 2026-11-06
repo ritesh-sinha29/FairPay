@@ -8,6 +8,7 @@ import {
   BookOpen,
   BriefcaseBusiness,
   ChevronUp,
+  Compass,
   Database,
   Layers,
   LayoutDashboard,
@@ -72,17 +73,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { signOut } = useAuthActions();
   const path = usePathname();
   const [signingOut, setSigningOut] = useState(false);
-  const navigation = [
-    { title: "Jobs & Escrow", href: "/jobs", icon: BriefcaseBusiness },
-    { title: "Arkiv Board", href: "/arkiv", icon: Database },
-    { title: "Payments", href: "/payments", icon: ArrowDownLeft },
-    { title: "Features", href: "/web#features", icon: Layers },
-  ];
+  const isFreelancer = user.role === "freelancer";
+  const navigation = isFreelancer
+    ? [
+        { title: "My Jobs", href: "/jobs", icon: BriefcaseBusiness },
+        { title: "Explore Jobs", href: "/arkiv", icon: Compass },
+        { title: "Payments", href: "/payments", icon: ArrowDownLeft },
+        { title: "Features", href: "/web#features", icon: Layers },
+      ]
+    : [
+        { title: "Jobs & Escrow", href: "/jobs", icon: BriefcaseBusiness },
+        { title: "Arkiv Board", href: "/arkiv", icon: Database },
+        { title: "Payments", href: "/payments", icon: ArrowDownLeft },
+        { title: "Features", href: "/web#features", icon: Layers },
+      ];
   const title =
     path === "/jobs"
-      ? "Jobs & Escrow"
+      ? isFreelancer
+        ? "My Jobs"
+        : "Jobs & Escrow"
       : path.startsWith("/arkiv")
-        ? "Arkiv Board"
+        ? isFreelancer
+          ? "Explore Jobs"
+          : "Arkiv Board"
         : path.startsWith("/payments")
           ? "Payments"
           : path.startsWith("/account")

@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BlockscoutInspector } from "./blockscout-inspector";
+import { ClientDeliveryReview, type ReviewWalletState } from "./client-delivery-review";
 
 export function JobDetail({ jobId }: { jobId: string }) {
   const { user, jobs, ready, account, chainId, connect, notify } =
@@ -218,10 +219,11 @@ export function JobDetail({ jobId }: { jobId: string }) {
     );
   const client = user.role === "client";
   const busy = !!stage;
-  const matchingWallet = account.toLowerCase() === user.walletAddress;
+  const matchingWallet = account.toLowerCase() === user.walletAddress.toLowerCase();
   const network = paymentNetwork(job.chainId);
   const correctNetwork = chainId === job.chainId;
   const canTransact = matchingWallet && correctNetwork && !busy;
+  const reviewWalletState: ReviewWalletState = !account ? "disconnected" : !matchingWallet ? "wrong-wallet" : !correctNetwork ? "wrong-network" : "ready";
   const pendingFunding =
     job.status === "Draft" &&
     !job.contractAddress &&
@@ -319,13 +321,13 @@ export function JobDetail({ jobId }: { jobId: string }) {
               </div>
             </CardContent>
           </Card>
-          {job.submissionNote && (
+          {(job.submissionNote || (client && ["Funded", "Submitted"].includes(job.status))) && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm">Freelancer’s delivery</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="job-description">{job.submissionNote}</p>
+                <p className="job-description">{job.submissionNote || "The freelancer has not provided delivery notes yet."}</p>
                 {job.deliverableUrl && (
                   <Button asChild variant="outline" size="sm" className="mt-4">
                     <a
@@ -337,10 +339,13 @@ export function JobDetail({ jobId }: { jobId: string }) {
                     </a>
                   </Button>
                 )}
-                <p className="mt-4 text-[10px] leading-6 text-muted-foreground">
-                  Delivery notes are stored in Convex. The job status changes
-                  after the submission transaction is confirmed and verified.
-                </p>
+                {client ? (
+                  <ClientDeliveryReview job={job} walletState={reviewWalletState} networkName={network.name} paymentSymbol={job.paymentAsset ?? network.symbol} busy={busy} onVerify={() => void advance()} onRefresh={() => void sync()} />
+                ) : job.status === "Funded" ? (
+                  <p role="status" className="mt-4 text-xs leading-6 text-amber-400">
+                    Your delivery notes are saved, but submission is not confirmed. Use the “Submit work for review” form below and confirm the transaction in your wallet on {network.name}.
+                  </p>
+                ) : null}
               </CardContent>
             </Card>
           )}
@@ -567,12 +572,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
                           releases the full {job.amount} {network.symbol}{" "}
                           deposit to {job.freelancerName}.
                         </p>
-                        <Button
-                          onClick={() => void advance()}
-                          disabled={!canTransact}
-                        >
-                          <FileCheck2 size={14} /> Verify work & release payment
-                        </Button>
+                        <p className="text-xs leading-6 text-muted-foreground">Use “Verify work &amp; release payment” beside the delivery above.</p>
                       </>
                     ) : (
                       <p className="text-xs leading-7 text-muted-foreground">

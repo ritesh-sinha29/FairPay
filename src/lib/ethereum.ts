@@ -10,6 +10,7 @@ import stableArtifact from "./stable-escrow-artifact.json";
 import type { Job } from "./jobs";
 import { ARC_TESTNET, USDC_ABI, paymentNetwork } from "./payments";
 import { agreementHash } from "./agreement";
+import { walletErrorMessage, type WalletErrorContext } from "./wallet-errors";
 
 interface WalletProvider extends Eip1193Provider {
   on?: (event: string, listener: (...args: unknown[]) => void) => void;
@@ -245,27 +246,6 @@ export async function advanceJob(job: Job, onSent: (hash: string) => void) {
   await confirmed(transaction);
 }
 
-export function readableError(error: unknown): string {
-  const value = error as {
-    code?: string | number;
-    data?: unknown;
-    reason?: string;
-    shortMessage?: string;
-    message?: string;
-  };
-  if (value?.code === 4001 || value?.code === "ACTION_REJECTED")
-    return "Request cancelled in your wallet. You can try again.";
-  if (value?.code === "INSUFFICIENT_FUNDS")
-    return "Your wallet needs the job’s payment asset and enough native currency for network gas.";
-  if (typeof value?.data === "string") return value.data;
-  return (
-    value?.reason ||
-    value?.shortMessage ||
-    value?.message ||
-    "The request failed. Please try again."
-  )
-    .replace(/\[CONVEX[^\]]*\]\s*/g, "")
-    .replace(/\[Request ID:[^\]]*\]\s*/g, "")
-    .replace(/Server Error\s*Uncaught (?:ConvexError|Error):\s*/, "")
-    .split("\n")[0];
+export function readableError(error: unknown, context?: WalletErrorContext): string {
+  return walletErrorMessage(error, context);
 }

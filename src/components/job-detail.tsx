@@ -167,6 +167,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
     if (!job || lock.current) return;
     lock.current = true;
     setError("");
+    let sent = false;
     try {
       if (job.status === "Funded") {
         setStage("Saving your delivery…");
@@ -178,6 +179,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
           : "Confirm work verification in your wallet…",
       );
       await advanceJob(job, (hash) => {
+        sent = true;
         setTransactionHash(hash);
         setStage("Waiting for confirmation…");
       });
@@ -189,7 +191,10 @@ export function JobDetail({ jobId }: { jobId: string }) {
           : "Work verified. Payment released to the freelancer.",
       );
     } catch (error) {
-      setError(readableError(error));
+      setError(readableError(error, { chainId: job.chainId, operation: job.status === "Funded" ? "submit" : "verify" }));
+      // A receipt/RPC read can fail after broadcast. Recover the real contract
+      // state without automatically sending another submission or payout.
+      if (sent) await synchronize({ jobId: job.id }).catch(() => undefined);
     } finally {
       lock.current = false;
       setStage("");

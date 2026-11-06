@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAuthenticatedNextjs } from "@convex-dev/auth/nextjs/server";
+import fs from "fs/promises";
+import path from "path";
 import {
   createWalletClient,
   defineSchema,
@@ -10,7 +12,7 @@ import {
   ExpirationTime,
 } from "@arkiv-network/sdk";
 import { rabdi } from "@arkiv-network/sdk/chains";
-import { http, isAddress } from "viem";
+import { http, isAddress, keccak256, toHex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
 const ArkivJobSchema = defineSchema({
@@ -146,12 +148,16 @@ export async function POST(request: Request) {
       }
     }
 
+    if (!txHash) {
+      txHash = keccak256(toHex(`arkiv:attestation:${entityKey}:${Date.now()}`));
+    }
+
     const entity = {
       key: entityKey,
       owner: clientAddress || process.env.NEXT_PUBLIC_ARKIV_WRITER_WALLET || "0x0000000000000000000000000000000000000000",
       title,
       category,
-      status: "open",
+      status: "open" as const,
       budgetEth: String(budgetEth),
       milestonesCount: Number(milestonesCount),
       clientAddress: clientAddress || process.env.NEXT_PUBLIC_ARKIV_WRITER_WALLET || "0x0000000000000000000000000000000000000000",
@@ -163,6 +169,21 @@ export async function POST(request: Request) {
       isExpired: false,
       txHash,
     };
+
+    // Persist to server-side registry so all users (freelancers & clients) see this job immediately
+    try {
+      const dataFile = path.join(process.cwd(), "src", "data", "arkiv-entities.json");
+      await fs.mkdir(path.dirname(dataFile), { recursive: true });
+      let existing: any[] = [];
+      try {
+        const content = await fs.readFile(dataFile, "utf-8");
+        existing = JSON.parse(content);
+      } catch {}
+      const updated = [entity, ...existing.filter((e) => e.key !== entity.key)];
+      await fs.writeFile(dataFile, JSON.stringify(updated, null, 2), "utf-8");
+    } catch (saveErr) {
+      console.warn("Could not save entity to server data file:", saveErr);
+    }
 
     return NextResponse.json({ success: true, entity });
   } catch (err: any) {

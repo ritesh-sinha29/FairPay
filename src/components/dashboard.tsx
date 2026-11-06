@@ -342,10 +342,10 @@ export function Dashboard({
                     {item.budgetEth} ETH / USDC
                   </span>
                   <Link
-                    href="/arkiv"
+                    href={`/arkiv/${encodeURIComponent(item.key)}`}
                     className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium"
                   >
-                    View proposals <ArrowRight size={11} />
+                    View agreement <ArrowRight size={11} />
                   </Link>
                 </div>
               </div>
@@ -486,7 +486,7 @@ export function Dashboard({
                       <Database size={13} className="text-blue-400 shrink-0" />
                       <Link
                         className="font-medium hover:text-blue-300"
-                        href="/arkiv"
+                        href={`/arkiv/${encodeURIComponent(item.key)}`}
                       >
                         {item.title}
                       </Link>
@@ -533,7 +533,7 @@ export function Dashboard({
                       </a>
                       <Button asChild variant="ghost" size="icon-sm">
                         <Link
-                          href="/arkiv"
+                          href={`/arkiv/${encodeURIComponent(item.key)}`}
                           aria-label={`Open Arkiv RFP ${item.title}`}
                         >
                           <ArrowRight size={14} />

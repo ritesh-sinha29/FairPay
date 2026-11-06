@@ -170,6 +170,10 @@ export default function ArkivBoardPage() {
 
   async function handleCreateJob(e: React.FormEvent) {
     e.preventDefault();
+    if (user?.role !== "client") {
+      toast.error("Only client accounts can post jobs.");
+      return;
+    }
     if (!newTitle.trim()) {
       toast.error("Please enter a title");
       return;
@@ -591,8 +595,13 @@ export default function ArkivBoardPage() {
                           </div>
 
                           {/* Title */}
-                          <h3 className="text-base font-semibold text-white leading-snug">
-                            {job.title}
+                          <h3 className="text-base font-semibold leading-snug">
+                            <Link
+                              href={`/arkiv/${encodeURIComponent(job.key)}`}
+                              className="text-white hover:text-blue-300 transition-colors"
+                            >
+                              {job.title}
+                            </Link>
                           </h3>
 
                           {/* Description */}

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { isAddress, parseUnits } from "ethers";
@@ -69,6 +69,13 @@ export default function NewJobPage() {
   const [arkivDays, setArkivDays] = useState(7);
   const [jobMode, setJobMode] = useState<"open" | "direct">("open");
 
+  useEffect(() => {
+    if (user && user.role === "freelancer") {
+      notify("Only clients can create or post jobs. Freelancers can explore and apply on Explore Jobs.");
+      router.replace("/arkiv");
+    }
+  }, [user, router, notify]);
+
   const selectedPreset: TokenPreset | undefined = SUPPORTED_PAYMENT_TOKENS.find(
     (item) => item.id === selectedAssetId,
   );
@@ -98,6 +105,9 @@ export default function NewJobPage() {
     setError("");
     setBusy(true);
     try {
+      if (user?.role !== "client") {
+        throw new Error("Only client accounts can create or post jobs.");
+      }
       if (!title.trim()) throw new Error("Please enter a job title.");
       if (description.trim().length < 20)
         throw new Error("Describe the job in at least 20 characters.");

@@ -1,0 +1,37 @@
+[
+  {
+    "key": "0xb2fefc4ac1b0cf097ad6f62837987abecf79a957a02e64627885b54203e0ddc",
+    "owner": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "title": "Design a logo",
+    "category": "design",
+    "status": "open",
+    "budgetEth": "5.0",
+    "milestonesCount": 2,
+    "clientAddress": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "tags": ["design", "arkiv", "escrow"],
+    "description": "Design a modern Web3 brand identity and vector logo for milestone escrow protocol.",
+    "createdAt": 1730906210000,
+    "expiresAt": 1732115810000,
+    "remainingHours": 336,
+    "isExpired": false,
+    "txHash": "0xe142a8c10e9c7ce3c14c13365371b3758ebab2edf987f62c1a4e10581984bc64"
+  },
+  {
+    "key": "0x7a31f9b8c2d1e04fa8b5329c017ef6a5b48c12fc2fa41a85b25b738870838124",
+    "owner": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "title": "webpage development",
+    "category": "frontend",
+    "status": "open",
+    "budgetEth": "1.0",
+    "milestonesCount": 2,
+    "clientAddress": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "tags": ["frontend", "arkiv", "escrow"],
+    "description": "Build responsive Next.js frontend milestone components integrated with smart contracts.",
+    "createdAt": 1730905800000,
+    "expiresAt": 1731510600000,
+    "remainingHours": 168,
+    "isExpired": false,
+    "txHash": "0x8f2d59a3c10e9c7ce3c14c13365371b3758ebab2edf987f62c1a4e10581984ab12"
+  }
+]
+

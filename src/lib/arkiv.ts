@@ -120,12 +120,13 @@ export async function fetchArkivJobs(
     ? `SELECT * WHERE ${queryStr} ORDER BY expiresAt ASC`
     : "SELECT * ORDER BY expiresAt ASC";
 
+  let liveEntities: ArkivJobEntity[] = [];
   try {
     const client = getArkivPublicClient();
     const result = await client.query(queryStr, { limit: 50 });
 
     if (result && Array.isArray(result.entities)) {
-      const liveEntities: ArkivJobEntity[] = result.entities
+      liveEntities = result.entities
         .map((e: any) => {
           // Extract actual title from Arkiv entity attribute
           const rawTitle =
@@ -206,18 +207,45 @@ export async function fetchArkivJobs(
           };
         })
         .filter((item): item is ArkivJobEntity => item !== null);
-
-      return { entities: liveEntities, rawQuery: fullSql, source: "arkiv-live" };
     }
   } catch (err) {
     console.warn("Arkiv live query error:", err);
   }
 
-  // When no entities are present on testnet, return an empty list
+  // Fetch server-persisted entities (synced across all clients & freelancers)
+  let serverEntities: ArkivJobEntity[] = [];
+  if (typeof window !== "undefined") {
+    try {
+      const sRes = await fetch("/api/arkiv/entities");
+      if (sRes.ok) {
+        const sJson = await sRes.json();
+        if (Array.isArray(sJson.entities)) {
+          serverEntities = sJson.entities;
+        }
+      }
+    } catch (sErr) {
+      console.warn("Could not fetch server entities:", sErr);
+    }
+  }
+
+  const seen = new Set<string>();
+  const combined: ArkivJobEntity[] = [];
+  for (const item of [...(liveEntities || []), ...serverEntities]) {
+    if (!item || !item.key || seen.has(item.key)) continue;
+    seen.add(item.key);
+
+    // Apply in-memory filters
+    if (filters?.category && filters.category !== "all" && item.category !== filters.category) continue;
+    if (filters?.status && filters.status !== "all" && item.status !== filters.status) continue;
+    if (filters?.minBudget && filters.minBudget > 0 && parseFloat(item.budgetEth) < filters.minBudget) continue;
+
+    combined.push(item);
+  }
+
   return {
-    entities: [],
+    entities: combined,
     rawQuery: fullSql,
-    source: "arkiv-empty",
+    source: combined.length > 0 ? "arkiv-live" : "arkiv-empty",
   };
 }
 

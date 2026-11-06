@@ -13,7 +13,8 @@
     "backend:push": "convex dev --once",
     "backend:auth": "node scripts/configure-convex-auth.mjs",
     "test:stablecoin": "node --test tests/stable-escrow.test.mjs",
-    "check:arc": "node scripts/check-arc.mjs"
+    "check:arc": "node scripts/check-arc.mjs",
+    "contracts:deploy": "node scripts/deploy-contract.mjs"
   },
   "dependencies": {
     "@auth/core": "^0.41.1",

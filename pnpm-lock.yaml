@@ -14,6 +14,9 @@ importers:
       '@convex-dev/auth':
         specifier: ^0.0.96
         version: 0.0.96(@auth/core@0.41.3)(convex@1.49.0(bufferutil@4.0.7)(react@19.3.1)(utf-8-validate@6.0.3))(react@19.3.1)
+      '@openzeppelin/contracts':
+        specifier: 5.4.0
+        version: 5.4.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -63,6 +66,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.0
         version: 19.3.0(@types/react@19.3.0)
+      esbuild:
+        specifier: 0.27.0
+        version: 0.27.0
       ganache:
         specifier: ^7.9.2
         version: 7.9.2
@@ -748,6 +754,9 @@ packages:
 
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
+
+  '@openzeppelin/contracts@5.4.0':
+    resolution: {integrity: sha512-eCYgWnLg6WO+X52I16TZt8uEjbtdkgLC0SUX/xnAksjjrQI4Xfn4iBRoI5j55dmlOhDv1Y7BoR3cU7e3WWhC6A==}
 
   '@oslojs/asn1@1.0.0':
     resolution: {integrity: sha512-zw/wn0sj0j0QKbIXfIlnEcTviaCzYOY3V5rAyjR6YtOByFtJiT574+8p9Wlach0lZH9fddD4yb9laEAIl4vXQA==}
@@ -3899,6 +3908,8 @@ snapshots:
       outvariant: 1.4.3
 
   '@open-draft/until@2.1.0': {}
+
+  '@openzeppelin/contracts@5.4.0': {}
 
   '@oslojs/asn1@1.0.0':
     dependencies:

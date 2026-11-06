@@ -108,7 +108,7 @@ export function BlockscoutInspector({
                 </div>
                 <div className="flex justify-between">
                   <span>Block Height:</span>
-                  <span className="font-mono text-foreground">{data.tx.blockNumber || "Confirmed"}</span>
+                  <span className="font-mono text-foreground">{data.tx.blockNumber || "Unavailable"}</span>
                 </div>
                 {data.tx.fee && (
                   <div className="flex justify-between">
@@ -123,8 +123,8 @@ export function BlockscoutInspector({
               <>
                 <div className="flex justify-between">
                   <span>Contract Verified:</span>
-                  <span className="flex items-center gap-1 font-medium text-emerald-400">
-                    <CheckCircle2 size={12} /> {data.contract.isVerified ? "Verified (OpenZeppelin)" : "Bytecode Matched"}
+                  <span className={`flex items-center gap-1 font-medium ${data.contract.isVerified ? "text-emerald-400" : "text-muted-foreground"}`}>
+                    {data.contract.isVerified && <CheckCircle2 size={12} />} {data.contract.isVerified ? "Verified" : "Not verified"}
                   </span>
                 </div>
                 {data.contract.txCount !== undefined && (

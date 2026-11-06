@@ -155,8 +155,11 @@ export function WorkspaceProvider({
     </Context.Provider>
   );
 }
+export function useOptionalWorkspace() {
+  return useContext(Context);
+}
 export function useWorkspace() {
-  const context = useContext(Context);
+  const context = useOptionalWorkspace();
   if (!context) throw new Error("An authenticated workspace is required.");
   return context;
 }

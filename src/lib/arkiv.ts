@@ -1,15 +1,10 @@
 import {
-  createPublicClient,
   defineSchema,
   str,
   dec,
   u64,
   addr,
-  ExpirationTime,
 } from "@arkiv-network/sdk";
-import { rabdi } from "@arkiv-network/sdk/chains";
-import { http } from "viem";
-import seedEntities from "@/data/arkiv-entities.json";
 
 // Configuration loaded strictly from environment variables
 export const ARKIV_CHAIN_ID = Number(
@@ -19,14 +14,6 @@ export const ARKIV_CHAIN_ID = Number(
 export const ARKIV_EXPLORER_URL =
   process.env.NEXT_PUBLIC_ARKIV_EXPLORER_URL ||
   "https://rabdi.explorer.arkiv.network";
-
-export const ARKIV_ACCESS_KEY =
-  process.env.NEXT_PUBLIC_ARKIV_ACCESS_KEY ||
-  process.env.ARKIV_ACCESS_KEY ||
-  "";
-
-export const ARKIV_WRITER_WALLET =
-  process.env.NEXT_PUBLIC_ARKIV_WRITER_WALLET || "";
 
 // 1. Schema Definition for Ephemeral Escrow Milestone RFPs on Arkiv DB-Chain
 export const ArkivJobSchema = defineSchema("fairpay_jobs", {
@@ -87,12 +74,14 @@ export interface ArkivProposalEntity {
   key?: string;
 }
 
-// Arkiv Public Client for Gas-Free Reads & SQL-Like Queries
-export function getArkivPublicClient() {
-  return createPublicClient({
-    chain: rabdi({ accessKey: ARKIV_ACCESS_KEY }),
-    transport: http(),
-  });
+export type ArkivJobSource = "arkiv-live" | "arkiv-empty";
+
+// SDK system times are block heights, not Unix timestamps.
+export function arkivBlockTimestamp(
+  block: bigint | number,
+  timing: { currentBlock: bigint; currentBlockTime: number; blockDuration: number },
+) {
+  return (timing.currentBlockTime + Number(BigInt(block) - timing.currentBlock) * timing.blockDuration) * 1000;
 }
 
 // Helper to construct Arkiv SQL-like filter string
@@ -102,12 +91,14 @@ export function buildArkivQuery(filters?: {
   minBudget?: number;
   clientAddress?: string;
 }): string {
-  const parts: string[] = [];
+  // Existing jobs were written through an unnamed schema. Match their indexed
+  // FairPay fields as well, rather than excluding them with a new schema tag.
+  const parts: string[] = ["EXISTS(clientAddress)", "EXISTS(budgetEth)"];
   const sanitize = (val: string) => val.replace(/['"\\]/g, "");
 
   if (filters?.status && filters.status !== "all") {
     parts.push(`status = str('${sanitize(filters.status)}')`);
-  } else {
+  } else if (filters?.status !== "all") {
     parts.push(`status = str('open')`);
   }
 
@@ -126,236 +117,40 @@ export function buildArkivQuery(filters?: {
   return parts.length > 0 ? parts.join(" AND ") : "*";
 }
 
-// Fetch live jobs directly from Arkiv DB-Chain
+// Reads always use server-side Arkiv RPC. Network failures never substitute data.
+async function readArkivResponse(path: string) {
+  const response = await fetch(path, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000),
+  });
+  const json = await response.json();
+  if (!response.ok) throw new Error(json.error || "Arkiv could not be reached. Please try again.");
+  return json;
+}
+
 export async function fetchArkivJobs(
-  filters?: {
-    category?: string;
-    status?: string;
-    minBudget?: number;
-  },
-  writerFallback: string = "",
-): Promise<{
-  entities: ArkivJobEntity[];
-  rawQuery: string;
-  source: "arkiv-live" | "arkiv-empty";
-}> {
-  const queryStr = buildArkivQuery(filters);
-  const fullSql = queryStr
-    ? `SELECT * WHERE ${queryStr} ORDER BY expiresAt ASC`
-    : "SELECT * ORDER BY expiresAt ASC";
-
-  let liveEntities: ArkivJobEntity[] = [];
-
-  // Query Arkiv DB-Chain directly
-  try {
-    const client = getArkivPublicClient();
-    const result = await client.query(queryStr, { limit: 50 });
-
-    if (result && Array.isArray(result.entities)) {
-      const mapped: (ArkivJobEntity | null)[] = result.entities
-        .map((e: any) => {
-          const attrs = e.$attributes || {};
-          const rawTitle =
-            attrs.title?.value !== undefined
-              ? attrs.title.value
-              : (e.title?.value !== undefined ? e.title.value : e.title);
-          const rawDesc =
-            attrs.description?.value !== undefined
-              ? attrs.description.value
-              : (e.description?.value !== undefined ? e.description.value : e.description);
-
-          if (
-            !rawTitle ||
-            typeof rawTitle !== "string" ||
-            !rawTitle.trim() ||
-            rawTitle === "Arkiv Milestone RFP"
-          ) {
-            return null;
-          }
-
-          const expiresAt = Number(e.$expiresAt || e.expiresAt || 0);
-          const computedHours = Math.round((expiresAt - Date.now()) / (3600 * 1000));
-          const rawStatus =
-            attrs.status?.value !== undefined
-              ? attrs.status.value
-              : (e.status?.value !== undefined ? e.status.value : e.status);
-          const status = (rawStatus as any) || "open";
-
-          // Keep open RFPs active and visible for bidding
-          const remainingHours = computedHours > 0 ? computedHours : (status === "open" ? 168 : 0);
-          if (status !== "open" && remainingHours <= 0) {
-            return null;
-          }
-          const rawCategory =
-            attrs.category?.value !== undefined
-              ? attrs.category.value
-              : (e.category?.value !== undefined ? e.category.value : e.category);
-          const rawBudget =
-            attrs.budgetEth?.value !== undefined
-              ? attrs.budgetEth.value
-              : (e.budgetEth?.value !== undefined ? e.budgetEth.value : e.budgetEth);
-          const rawMilestones =
-            attrs.milestonesCount?.value !== undefined
-              ? attrs.milestonesCount.value
-              : (e.milestonesCount?.value !== undefined ? e.milestonesCount.value : e.milestonesCount);
-          const rawClient =
-            attrs.clientAddress?.value !== undefined
-              ? attrs.clientAddress.value
-              : (e.clientAddress?.value !== undefined ? e.clientAddress.value : e.clientAddress);
-          const rawTags =
-            attrs.tags?.value !== undefined
-              ? attrs.tags.value
-              : (e.tags?.value !== undefined ? e.tags.value : e.tags);
-
-          return {
-            key: e.$key || e.key || "0x...",
-            owner:
-              e.$owner ||
-              e.owner ||
-              rawClient ||
-              ARKIV_WRITER_WALLET ||
-              writerFallback,
-            title: String(rawTitle),
-            category: (rawCategory as any) || "smart-contracts",
-            status: (rawStatus as any) || "open",
-            budgetEth: String(rawBudget || "1.0"),
-            milestonesCount: Number(rawMilestones || 2),
-            clientAddress: String(
-              rawClient || e.$owner || e.owner || ARKIV_WRITER_WALLET || writerFallback,
-            ),
-            tags: Array.isArray(rawTags)
-              ? rawTags
-              : String(rawTags || "escrow")
-                  .split(",")
-                  .filter(Boolean),
-            description: String(
-              rawDesc || "Decentralized milestone escrow listing on Arkiv",
-            ),
-            createdAt: Number(e.$createdAt || e.createdAt || Date.now()),
-            expiresAt,
-            remainingHours,
-            isExpired: false,
-            txHash: e.txHash,
-          };
-        });
-      liveEntities = mapped.filter((item): item is ArkivJobEntity => item !== null);
-    }
-  } catch (err) {
-    console.warn("Arkiv live query error:", err);
-  }
-
-  // Fetch server entities synced with Arkiv DB-Chain
-  let serverEntities: ArkivJobEntity[] = [];
-  if (typeof window !== "undefined") {
-    try {
-      const sRes = await fetch("/api/arkiv/entities");
-      if (sRes.ok) {
-        const sJson = await sRes.json();
-        if (Array.isArray(sJson.entities)) {
-          serverEntities = sJson.entities;
-        }
-      }
-    } catch (sErr) {
-      console.warn("Could not fetch server entities:", sErr);
-    }
-  }
-
-  // Seed fallback
-  if (serverEntities.length === 0 && Array.isArray(seedEntities)) {
-    serverEntities = seedEntities as ArkivJobEntity[];
-  }
-
-  const seen = new Set<string>();
-  const combined: ArkivJobEntity[] = [];
-  for (const item of [...liveEntities, ...serverEntities]) {
-    if (!item || !item.key || seen.has(item.key.toLowerCase())) continue;
-    seen.add(item.key.toLowerCase());
-
-    if (filters?.category && filters.category !== "all" && item.category !== filters.category) continue;
-    if (filters?.status && filters.status !== "all" && item.status !== filters.status) continue;
-    if (filters?.minBudget && filters.minBudget > 0 && parseFloat(item.budgetEth) < filters.minBudget) continue;
-
-    combined.push(item);
-  }
-
+  filters?: { category?: string; status?: string; minBudget?: number },
+  _writerFallback = "",
+): Promise<{ entities: ArkivJobEntity[]; rawQuery: string; source: ArkivJobSource }> {
+  const params = new URLSearchParams();
+  if (filters?.category) params.set("category", filters.category);
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.minBudget) params.set("minBudget", String(filters.minBudget));
+  const json = await readArkivResponse("/api/arkiv/entities?" + params);
+  if (!Array.isArray(json.entities)) throw new Error("Arkiv returned an invalid listing response.");
   return {
-    entities: combined,
-    rawQuery: fullSql,
-    source: combined.length > 0 ? "arkiv-live" : "arkiv-empty",
+    entities: json.entities,
+    rawQuery: json.rawQuery || buildArkivQuery(filters),
+    source: json.entities.length ? "arkiv-live" : "arkiv-empty",
   };
 }
 
-// Fetch live freelancer proposals directly from Arkiv DB-Chain
 export async function fetchArkivProposals(jobKey?: string): Promise<ArkivProposalEntity[]> {
-  let liveProposals: ArkivProposalEntity[] = [];
-
-  // 1. Query live Arkiv DB-Chain
-  try {
-    const client = getArkivPublicClient();
-    const queryStr = jobKey
-      ? `jobKey = str('${jobKey.replace(/['"\\]/g, "")}')`
-      : "*";
-    const result = await client.query(queryStr, { limit: 50 });
-
-    if (result && Array.isArray(result.entities)) {
-      const mapped: (ArkivProposalEntity | null)[] = result.entities
-        .map((e: any) => {
-          const attrs = e.$attributes || {};
-          const rawJobKey = attrs.jobKey?.value !== undefined ? attrs.jobKey.value : (e.jobKey?.value ?? e.jobKey);
-          const rawFreelancer = attrs.freelancerAddress?.value !== undefined ? attrs.freelancerAddress.value : (e.freelancerAddress?.value ?? e.freelancerAddress);
-          const rawName = attrs.freelancerName?.value !== undefined ? attrs.freelancerName.value : (e.freelancerName?.value ?? e.freelancerName);
-          const rawNote = attrs.proposalNote?.value !== undefined ? attrs.proposalNote.value : (e.proposalNote?.value ?? e.proposalNote);
-          const rawPortfolio = attrs.portfolioLink?.value !== undefined ? attrs.portfolioLink.value : (e.portfolioLink?.value ?? e.portfolioLink);
-          const rawTime = attrs.createdAt?.value !== undefined ? attrs.createdAt.value : (e.$createdAt ?? e.createdAt);
-
-          if (!rawJobKey || !rawNote) return null;
-
-          return {
-            id: e.$key || e.key || `prop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            key: e.$key || e.key,
-            jobKey: String(rawJobKey),
-            freelancerAddress: String(rawFreelancer || "0x0000000000000000000000000000000000000000"),
-            freelancerName: String(rawName || "Freelancer"),
-            proposalNote: String(rawNote),
-            portfolioLink: rawPortfolio ? String(rawPortfolio) : "",
-            createdAt: Number(rawTime || Date.now()),
-            txHash: e.txHash,
-          };
-        });
-      liveProposals = mapped.filter((item): item is ArkivProposalEntity => item !== null);
-    }
-  } catch (err) {
-    console.warn("Arkiv live proposals query error:", err);
-  }
-
-  // 2. Fetch server proposals synced with Arkiv
-  let serverProposals: ArkivProposalEntity[] = [];
-  if (typeof window !== "undefined") {
-    try {
-      const url = jobKey
-        ? `/api/arkiv/proposals?jobKey=${encodeURIComponent(jobKey)}`
-        : "/api/arkiv/proposals";
-      const res = await fetch(url);
-      if (res.ok) {
-        const json = await res.json();
-        if (Array.isArray(json.proposals)) {
-          serverProposals = json.proposals;
-        }
-      }
-    } catch {}
-  }
-
-  const seen = new Set<string>();
-  const combined: ArkivProposalEntity[] = [];
-  for (const item of [...liveProposals, ...serverProposals]) {
-    if (!item) continue;
-    const identifier = item.id || item.key || `${item.jobKey}-${item.freelancerAddress}-${item.proposalNote}`;
-    if (seen.has(identifier.toLowerCase())) continue;
-    seen.add(identifier.toLowerCase());
-    combined.push(item);
-  }
-
-  return combined;
+  const params = new URLSearchParams();
+  if (jobKey) params.set("jobKey", jobKey);
+  const json = await readArkivResponse("/api/arkiv/proposals?" + params);
+  if (!Array.isArray(json.proposals)) throw new Error("Arkiv returned an invalid proposal response.");
+  return json.proposals;
 }
 
 // Publish proposal directly to Arkiv DB-Chain

@@ -75,7 +75,7 @@ export function Hero() {
 
         {/* Subhead (clean neutral) */}
         <p className="text-neutral-300 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-10 font-normal">
-          71% of freelancers face late payments or client ghosting. FairPay secures 100% of milestone USDC in deterministic smart contracts before work begins. Zero platform commission, zero custody risk, instant wallet payout.
+          FairPay secures 100% of milestone USDC in deterministic smart contracts before work begins. Zero platform commission, zero custody risk, instant wallet payout.
         </p>
 
         {/* CTA Buttons (WeKraft black & white styles) */}
@@ -102,9 +102,9 @@ export function Hero() {
 
         {/* Minimalist Metrics Strip with Real Facts */}
         <div className="inline-flex items-center gap-6 px-5 py-2 rounded-full border border-white/10 bg-neutral-950/70 text-[11px] text-neutral-400 backdrop-blur-md">
-          <span className="text-neutral-300">0% Cut vs 15% Upwork</span>
+          <span className="text-neutral-300">0% Platform Fee</span>
           <span className="text-neutral-700">•</span>
-          <span className="text-neutral-300">&lt; 2s Instant Release</span>
+          <span className="text-neutral-300">On-chain Payment Release</span>
           <span className="text-neutral-700">•</span>
           <span className="text-neutral-300">Arkiv TTL Ghost-Job Shield</span>
         </div>

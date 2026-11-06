@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "contracts:compile": "node scripts/compile-contract.mjs",
     "test:contract": "node --test tests/escrow.test.mjs",
+    "test:arkiv": "node --test tests/arkiv.test.mjs",
     "backend:dev": "convex dev",
     "backend:push": "convex dev --once",
     "backend:auth": "node scripts/configure-convex-auth.mjs",

@@ -146,7 +146,6 @@ All credentials and endpoints are loaded via environment variables without hardc
 ```env
 # Arkiv DB-Chain Integration (.env.local)
 NEXT_PUBLIC_ARKIV_ACCESS_KEY=""
-NEXT_PUBLIC_ARKIV_WRITER_WALLET="0xE6E4bde21600b3c973E1CB2c6125C2E46bb96d24"
 ARKIV_PRIVATE_KEY="<your-testnet-private-key>"
 NEXT_PUBLIC_ARKIV_EXPLORER_URL="https://rabdi.explorer.arkiv.network"
 NEXT_PUBLIC_ARKIV_CHAIN_ID=7794095

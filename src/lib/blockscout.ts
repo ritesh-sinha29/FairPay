@@ -54,7 +54,7 @@ export interface BlockscoutTxInfo {
   from: string;
   to: string;
   value: string;
-  fee: string;
+  fee?: string;
   method?: string;
 }
 
@@ -122,7 +122,7 @@ export async function fetchBlockscoutTx(
       from: data.from?.hash || data.from,
       to: data.to?.hash || data.to,
       value: data.value,
-      fee: data.fee?.value || "0",
+      fee: data.fee?.value,
       method: data.method,
     };
   } catch (err) {

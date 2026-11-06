@@ -11,7 +11,9 @@ export function Application({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(api.users.me, isAuthenticated ? {} : "skip");
+  const arkivRoute = path === "/arkiv" || path.startsWith("/arkiv/");
   const publicRoute =
+    arkivRoute ||
     path === "/web" ||
     path.startsWith("/web") ||
     path === "/" ||
@@ -22,7 +24,8 @@ export function Application({ children }: { children: ReactNode }) {
     if (!isLoading && !isAuthenticated && !publicRoute)
       router.replace("/web");
   }, [isAuthenticated, isLoading, publicRoute, router, path]);
-  if (publicRoute) return children;
+  // Anyone can browse Arkiv. Signed-in users retain their workspace and role.
+  if (publicRoute && (!arkivRoute || !isAuthenticated || !profile)) return children;
   if (isLoading || !isAuthenticated || profile === undefined)
     return (
       <div className="auth-loading">

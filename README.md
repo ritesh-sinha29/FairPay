@@ -45,7 +45,7 @@ Freelancers routinely face late payments, ghosting, and scope disputes, while cl
 
 FairPay leverages **Arkiv** as an ephemeral, decentralized DB-chain layer for milestone job postings and Request for Proposals (RFPs).
 
-- **Writer Wallet Address**: `0xE6E4bde21600b3c973E1CB2c6125C2E46bb96d24` (configured in `NEXT_PUBLIC_ARKIV_WRITER_WALLET`)
+- **Writer wallet**: derived from the server signing key. Confirm the actual owner on each live Arkiv record.
 - **Network**: Arkiv Rabdi Testnet (Chain ID: `7794095`)
 - **Block Explorer**: [https://rabdi.explorer.arkiv.network](https://rabdi.explorer.arkiv.network)
 - **Live User-Facing Route**: Accessible in the FairPay portal navigation under **Arkiv Board** (`/arkiv`)
@@ -70,7 +70,7 @@ const activeJobs = await client.query(
 console.log("Active Arkiv Listings:", activeJobs.entities);
 ```
 
-### Arkiv Track Documentation (100% Judging Criteria):
+### Arkiv Track Documentation:
 
 - [`/arkiv/schema.md`](file:///arkiv/schema.md) — Entity definition, indexed fields, and wallet ownership.
 - [`/arkiv/why-arkiv.md`](file:///arkiv/why-arkiv.md) — Rationale: what users lose without Arkiv vs. what stays on EVM.
@@ -182,7 +182,6 @@ SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 
 # Arkiv DB-Chain Integration
 NEXT_PUBLIC_ARKIV_ACCESS_KEY=""
-NEXT_PUBLIC_ARKIV_WRITER_WALLET="0xE6E4bde21600b3c973E1CB2c6125C2E46bb96d24"
 ARKIV_PRIVATE_KEY="<your-testnet-private-key>"
 NEXT_PUBLIC_ARKIV_EXPLORER_URL="https://rabdi.explorer.arkiv.network"
 NEXT_PUBLIC_ARKIV_CHAIN_ID=7794095

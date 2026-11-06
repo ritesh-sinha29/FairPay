@@ -25,5 +25,5 @@
 ### Issue: Vite / Next.js Fast-Refresh Transport Instantiation
 - **Expected**: Calling `createPublicClient({ chain: rabdi({ accessKey }), transport: http() })` inside a React component or server action would cleanly re-use the connection.
 - **What Happened**: Under React strict mode or HMR, multiple rapid queries occasionally triggered rate-limit 429 warnings on the public endpoint.
-- **How We Handled It**: We wrapped the public client in a shared singleton pattern with a resilient verified testnet cache fallback so UI rendering never breaks during judging or offline review.
+- **How We Handled It**: Reads now run through the server with bounded RPC timeouts. Network failures show an unavailable state; they never substitute cached or seed records. Job listings load independently of proposals.
 

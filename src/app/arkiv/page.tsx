@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Database,
@@ -48,17 +48,17 @@ import {
   publishProposalToArkiv,
   ARKIV_CHAIN_ID,
   ARKIV_EXPLORER_URL,
-  ARKIV_WRITER_WALLET,
   type ArkivJobEntity,
   type ArkivProposalEntity,
 } from "@/lib/arkiv";
-import { useWorkspace } from "@/components/workspace-provider";
+import { useOptionalWorkspace } from "@/components/workspace-provider";
 
 export default function ArkivBoardPage() {
-  const { user } = useWorkspace();
+  const user = useOptionalWorkspace()?.user;
   const [entities, setEntities] = useState<ArkivJobEntity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [source, setSource] = useState<"arkiv-live" | "arkiv-empty">("arkiv-empty");
+  const [loadError, setLoadError] = useState("");
+  const requestId = useRef(0);
   const [rawSql, setRawSql] = useState("");
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("open");
@@ -88,14 +88,16 @@ export default function ArkivBoardPage() {
   async function handleProposalSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!applyingJob) return;
+    if (!user?.walletAddress || user.role !== "freelancer") {
+      toast.error("Sign in as a freelancer and connect your wallet to apply.");
+      return;
+    }
     setSubmittingProposal(true);
 
     try {
       const created = await publishProposalToArkiv({
         jobKey: applyingJob.key,
         jobTitle: applyingJob.title,
-        freelancerAddress: user?.walletAddress || "0x...",
-        freelancerName: user?.name || "Freelancer",
         proposalNote,
         portfolioLink,
       });
@@ -111,27 +113,36 @@ export default function ArkivBoardPage() {
     }
   }
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
+    const currentRequest = ++requestId.current;
     setLoading(true);
+    setLoadError("");
     try {
       const jobsRes = await fetchArkivJobs(
         {
           category: category !== "all" ? category : undefined,
-          status: status !== "all" ? status : undefined,
+          status,
           minBudget: minBudget > 0 ? minBudget : undefined,
         },
         user?.walletAddress,
       );
 
-      if (jobsRes && Array.isArray(jobsRes.entities)) {
+      if (currentRequest === requestId.current && Array.isArray(jobsRes.entities)) {
         setEntities(jobsRes.entities);
         setRawSql(jobsRes.rawQuery);
-        setSource(jobsRes.source);
       }
     } catch (jErr) {
       console.warn("Arkiv jobs load error:", jErr);
+      if (currentRequest === requestId.current) {
+        setEntities([]);
+        setLoadError("Could not load listings from Arkiv. Please refresh to try again.");
+      }
+    } finally {
+      if (currentRequest === requestId.current) setLoading(false);
     }
+  }, [category, status, minBudget, user?.walletAddress]);
 
+  const loadProposals = useCallback(async () => {
     try {
       const proposalsList = await fetchArkivProposals();
       if (Array.isArray(proposalsList)) {
@@ -139,14 +150,15 @@ export default function ArkivBoardPage() {
       }
     } catch (pErr) {
       console.warn("Arkiv proposals load error:", pErr);
-    } finally {
-      setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    loadData();
-  }, [category, status, minBudget]);
+    void loadData();
+    return () => { requestId.current += 1; };
+  }, [loadData]);
+
+  useEffect(() => { void loadProposals(); }, [loadProposals]);
 
   function copyText(text: string, label: string) {
     navigator.clipboard.writeText(text);
@@ -192,6 +204,7 @@ export default function ArkivBoardPage() {
 
   return (
     <div className="page-wrap px-4 sm:px-6 lg:px-8 py-6 space-y-8 pb-16 max-w-7xl mx-auto w-full">
+      {!user && <p className="text-sm text-neutral-400">Browse live Arkiv listings. <Link href="/sign-in" className="text-blue-400 underline">Sign in</Link> to post a job or apply.</p>}
       {/* Hero Banner */}
       <div className="relative overflow-hidden rounded-2xl border border-neutral-800 bg-gradient-to-br from-neutral-950 via-neutral-900 to-black p-6 sm:p-8">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -207,7 +220,7 @@ export default function ArkivBoardPage() {
               Explore Open Jobs & Escrow RFPs
             </h1>
             <p className="text-sm text-neutral-400 leading-relaxed">
-              Browse open Web3 milestone projects, inspect verified budgets, and submit proposals or accept work. All listings are time-delimited and cryptographically recorded onchain.
+              Browse open Web3 milestone projects, review proposed budgets, and submit proposals. Listings are recorded on Arkiv with an expiration. A listing does not confirm escrow funding.
             </p>
           </div>
 
@@ -461,6 +474,7 @@ export default function ArkivBoardPage() {
       </div>
 
       {/* Entities Grid */}
+      {loadError && <p role="alert" className="text-sm text-red-400">{loadError}</p>}
       <div className="space-y-4">
         {(() => {
           const filteredEntities = entities.filter((job) => {
@@ -487,7 +501,7 @@ export default function ArkivBoardPage() {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-neutral-400">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Verified Escrow Budgets</span>
+                  <span>Listed project budgets</span>
                 </div>
               </div>
 
@@ -497,7 +511,7 @@ export default function ArkivBoardPage() {
                     <Compass className="w-5 h-5" />
                   </div>
                   <h3 className="text-base font-semibold text-white">
-                    No open jobs match your filters
+                    {loading ? "Loading job listings…" : loadError ? "Listings unavailable" : "No jobs match your filters"}
                   </h3>
                   <p className="text-xs text-neutral-400 max-w-md mx-auto">
                     Try adjusting your search keywords, budget threshold, or category filter to discover more listings.
@@ -626,7 +640,7 @@ export default function ArkivBoardPage() {
                               <span className="truncate">
                                 {job.clientAddress
                                   ? `${job.clientAddress.slice(0, 8)}...${job.clientAddress.slice(-6)}`
-                                  : "Verified Issuer"}
+                                  : "Client address unavailable"}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -963,12 +977,12 @@ export default function ArkivBoardPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-neutral-300">
               <div className="space-y-2 p-3.5 rounded-xl bg-black/40 border border-neutral-800/80">
-                <span className="text-white font-semibold block">1. Writer Wallet Address</span>
+                <span className="text-white font-semibold block">1. On-chain Entity Owners</span>
                 <code className="text-emerald-400 block font-mono text-[11px] break-all">
-                  {ARKIV_WRITER_WALLET || user?.walletAddress || "Configured via NEXT_PUBLIC_ARKIV_WRITER_WALLET"}
+                  {entities.length ? [...new Set(entities.map((job) => job.owner))].join(", ") : "No live listing owners to display"}
                 </code>
                 <p className="text-[11px] text-neutral-400">
-                  All entities are signed and published on Rabdi testnet with this designated wallet.
+                  These addresses come from the live records returned by Arkiv.
                 </p>
               </div>
 

@@ -15,25 +15,25 @@ const defaultFaqs: FAQItem[] = [
     id: "escrow-mechanics",
     question: "How does FairPay protect contractors from client ghosting and non-payment?",
     answer:
-      "Over 71% of freelancers have experienced delayed payment or complete client ghosting. On FairPay, clients must deposit 100% of the agreed milestone funds in native Circle USDC into an Arc Testnet smart contract before any code is committed. Once locked in contract escrow, the client cannot unilaterally retract or charge back funds. When you submit deliverables and the client approves, funds release instantly to your wallet.",
+      "The client and freelancer agree on the work before the client funds the escrow contract. After the freelancer submits the deliverables, the client verifies the work and that transaction releases the agreed payment to the freelancer’s wallet. Payment still depends on client verification; FairPay does not independently judge the work.",
   },
   {
     id: "platform-fees",
     question: "Why does FairPay charge 0% platform fees? What is the catch?",
     answer:
-      "There is no catch. Legacy freelance marketplaces (Upwork, Fiverr) operate massive centralized overhead and extract 10% to 20% from every paycheck, plus 3-5% payment processing fees and paid 'Connects' to pitch. FairPay is a decentralized Web3 protocol: smart contracts handle escrow on Arc Testnet, and Arkiv DB-Chain handles RFP storage. Because there are no middlemen, 100% of the funds go straight to the builder. Users pay only standard network gas (< $0.0002).",
+      "The escrow contract does not deduct a FairPay platform fee from the agreed payment. Blockchain transactions have network fees, which vary. Testnet tokens are used on Arc Testnet.",
   },
   {
     id: "arkiv-ttl",
     question: "How does Arkiv DB-Chain eliminate fake and 'Ghost Jobs'?",
     answer:
-      "On traditional job boards, over 38% of postings are dead listings where clients interview nobody and let posts expire, burning paid Connects without a refund. On FairPay, every RFP is published to Arkiv's decentralized database chain with a native block-lease Time-To-Live (TTL). When the timer expires without an active contract, the listing automatically prunes from the network. Every opportunity you see on FairPay is backed by an active, verifiable budget.",
+      "Each published job has an expiration block on Arkiv. Once that block is reached, Arkiv queries stop returning the listing. A listed budget describes the proposed job; it does not prove that an escrow has been funded.",
   },
   {
     id: "payout-speed",
     question: "How fast do payouts settle compared to traditional platforms?",
     answer:
-      "Immediately (< 2 seconds). Upwork and freelance escrow companies enforce a 5 to 10-day 'security review' hold before clearing funds, followed by 2 to 3 days of bank processing. With FairPay, once a milestone is approved by the client, funds release directly into your self-custody EVM wallet in a single gas-efficient transaction. Zero holds, zero bank delays.",
+      "Client verification and payment release happen in the same smart contract transaction. The payout is confirmed when that transaction is included on the selected network; confirmation time depends on network conditions.",
   },
   {
     id: "custody-risk",

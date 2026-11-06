@@ -33,7 +33,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BlockscoutInspector } from "./blockscout-inspector";
-import { InrOfframpModal } from "./inr-offramp-modal";
 
 export function JobDetail({ jobId }: { jobId: string }) {
   const { user, jobs, ready, account, chainId, connect, notify } =
@@ -378,18 +377,6 @@ export function JobDetail({ jobId }: { jobId: string }) {
                       </p>
                     </div>
                   </div>
-                  {!client && (
-                    <div className="mt-5 border-t border-border/60 pt-4">
-                      <p className="mb-2.5 text-[11px] text-muted-foreground">
-                        Funds are secured in your wallet. Off-ramp directly to your Indian bank:
-                      </p>
-                      <InrOfframpModal
-                        amountUsdc={job.amount}
-                        freelancerAddress={job.freelancer}
-                        symbol={network.symbol}
-                      />
-                    </div>
-                  )}
                 </>
               ) : (
                 <>

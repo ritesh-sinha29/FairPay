@@ -17,7 +17,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useWorkspace } from "./workspace-provider";
+import { useOptionalWorkspace } from "./workspace-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,12 +32,13 @@ import {
   type ArkivJobEntity,
   type ArkivProposalEntity,
 } from "@/lib/arkiv";
-import seedEntities from "@/data/arkiv-entities.json";
 
 export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
-  const { user, notify } = useWorkspace();
+  const workspace = useOptionalWorkspace();
+  const user = workspace?.user;
   const [job, setJob] = useState<ArkivJobEntity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   // Proposal State
   const [proposalNote, setProposalNote] = useState("");
@@ -49,33 +50,25 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
   useEffect(() => {
     async function fetchJob() {
       setLoading(true);
+      setLoadError("");
+      setJob(null);
       try {
         // 1. Fetch directly from Arkiv entity registry API
-        const res = await fetch(`/api/arkiv/entities?key=${encodeURIComponent(entityKey)}`);
+        const res = await fetch(`/api/arkiv/entities?key=${encodeURIComponent(entityKey)}`, { cache: "no-store", signal: AbortSignal.timeout(10000) });
         if (res.ok) {
           const json = await res.json();
           if (json.entity) {
             setJob(json.entity);
-            await loadProposals(json.entity.key);
+            void loadProposals(json.entity.key);
             setLoading(false);
             return;
           }
         }
 
-        // 2. Fallback to bundled seedEntities
-        if (Array.isArray(seedEntities)) {
-          const seedMatch = (seedEntities as ArkivJobEntity[]).find(
-            (e) => e.key.toLowerCase() === entityKey.toLowerCase(),
-          );
-          if (seedMatch) {
-            setJob(seedMatch);
-            await loadProposals(seedMatch.key);
-            setLoading(false);
-            return;
-          }
-        }
+        if (res.status !== 404) throw new Error("Arkiv could not be reached. Please try again.");
       } catch (err) {
         console.warn("Could not load Arkiv entity:", err);
+        setLoadError("Could not load this job from Arkiv. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -96,21 +89,23 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
   async function handleProposalSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!job) return;
+    if (!user?.walletAddress || user.role !== "freelancer") {
+      toast.error("Sign in as a freelancer and connect your wallet to apply.");
+      return;
+    }
     setSubmittingProposal(true);
 
     try {
       const created = await publishProposalToArkiv({
         jobKey: job.key,
         jobTitle: job.title,
-        freelancerAddress: user?.walletAddress || "0x...",
-        freelancerName: user?.name || "Freelancer",
         proposalNote,
         portfolioLink,
       });
 
       setProposals((prev) => [created, ...prev.filter((p) => p.id !== created.id)]);
       setProposalSuccess(true);
-      notify("Proposal submitted to Arkiv DB-Chain!");
+      workspace?.notify("Proposal submitted to Arkiv DB-Chain!");
       toast.success("Proposal published to Arkiv DB-Chain!");
     } catch (err: any) {
       console.error("Proposal submission error:", err);
@@ -145,9 +140,9 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
         </Link>
         <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-8 text-center space-y-4">
           <Database className="mx-auto text-blue-400" size={32} />
-          <h2 className="text-base font-semibold text-white">Listing Not Found</h2>
+          <h2 className="text-base font-semibold text-white">{loadError ? "Listing unavailable" : "Listing Not Found"}</h2>
           <p className="text-xs text-neutral-400 max-w-sm mx-auto">
-            This job listing may have reached its auto-deletion expiration window or was not indexed yet.
+            {loadError || "This job was not found on Arkiv. It may have expired or may not be indexed yet."}
           </p>
           <Button asChild variant="outline" size="sm">
             <Link href="/arkiv">Browse Explore Jobs</Link>
@@ -186,7 +181,7 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
           <div className="flex items-center gap-2 mt-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border border-blue-500/30 bg-blue-500/10 text-blue-300">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              Open for bids
+              {job.status === "open" ? "Open for bids" : job.status}
             </span>
             <span className="text-xs text-neutral-500">
               Created {new Date(job.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
@@ -212,17 +207,15 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
         <div className="space-y-6">
           <Card className="border-neutral-800 bg-neutral-950/70">
             <CardHeader>
-              <CardTitle className="text-sm text-neutral-200">Agreement progress</CardTitle>
+              <CardTitle className="text-sm text-neutral-200">Listing activity</CardTitle>
             </CardHeader>
             <CardContent>
               {/* Step indicator */}
-              <div className="mb-8 grid grid-cols-5 gap-2">
+              <div className="mb-8 grid grid-cols-3 gap-2">
                 {[
                   { label: "1. Published", done: true },
-                  { label: "2. Open Bids", done: true },
+                  { label: `2. ${job.status}`, done: job.status === "open" },
                   { label: "3. Proposal", done: proposals.length > 0 },
-                  { label: "4. Escrow", done: false },
-                  { label: "5. Paid", done: false },
                 ].map((step, idx) => (
                   <div key={step.label} className="text-center">
                     <span
@@ -252,13 +245,13 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
                     Client / Issuer
                   </p>
                   <p className="mt-1 text-xs font-mono text-white truncate">{job.clientAddress}</p>
-                  <p className="text-[11px] text-neutral-500 mt-1">Verified onchain creator</p>
+                  <p className="text-[11px] text-neutral-500 mt-1">Client address recorded in the listing</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-wide text-neutral-400 font-semibold">
-                    Assigned Freelancer
+                    Listing status
                   </p>
-                  <p className="mt-1 text-xs text-blue-400 italic">Open for bids (Decentralized RFP)</p>
+                  <p className="mt-1 text-xs text-blue-400 italic">{job.status === "open" ? "Accepting proposals" : job.status}</p>
                   <p className="text-[11px] text-neutral-500 mt-1">{proposals.length} proposal(s) submitted</p>
                 </div>
               </div>

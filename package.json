@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
-    "build": "npm run contracts:compile && next build",
+    "build": "pnpm run contracts:compile && convex deploy --cmd \"next build\"",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "contracts:compile": "node scripts/compile-contract.mjs",

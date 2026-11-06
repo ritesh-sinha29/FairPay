@@ -1,4 +1,5 @@
-import { Dashboard } from "@/components/dashboard";
+import { Hero } from "@/modules/web/hero";
+
 export default function Page() {
-  return <Dashboard view="overview" />;
+  return <Hero />;
 }

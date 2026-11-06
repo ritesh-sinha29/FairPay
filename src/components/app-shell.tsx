@@ -9,6 +9,7 @@ import {
   BriefcaseBusiness,
   ChevronUp,
   Database,
+  Globe,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -72,21 +73,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const [signingOut, setSigningOut] = useState(false);
   const navigation = [
-    { title: "Overview", href: "/", icon: LayoutDashboard },
-    { title: "Jobs", href: "/jobs", icon: BriefcaseBusiness },
+    { title: "Jobs & Escrow", href: "/jobs", icon: BriefcaseBusiness },
     { title: "Arkiv Board", href: "/arkiv", icon: Database },
     { title: "Payments", href: "/payments", icon: ArrowDownLeft },
+    { title: "Landing Page", href: "/", icon: Globe },
   ];
   const title =
-    path === "/"
-      ? "Overview"
+    path === "/jobs"
+      ? "Jobs & Escrow"
       : path.startsWith("/arkiv")
         ? "Arkiv Board"
         : path.startsWith("/payments")
           ? "Payments"
           : path.startsWith("/account")
             ? "Account"
-            : "Jobs";
+            : path === "/"
+              ? "Landing Page"
+              : "Workspace";
   const mismatch = account && account.toLowerCase() !== user.walletAddress;
   const pageJob = jobs.find((job) => path === jobUrl(job));
   const network = paymentNetwork(pageJob?.chainId ?? ARC_TESTNET.chainId);
@@ -95,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     setSigningOut(true);
     try {
       await signOut();
-      window.location.assign("/sign-in");
+      window.location.assign("/web");
     } catch (error) {
       notify(readableError(error));
       setSigningOut(false);
@@ -107,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar className="border-sidebar-border" collapsible="offcanvas">
         <SidebarHeader className="p-5 flex items-center justify-center">
           <Link
-            href="/"
+            href="/jobs"
             className="flex items-center justify-center gap-2.5 text-2xl font-semibold tracking-tight w-full"
           >
             <FairPayLogo size={32} />

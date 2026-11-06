@@ -12,10 +12,15 @@ export function Application({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(api.users.me, isAuthenticated ? {} : "skip");
   const publicRoute =
-    path.startsWith("/sign-up") || path === "/sign-in" || path === "/auth";
+    path === "/web" ||
+    path.startsWith("/web") ||
+    path === "/" ||
+    path.startsWith("/sign-up") ||
+    path === "/sign-in" ||
+    path === "/auth";
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !publicRoute)
-      router.replace(`/sign-in?returnTo=${encodeURIComponent(path)}`);
+      router.replace("/web");
   }, [isAuthenticated, isLoading, publicRoute, router, path]);
   if (publicRoute) return children;
   if (isLoading || !isAuthenticated || profile === undefined)

@@ -4,20 +4,27 @@ import {
 } from "@convex-dev/auth/nextjs/server";
 import { NextResponse } from "next/server";
 export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+  const pathname = request.nextUrl.pathname;
+  const isAuthPage =
+    pathname === "/sign-in" ||
+    pathname === "/auth" ||
+    pathname.startsWith("/sign-up");
   const publicRoute =
-    request.nextUrl.pathname === "/sign-in" ||
-    request.nextUrl.pathname === "/auth" ||
-    request.nextUrl.pathname.startsWith("/sign-up");
+    pathname === "/" ||
+    pathname === "/web" ||
+    pathname.startsWith("/web") ||
+    pathname.startsWith("/api") ||
+    isAuthPage;
+
   const authenticated = await convexAuth.isAuthenticated();
-  if (publicRoute && authenticated)
-    return nextjsMiddlewareRedirect(request, "/");
+
+  // If already authenticated and on sign-in/sign-up, redirect to app
+  if (isAuthPage && authenticated)
+    return nextjsMiddlewareRedirect(request, "/jobs");
+
+  // If not authenticated and trying to access a protected app page, redirect to /web
   if (!publicRoute && !authenticated) {
-    const url = new URL("/sign-in", request.url);
-    url.searchParams.set(
-      "returnTo",
-      request.nextUrl.pathname + request.nextUrl.search,
-    );
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(new URL("/web", request.url));
   }
 });
 export const config = {

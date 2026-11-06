@@ -75,8 +75,9 @@ export async function GET(request: Request) {
     const all = await readEntities();
     const now = Date.now();
 
-    // Filter unexpired active entities
+    // Filter active listings (keep open RFPs visible for bidding)
     const active = all.filter((e) => {
+      if (e.status === "open") return true;
       const expiresAt = Number(e.expiresAt || 0);
       return !expiresAt || expiresAt > now;
     });

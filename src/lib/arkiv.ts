@@ -171,19 +171,18 @@ export async function fetchArkivJobs(
           }
 
           const expiresAt = Number(e.expiresAt || e.$expiresAt || 0);
-          const remainingHours = Math.max(
-            0,
-            Math.round((expiresAt - Date.now()) / (3600 * 1000)),
-          );
-
-          if (remainingHours <= 0) {
-            return null;
-          }
-
-          const rawCategory =
-            e.category?.value !== undefined ? e.category.value : e.category;
+          const computedHours = Math.round((expiresAt - Date.now()) / (3600 * 1000));
           const rawStatus =
             e.status?.value !== undefined ? e.status.value : e.status;
+          const status = (rawStatus as any) || "open";
+
+          // Keep open RFPs active and visible for bidding
+          const remainingHours = computedHours > 0 ? computedHours : (status === "open" ? 168 : 0);
+          if (status !== "open" && remainingHours <= 0) {
+            return null;
+          }
+          const rawCategory =
+            e.category?.value !== undefined ? e.category.value : e.category;
           const rawBudget =
             e.budgetEth?.value !== undefined
               ? e.budgetEth.value

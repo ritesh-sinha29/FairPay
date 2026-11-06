@@ -11,7 +11,8 @@ export function Application({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(api.users.me, isAuthenticated ? {} : "skip");
-  const publicRoute = path.startsWith("/sign-up") || path === "/sign-in";
+  const publicRoute =
+    path.startsWith("/sign-up") || path === "/sign-in" || path === "/auth";
   useEffect(() => {
     if (!isLoading && !isAuthenticated && !publicRoute)
       router.replace(`/sign-in?returnTo=${encodeURIComponent(path)}`);

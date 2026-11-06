@@ -1,43 +1,101 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
+import { FairPayLogo } from "./fairpay-logo";
 
-export function AuthScreen({ children }: { children: ReactNode }) {
+interface AuthScreenProps {
+  children: ReactNode;
+}
+
+export function AuthScreen({ children }: AuthScreenProps) {
   return (
-    <div className="auth-layout">
-      <aside className="auth-story">
-        <Link
-          href="/sign-in"
-          className="flex items-center gap-3 text-2xl font-semibold tracking-tight"
-        >
-          <span className="brand-mark">
-            <ShieldCheck size={23} />
-          </span>
-          FairPay<span className="text-blue-400">.</span>
-        </Link>
-        <div className="auth-story-content">
-          <p className="eyebrow">WORK WITH A CLEAR AGREEMENT</p>
-          <h1>
-            A funded job.
-            <br />A clear delivery.
-            <br />A fair payment.
-          </h1>
-          <p>
-            Clients set aside the payment before work begins. Freelancers
-            deliver against a shared brief. Both can follow the same agreement.
-          </p>
-          <div className="mt-9 flex items-center gap-3 rounded-lg border border-blue-900/50 bg-blue-950/30 p-4 text-xs text-blue-200">
-            <ShieldCheck size={22} />
-            <span>Escrow payments are authorized by your wallet.</span>
+    <div className="h-screen bg-black text-white selection:bg-white selection:text-black font-sans dark p-5">
+      {/* Main Container */}
+      <div className="flex h-full">
+        {/* LEFT SIDE (65% width) */}
+        <div className="hidden lg:block border border-neutral-800/80 relative overflow-hidden w-[65%] h-full rounded-lg p-8">
+          <div className="absolute z-10 -top-20 left-1/2 -translate-x-1/2 w-full max-w-[560px] h-[300px] bg-blue-500/25 blur-[160px] rounded-full pointer-events-none" />
+          <div className="absolute z-10 -bottom-10 left-1/2 -translate-x-1/2 w-full h-[160px] bg-black blur-[160px] rounded-full pointer-events-none" />
+          <Image
+            src="/bg-footer.jpg"
+            alt="Background"
+            fill
+            priority
+            className="object-cover z-0 opacity-50"
+          />
+          <div className="flex items-center gap-2 z-20 relative">
+            <FairPayLogo size={35} />
+            <h1 className="text-xl font-semibold tracking-tight text-white">
+              FairPay
+            </h1>
+          </div>
+
+          <div className="absolute bottom-10 z-20">
+            <h1 className="text-6xl font-semibold tracking-tight bg-gradient-to-r from-white to-neutral-800 text-transparent bg-clip-text">
+              Decentralized
+            </h1>
+            <h1 className="text-6xl font-semibold tracking-tight bg-gradient-to-r from-white to-neutral-800 text-transparent bg-clip-text">
+              Milestone Escrow for
+            </h1>
+            <h1 className="text-6xl leading-snug -mt-1 font-semibold tracking-wide bg-gradient-to-r from-white to-neutral-800 text-transparent bg-clip-text">
+              Builders and Startups
+            </h1>
           </div>
         </div>
-        <footer className="text-[10px] text-muted-foreground">
-          Built for ETHGlobal Mumbai · Arc Testnet
-        </footer>
-      </aside>
-      <main className="auth-form-area">
-        <div>{children}</div>
-      </main>
+
+        {/* RIGHT SIDE (35% width) */}
+        <div className="w-full lg:w-[35%] h-full flex flex-col justify-center items-center px-6 sm:px-12 relative overflow-hidden bg-black">
+          {/* Header */}
+          <div className="flex flex-col items-center gap-5 mb-12 relative z-10">
+            <div className="flex items-center gap-3">
+              <FairPayLogo size={40} />
+              <h1 className="text-3xl font-bold tracking-tight text-white">
+                FairPay
+              </h1>
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-neutral-400 tracking-wide uppercase">
+                Building the future together
+              </p>
+              <div className="h-px w-40 bg-gradient-to-r from-transparent via-neutral-400 to-transparent mx-auto" />
+            </div>
+          </div>
+
+          {/* Dynamic Form Content */}
+          <div className="w-full max-w-sm space-y-8 relative z-10">
+            {children}
+          </div>
+
+          {/* Footer Items */}
+          <div className="absolute bottom-10 left-0 right-0 px-6 sm:px-12">
+            <div className="flex flex-col items-center gap-6">
+              <div className="flex items-center gap-8">
+                <Link
+                  href="/terms"
+                  className="text-[11px] font-medium text-neutral-400 hover:text-neutral-300 transition-colors tracking-wider uppercase"
+                >
+                  Terms
+                </Link>
+                <Link
+                  href="/privacy"
+                  className="text-[11px] font-medium text-neutral-400 hover:text-neutral-300 transition-colors tracking-wider uppercase"
+                >
+                  Privacy
+                </Link>
+                <Link
+                  href="/support"
+                  className="text-[11px] font-medium text-neutral-400 hover:text-neutral-300 transition-colors tracking-wider uppercase"
+                >
+                  Support
+                </Link>
+              </div>
+              <p className="text-[10px] text-neutral-400 font-medium tracking-widest uppercase">
+                © 2026 FAIRPAY
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

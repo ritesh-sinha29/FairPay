@@ -1,0 +1,31 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fairpay-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="45%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="fairpay-sheen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded squircle background -->
+  <rect x="2" y="2" width="96" height="96" rx="24" fill="url(#fairpay-bg)" />
+  <rect x="2" y="2" width="96" height="96" rx="24" fill="url(#fairpay-sheen)" />
+  <rect x="2.5" y="2.5" width="95" height="95" rx="23.5" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1" />
+
+  <!-- FairPay Escrow "F" & Shield-Check Mark -->
+  <!-- Left vertical pillar -->
+  <path d="M26 26 H40 V74 H26 Z" fill="#FFFFFF" fill-opacity="0.95" />
+  <!-- Top horizontal wing -->
+  <path d="M40 26 H74 L63 40 H40 Z" fill="#FFFFFF" fill-opacity="0.95" />
+  <!-- Top fold facet -->
+  <path d="M40 40 L52 40 L40 54 Z" fill="#93C5FD" fill-opacity="0.85" />
+  <!-- Middle horizontal bar -->
+  <path d="M40 46 H65 L55 58 H40 Z" fill="#BFDBFE" fill-opacity="0.92" />
+  <!-- Escrow verification checkmark accent -->
+  <path d="M50 66 L59 75 L76 56 L71 52 L59 67 L54 62 Z" fill="#FFFFFF" fill-opacity="0.95" />
+</svg>
+

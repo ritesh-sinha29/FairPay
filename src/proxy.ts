@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   const publicRoute =
     request.nextUrl.pathname === "/sign-in" ||
+    request.nextUrl.pathname === "/auth" ||
     request.nextUrl.pathname.startsWith("/sign-up");
   const authenticated = await convexAuth.isAuthenticated();
   if (publicRoute && authenticated)

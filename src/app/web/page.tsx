@@ -1,6 +1,10 @@
-import { Hero } from "@/modules/web/hero";
+import { Hero, WhyFairPay } from "@/modules/web";
 
 export default function WebPage() {
-  return <Hero />;
+  return (
+    <div className="bg-black text-white min-h-screen">
+      <Hero />
+      <WhyFairPay />
+    </div>
+  );
 }
-

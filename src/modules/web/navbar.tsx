@@ -13,10 +13,9 @@ interface NavLink {
 }
 
 const navLinks: NavLink[] = [
+  { label: "How it works", href: "#features" },
+  { label: "Payment rules", href: "/payments" },
   { label: "Arkiv Board", href: "/arkiv" },
-  { label: "Escrow", href: "/jobs" },
-  { label: "Verify", href: "/jobs" },
-  { label: "About", href: "/web" },
 ];
 
 export function Navbar() {

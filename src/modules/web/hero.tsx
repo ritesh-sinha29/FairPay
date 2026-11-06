@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Database, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Navbar } from "./navbar";
 import { Button } from "@/components/ui/button";
 
@@ -23,7 +23,13 @@ export function Hero() {
           playsInline
           preload="auto"
           poster="/images/hero-globe.jpg"
-          className="w-full h-full object-cover object-bottom opacity-80 mix-blend-screen will-change-transform transform-gpu"
+          className="w-full h-full object-cover object-center opacity-85 mix-blend-screen will-change-transform transform-gpu scale-120 -translate-y-12 sm:-translate-y-20 origin-center"
+          style={{
+            maskImage:
+              "linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.3) 14%, black 30%, black 60%, rgba(0, 0, 0, 0.4) 82%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.3) 14%, black 30%, black 60%, rgba(0, 0, 0, 0.4) 82%, transparent 100%)",
+          }}
         >
           <source
             src="/Digital_globe_rotating_with_network_ea208c27_1080p.mp4"
@@ -32,9 +38,13 @@ export function Hero() {
         </video>
 
         {/* Ambient Top Light & Vignette Overlays for Maximum Text Contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/35 to-black/90 pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-[radial-gradient(ellipse_60%_50%_at_50%_20%,rgba(35,90,225,0.22),rgba(0,0,0,0))] pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/20 to-black/85 pointer-events-none" />
+        
+        {/* Seamless full-width top blend — navbar region blends into pure black with zero hard lines */}
+        <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-10" />
+
+        {/* Seamless full-width bottom blend to pure black — no corner patches or rectangular cuts */}
+        <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black via-black/75 to-transparent pointer-events-none z-10" />
       </div>
 
       {/* 3. Hero content */}

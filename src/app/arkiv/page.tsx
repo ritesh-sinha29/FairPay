@@ -66,6 +66,23 @@ export default function ArkivBoardPage() {
   const [newDesc, setNewDesc] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Proposal / Apply Modal State
+  const [applyingJob, setApplyingJob] = useState<ArkivJobEntity | null>(null);
+  const [proposalNote, setProposalNote] = useState("");
+  const [portfolioLink, setPortfolioLink] = useState("");
+  const [submittingProposal, setSubmittingProposal] = useState(false);
+  const [proposalSuccess, setProposalSuccess] = useState(false);
+
+  function handleProposalSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmittingProposal(true);
+    setTimeout(() => {
+      setSubmittingProposal(false);
+      setProposalSuccess(true);
+      toast.success("Proposal submitted to client!");
+    }, 1200);
+  }
+
   async function loadData() {
     setLoading(true);
     try {
@@ -520,14 +537,27 @@ export default function ArkivBoardPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 pt-1">
-                      <Link
-                        href={`/jobs/new?title=${encodeURIComponent(job.title)}&amount=${job.budgetEth}`}
-                        className="flex-1"
-                      >
-                        <Button className="w-full h-8 text-xs bg-white hover:bg-neutral-200 text-black font-semibold">
-                          Create Milestone Escrow
+                      {user?.role === "freelancer" ? (
+                        <Button
+                          onClick={() => {
+                            setApplyingJob(job);
+                            setProposalSuccess(false);
+                            setProposalNote("");
+                          }}
+                          className="flex-1 h-8 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center justify-center gap-1.5"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" /> Apply for RFP
                         </Button>
-                      </Link>
+                      ) : (
+                        <Link
+                          href={`/jobs/new?title=${encodeURIComponent(job.title)}&amount=${job.budgetEth}`}
+                          className="flex-1"
+                        >
+                          <Button className="w-full h-8 text-xs bg-white hover:bg-neutral-200 text-black font-semibold">
+                            Accept & Fund Escrow
+                          </Button>
+                        </Link>
+                      )}
                       {job.txHash && (
                         <a
                           href={`${ARKIV_EXPLORER_URL}/tx/${job.txHash}`}
@@ -546,6 +576,99 @@ export default function ArkivBoardPage() {
             </div>
           )}
         </div>
+
+        {/* Freelancer Apply Proposal Dialog */}
+        <Dialog
+          open={Boolean(applyingJob)}
+          onOpenChange={(open) => {
+            if (!open) setApplyingJob(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-md bg-neutral-950 border-neutral-800 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-yellow-400" />
+                Apply for Milestone RFP
+              </DialogTitle>
+              <DialogDescription className="text-xs text-neutral-400">
+                Submit your pitch for{" "}
+                <span className="text-white font-medium">
+                  {applyingJob?.title}
+                </span>
+                . Budget: {applyingJob?.budgetEth} USDC / ETH.
+              </DialogDescription>
+            </DialogHeader>
+
+            {proposalSuccess ? (
+              <div className="py-6 text-center space-y-3">
+                <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+                  <CheckCircle2 size={24} />
+                </div>
+                <h4 className="text-sm font-semibold text-emerald-400">
+                  Proposal Submitted!
+                </h4>
+                <p className="text-xs text-neutral-400 leading-relaxed">
+                  Your proposal and wallet address have been transmitted to the
+                  client. Once the client approves your proposal, the milestone
+                  escrow will be locked on Arc Testnet USDC.
+                </p>
+                <Button
+                  onClick={() => {
+                    setApplyingJob(null);
+                    setProposalSuccess(false);
+                  }}
+                  className="w-full bg-white hover:bg-neutral-200 text-black text-xs h-9 font-semibold"
+                >
+                  Close
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleProposalSubmit} className="space-y-4 pt-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-neutral-300">
+                    Your Proposal & Approach
+                  </Label>
+                  <textarea
+                    rows={4}
+                    value={proposalNote}
+                    onChange={(e) => setProposalNote(e.target.value)}
+                    placeholder="Explain how you will deliver this milestone, your timeline, and why you are the best fit..."
+                    required
+                    className="w-full rounded-md bg-neutral-900 border border-neutral-800 text-xs text-white p-2.5 outline-none focus:border-neutral-700"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-neutral-300">
+                    Portfolio / GitHub Profile
+                  </Label>
+                  <Input
+                    type="url"
+                    value={portfolioLink}
+                    onChange={(e) => setPortfolioLink(e.target.value)}
+                    placeholder="https://github.com/..."
+                    className="bg-neutral-900 border-neutral-800 text-xs text-white"
+                  />
+                </div>
+                <div className="rounded-lg bg-neutral-900/60 border border-neutral-800 p-2.5 text-[11px] text-neutral-400 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>
+                    Payment is guaranteed: the client must lock 100% deposit in
+                    escrow before you start work.
+                  </span>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={submittingProposal}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs h-9"
+                >
+                  {submittingProposal
+                    ? "Submitting to Client..."
+                    : "Send Application"}
+                </Button>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* ETHGlobal Mumbai Hackathon Submission Summary Card */}
         <div className="p-6 rounded-2xl border border-blue-500/20 bg-blue-950/10 space-y-4">

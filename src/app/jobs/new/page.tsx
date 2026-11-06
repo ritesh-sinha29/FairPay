@@ -17,8 +17,11 @@ import {
   Copy,
   Clock,
   Database,
+  Globe,
   LoaderCircle,
   ShieldCheck,
+  Sparkles,
+  Users,
 } from "lucide-react";
 import { publishJobToArkiv, getExpirationOptions } from "@/lib/arkiv";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +67,7 @@ export default function NewJobPage() {
   const [busy, setBusy] = useState(false);
   const [syncToArkiv, setSyncToArkiv] = useState(true);
   const [arkivDays, setArkivDays] = useState(7);
+  const [jobMode, setJobMode] = useState<"open" | "direct">("open");
 
   const selectedPreset: TokenPreset | undefined = SUPPORTED_PAYMENT_TOKENS.find(
     (item) => item.id === selectedAssetId,
@@ -94,7 +98,28 @@ export default function NewJobPage() {
     setError("");
     setBusy(true);
     try {
-      if (!freelancerId) throw new Error("Choose a freelancer for this job.");
+      if (!title.trim()) throw new Error("Please enter a job title.");
+      if (description.trim().length < 20)
+        throw new Error("Describe the job in at least 20 characters.");
+      if (!/^\d+(\.\d+)?$/.test(amount) || Number(amount) <= 0)
+        throw new Error(`Enter a positive ${activeSymbol} payment amount.`);
+
+      if (jobMode === "open") {
+        // Publish Open RFP directly to Arkiv DB-Chain
+        await publishJobToArkiv({
+          title: title.trim(),
+          description: description.trim(),
+          budgetEth: amount,
+          clientAddress: user.walletAddress,
+          days: arkivDays,
+        });
+
+        notify("Public RFP published to Arkiv DB-Chain! Open for bids.");
+        router.push("/arkiv");
+        return;
+      }
+
+      if (!freelancerId) throw new Error("Choose a freelancer for direct hire.");
 
       if (isCustom) {
         if (!isAddress(customTokenAddress))
@@ -194,6 +219,40 @@ export default function NewJobPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={submit} className="space-y-6">
+              {/* Hiring Mode Toggle */}
+              <div className="space-y-2">
+                <Label className="text-xs">Posting Mode</Label>
+                <div className="grid grid-cols-2 gap-2 p-1 rounded-lg bg-neutral-900 border border-neutral-800">
+                  <button
+                    type="button"
+                    onClick={() => setJobMode("open")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-xs font-medium transition-all ${
+                      jobMode === "open"
+                        ? "bg-white text-black font-semibold shadow-sm"
+                        : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    <Globe size={13} className={jobMode === "open" ? "text-blue-600" : ""} />
+                    <span>Public RFP (Arkiv)</span>
+                    <Badge variant="outline" className="text-[10px] py-0 px-1 border-neutral-700 bg-neutral-800 text-neutral-300">
+                      Open to Bids
+                    </Badge>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setJobMode("direct")}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 rounded-md text-xs font-medium transition-all ${
+                      jobMode === "direct"
+                        ? "bg-white text-black font-semibold shadow-sm"
+                        : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    <Users size={13} />
+                    <span>Direct Hire</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="job-title">Job title</Label>
                 <Input
@@ -226,62 +285,76 @@ export default function NewJobPage() {
                   disabled={busy}
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  The brief is visible to you and the assigned freelancer.
+                  {jobMode === "open"
+                    ? "Visible publicly on the Arkiv Board so freelancers can evaluate and bid."
+                    : "The brief is visible to you and the assigned freelancer."}
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="freelancer-select">Freelancer</Label>
-                <Select
-                  value={freelancerId}
-                  onValueChange={setFreelancerId}
-                  disabled={busy || !freelancers?.length}
-                >
-                  <SelectTrigger id="freelancer-select" className="w-full">
-                    <SelectValue
-                      placeholder={
-                        freelancers === undefined
-                          ? "Loading freelancers…"
-                          : "Choose a registered freelancer"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {freelancers?.map((freelancer) => (
-                      <SelectItem value={freelancer._id} key={freelancer._id}>
-                        {freelancer.name} ·{" "}
-                        {shortAddress(freelancer.walletAddress)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {freelancers?.length === 0 && (
-                  <Alert>
-                    <AlertDescription className="text-xs leading-6">
-                      Ask your freelancer to create an account first.
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="h-auto p-0 text-xs"
-                        onClick={() =>
-                          void navigator.clipboard
-                            .writeText(`${location.origin}/sign-up/freelancer`)
-                            .then(() =>
-                              notify("Freelancer signup link copied."),
-                            )
-                            .catch(() =>
-                              notify(
-                                `Share ${location.origin}/sign-up/freelancer`,
-                              ),
-                            )
+              {jobMode === "open" ? (
+                <div className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                    <Sparkles size={14} className="text-yellow-400" />
+                    <span>Open to All Web3 Freelancers</span>
+                  </div>
+                  <p className="text-[11px] leading-5 text-neutral-400">
+                    No pre-registered freelancer needed! This job will be posted as an open Request for Proposals (RFP) on <strong>Arkiv DB-Chain</strong>. Freelancers will browse the board and submit bids. You can approve your chosen builder with 1 click to lock escrow and begin work.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="freelancer-select">Freelancer</Label>
+                  <Select
+                    value={freelancerId}
+                    onValueChange={setFreelancerId}
+                    disabled={busy || !freelancers?.length}
+                  >
+                    <SelectTrigger id="freelancer-select" className="w-full">
+                      <SelectValue
+                        placeholder={
+                          freelancers === undefined
+                            ? "Loading freelancers…"
+                            : "Choose a registered freelancer"
                         }
-                      >
-                        <Copy size={12} /> Copy signup link
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {freelancers?.map((freelancer) => (
+                        <SelectItem value={freelancer._id} key={freelancer._id}>
+                          {freelancer.name} ·{" "}
+                          {shortAddress(freelancer.walletAddress)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {freelancers?.length === 0 && (
+                    <Alert>
+                      <AlertDescription className="text-xs leading-6">
+                        Ask your freelancer to create an account first.
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="h-auto p-0 text-xs ml-1"
+                          onClick={() =>
+                            void navigator.clipboard
+                              .writeText(`${location.origin}/sign-up/freelancer`)
+                              .then(() =>
+                                notify("Freelancer signup link copied."),
+                              )
+                              .catch(() =>
+                                notify(
+                                  `Share ${location.origin}/sign-up/freelancer`,
+                                ),
+                              )
+                          }
+                        >
+                          <Copy size={12} /> Copy signup link
+                        </Button>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
 
               {/* Payment Currency Selector */}
               <div className="space-y-2">
@@ -474,21 +547,27 @@ export default function NewJobPage() {
               )}
 
               <p className="text-[11px] leading-6 text-muted-foreground">
-                Sending this proposal confirms the scope and {activeSymbol}{" "}
-                payment from your side. The assigned freelancer must agree
-                before you lock the deposit into escrow.
+                {jobMode === "open"
+                  ? `Publishing will post your RFP to Arkiv DB-Chain with a ${arkivDays}-day bidding window. Freelancers will browse and submit proposals, and you can approve your chosen builder with 1 click to lock escrow.`
+                  : `Sending this proposal confirms the scope and ${activeSymbol} payment from your side. The assigned freelancer must agree before you lock the deposit into escrow.`}
               </p>
 
               <Button
                 className="w-full"
-                disabled={busy || !freelancers?.length}
+                disabled={busy || (jobMode === "direct" && !freelancers?.length)}
               >
                 {busy ? (
                   <LoaderCircle className="animate-spin" size={15} />
+                ) : jobMode === "open" ? (
+                  <Globe size={15} />
                 ) : (
                   <ArrowRight size={15} />
                 )}
-                {busy ? "Sending your proposal…" : `Send ${activeSymbol} Proposal`}
+                {busy
+                  ? "Publishing..."
+                  : jobMode === "open"
+                  ? `Publish Open RFP to Arkiv (${activeSymbol})`
+                  : `Send ${activeSymbol} Proposal`}
               </Button>
             </form>
           </CardContent>

@@ -9,6 +9,7 @@ import {
 } from "@arkiv-network/sdk";
 import { rabdi } from "@arkiv-network/sdk/chains";
 import { http } from "viem";
+import seedEntities from "@/data/arkiv-entities.json";
 
 // Configuration loaded strictly from environment variables
 export const ARKIV_CHAIN_ID = Number(
@@ -226,6 +227,11 @@ export async function fetchArkivJobs(
     } catch (sErr) {
       console.warn("Could not fetch server entities:", sErr);
     }
+  }
+
+  // Guaranteed fallback to bundled seed entities if server is cold or offline
+  if (serverEntities.length === 0 && Array.isArray(seedEntities)) {
+    serverEntities = seedEntities as ArkivJobEntity[];
   }
 
   const seen = new Set<string>();

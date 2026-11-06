@@ -13,6 +13,10 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
     pathname === "/" ||
     pathname === "/web" ||
     pathname.startsWith("/web") ||
+    pathname === "/arkiv" ||
+    pathname.startsWith("/arkiv/") ||
+    pathname === "/api/arkiv" ||
+    pathname.startsWith("/api/arkiv") ||
     pathname === "/api/auth" ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/blockscout") ||

@@ -29,6 +29,7 @@ import {
   ARKIV_EXPLORER_URL,
   type ArkivJobEntity,
 } from "@/lib/arkiv";
+import seedEntities from "@/data/arkiv-entities.json";
 
 export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
   const { user, notify } = useWorkspace();
@@ -68,6 +69,19 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
           if (found) {
             setJob(found);
             loadProposals(found.key);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // 3. Fallback to bundled seedEntities
+        if (Array.isArray(seedEntities)) {
+          const seedMatch = (seedEntities as ArkivJobEntity[]).find(
+            (e) => e.key.toLowerCase() === entityKey.toLowerCase(),
+          );
+          if (seedMatch) {
+            setJob(seedMatch);
+            loadProposals(seedMatch.key);
             setLoading(false);
             return;
           }

@@ -32,6 +32,56 @@
     "remainingHours": 168,
     "isExpired": false,
     "txHash": "0x8f2d59a3c10e9c7ce3c14c13365371b3758ebab2edf987f62c1a4e10581984ab12"
+  },
+  {
+    "key": "0x9c41d8e2a1b7cf086ba5219c017ef6a5b48c12fc2fa41a85b25b738870838999",
+    "owner": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "title": "portfolio",
+    "category": "smart-contracts",
+    "status": "open",
+    "budgetEth": "1.0",
+    "milestonesCount": 2,
+    "clientAddress": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "tags": ["smart-contracts", "arkiv", "escrow"],
+    "description": "Develop and deploy portfolio milestone escrow contract verified on Rabdi testnet.",
+    "createdAt": 1730905200000,
+    "expiresAt": 1732115810000,
+    "remainingHours": 336,
+    "isExpired": false,
+    "txHash": "0x1b4a92c30e9c7ce3c14c13365371b3758ebab2edf987f62c1a4e10581984cd34"
+  },
+  {
+    "key": "0x3275288de8c8156a339c025af6b4ba9c12fc2fa41a85b25b7388708385eb5f03",
+    "owner": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "title": "Ai Engineer",
+    "category": "smart-contracts",
+    "status": "open",
+    "budgetEth": "10.0",
+    "milestonesCount": 2,
+    "clientAddress": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "tags": ["smart-contracts", "arkiv", "escrow"],
+    "description": "Build AI agent workflow integration with onchain milestone escrow verification.",
+    "createdAt": 1730904000000,
+    "expiresAt": 1731508800000,
+    "remainingHours": 168,
+    "isExpired": false,
+    "txHash": "0x7d8e92a1b7cf086ba5219c017ef6a5b48c12fc2fa41a85b25b738870838999"
+  },
+  {
+    "key": "0x8b39b9d7de8c8156a339c025af6b4ba9c12fc2fa41a85b25b738870838dd401",
+    "owner": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "title": "Ai Engineer",
+    "category": "smart-contracts",
+    "status": "open",
+    "budgetEth": "1.0",
+    "milestonesCount": 2,
+    "clientAddress": "0x944d65b7cd8abe9ffc0570ced7790c371fe48f8a",
+    "tags": ["smart-contracts", "arkiv", "escrow"],
+    "description": "Autonomous AI agent smart contract audit and milestone release verification.",
+    "createdAt": 1730903000000,
+    "expiresAt": 1731507800000,
+    "remainingHours": 168,
+    "isExpired": false,
+    "txHash": "0x3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f"
   }
 ]
-

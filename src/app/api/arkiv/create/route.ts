@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAuthenticatedNextjs } from "@convex-dev/auth/nextjs/server";
-import fs from "fs/promises";
-import path from "path";
+import { readEntities, writeEntities } from "../entities/route";
 import {
   createWalletClient,
   defineSchema,
@@ -172,17 +171,11 @@ export async function POST(request: Request) {
 
     // Persist to server-side registry so all users (freelancers & clients) see this job immediately
     try {
-      const dataFile = path.join(process.cwd(), "src", "data", "arkiv-entities.json");
-      await fs.mkdir(path.dirname(dataFile), { recursive: true });
-      let existing: any[] = [];
-      try {
-        const content = await fs.readFile(dataFile, "utf-8");
-        existing = JSON.parse(content);
-      } catch {}
-      const updated = [entity, ...existing.filter((e) => e.key !== entity.key)];
-      await fs.writeFile(dataFile, JSON.stringify(updated, null, 2), "utf-8");
+      const existing = await readEntities();
+      const updated = [entity, ...existing.filter((e) => e.key.toLowerCase() !== entity.key.toLowerCase())];
+      await writeEntities(updated);
     } catch (saveErr) {
-      console.warn("Could not save entity to server data file:", saveErr);
+      console.warn("Could not save entity to server registry:", saveErr);
     }
 
     return NextResponse.json({ success: true, entity });

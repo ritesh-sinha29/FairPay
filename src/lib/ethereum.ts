@@ -26,18 +26,41 @@ declare global {
   }
 }
 
-export function browserWallet() {
+function injectedWallet() {
   if (!window.ethereum)
     throw new Error(
       "Install MetaMask or another Ethereum browser wallet, then reload this page.",
     );
-  return new BrowserProvider(window.ethereum);
+  return window.ethereum;
+}
+
+export function browserWallet() {
+  return new BrowserProvider(injectedWallet());
 }
 
 export async function connectWallet() {
-  const provider = browserWallet();
-  await provider.send("eth_requestAccounts", []);
-  return provider.getSigner();
+  const wallet = injectedWallet();
+  // Ask the extension directly, before ethers starts network discovery.
+  try {
+    await wallet.request({ method: "eth_requestAccounts" });
+  } catch (cause) {
+    throw Object.assign(new Error("MetaMask account access failed.", { cause }), { method: "eth_requestAccounts" });
+  }
+  return new BrowserProvider(wallet).getSigner();
+}
+
+export async function reconnectWallet() {
+  // Explicit recovery action only. Reopens the permission picker even if
+  // eth_requestAccounts considers this origin already connected.
+  try {
+    await injectedWallet().request({
+      method: "wallet_requestPermissions",
+      params: [{ eth_accounts: {} }],
+    });
+  } catch (cause) {
+    throw Object.assign(new Error("MetaMask permission request failed.", { cause }), { method: "wallet_requestPermissions" });
+  }
+  return connectWallet();
 }
 
 async function requireSigner(expectedAddress: string, chainId: number) {

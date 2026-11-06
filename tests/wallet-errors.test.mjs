@@ -52,7 +52,10 @@ test("Cancellation, pending requests, and nonces have distinct recovery messages
 });
 
 test("Revoked wallet permissions explain how to restore account access", () => {
-  assert.match(walletErrorMessage(wrapped({ code: 4100, message: "The requested account and/or method has not been authorized by the user." })), /approve account access in MetaMask/);
+  assert.match(walletErrorMessage(wrapped({ code: 4100, message: "The requested account and/or method has not been authorized by the user." })), /Use Reconnect wallet/);
+  const error = { cause: { code: 4100 }, payload: { method: "eth_sendTransaction", params: [{ data: "do-not-display" }] } };
+  assert.match(walletErrorMessage(error), /Denied request: eth_sendTransaction/);
+  assert.doesNotMatch(walletErrorMessage(error), /do-not-display/);
 });
 
 test("Opaque wallet errors offer the correct RPC settings without claiming a confirmed cause", () => {

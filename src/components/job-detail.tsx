@@ -20,6 +20,7 @@ import {
   advanceJob,
   fundJob,
   readableError,
+  reconnectWallet,
   switchToPaymentNetwork,
 } from "@/lib/ethereum";
 import { STATUS_ORDER } from "@/lib/jobs";
@@ -195,6 +196,25 @@ export function JobDetail({ jobId }: { jobId: string }) {
       // A receipt/RPC read can fail after broadcast. Recover the real contract
       // state without automatically sending another submission or payout.
       if (sent) await synchronize({ jobId: job.id }).catch(() => undefined);
+    } finally {
+      lock.current = false;
+      setStage("");
+    }
+  }
+
+  async function repairWalletConnection() {
+    if (lock.current) return;
+    lock.current = true;
+    setStage("Review FairPay's account and network permissions in MetaMask…");
+    try {
+      const signer = await reconnectWallet();
+      if ((await signer.getAddress()).toLowerCase() !== user.walletAddress.toLowerCase())
+        throw new Error("Select the wallet linked to your FairPay account in MetaMask.");
+      await connect();
+      setError("");
+      notify("Wallet reconnected. Check the job status, then submit when ready.");
+    } catch (error) {
+      setError(readableError(error));
     } finally {
       lock.current = false;
       setStage("");
@@ -625,6 +645,11 @@ export function JobDetail({ jobId }: { jobId: string }) {
                 <Alert variant="destructive">
                   <AlertDescription className="text-xs leading-6">
                     {error}
+                    {error.startsWith("MetaMask has not authorized") && (
+                      <Button type="button" variant="outline" className="mt-3 w-fit" disabled={busy} onClick={() => void repairWalletConnection()}>
+                        <Wallet size={14} /> Reconnect wallet
+                      </Button>
+                    )}
                   </AlertDescription>
                 </Alert>
               )}

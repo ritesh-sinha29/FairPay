@@ -51,18 +51,22 @@ const FooterColumn = ({
 export function Footer() {
   const { isAuthenticated } = useConvexAuth();
   const tryNowHref = isAuthenticated ? "/jobs" : "/auth";
+  const logoHref = "/web";
 
   return (
     <footer
       id="footer"
-      className="bg-[#050505] pt-20 pb-10 sm:pb-14 border-t border-white/[0.04] font-sans relative overflow-x-hidden"
+      className="bg-[#050505] pt-20 pb-10 sm:pb-14 font-sans relative overflow-x-hidden"
     >
       {/* 1. Header Grid + Links + Copyright (Contained inside max-w-7xl) */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
         <div className="grid grid-cols-1 lg:grid-cols-7 gap-12 lg:gap-8 mb-16 md:mb-20">
           {/* Brand Column (Spans 2 columns on lg screens) */}
           <div className="lg:col-span-2 flex flex-col gap-5 text-left">
-            <Link href="/" className="flex items-center gap-2.5">
+            <Link
+              href={logoHref}
+              className="flex items-center gap-2.5 hover:opacity-90 transition-opacity"
+            >
               <FairPayLogo size={28} />
               <span className="font-semibold text-white text-lg tracking-tight">
                 FairPay

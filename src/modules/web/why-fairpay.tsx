@@ -4,8 +4,21 @@ import React, { useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
-import { ArrowRight, CheckCircle2, Clock, ShieldCheck, ExternalLink, Database, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  ExternalLink,
+  Database,
+  Wallet,
+  BriefcaseBusiness,
+  ArrowDownLeft,
+  Lock,
+  Search,
+} from "lucide-react";
 import { useConvexAuth } from "convex/react";
+import { FairPayLogo } from "@/components/fairpay-logo";
 
 export interface FeatureBlock {
   tag: string;
@@ -70,7 +83,119 @@ const features: FeatureBlock[] = [
   },
 ];
 
-/* ─── Mock Preview Components (Rendered when no screenshot image is provided) ─── */
+/* ─── Reusable App Screenshot Shell (Matches actual FairPay dashboard screenshot) ─── */
+
+function AppWindowMock({
+  activeNav,
+  breadcrumb,
+  children,
+}: {
+  activeNav: "jobs" | "arkiv" | "payments";
+  breadcrumb: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="w-full bg-[#08090b] rounded-xl border border-white/10 overflow-hidden font-sans text-left text-xs select-none shadow-[0_8px_60px_rgba(0,0,0,0.6)]">
+      <div className="flex min-h-[380px] sm:min-h-[410px]">
+        {/* Left App Sidebar (Matches real FairPay sidebar in the screenshot) */}
+        <div className="hidden sm:flex w-44 shrink-0 border-r border-white/[0.08] bg-[#0c0d10] p-3.5 flex-col justify-between">
+          <div className="space-y-4">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <FairPayLogo size={20} />
+              <span className="font-semibold text-white tracking-tight text-sm">FairPay</span>
+            </div>
+
+            {/* User Profile */}
+            <div className="flex items-center gap-2 p-1.5 rounded-lg bg-neutral-900/60 border border-white/[0.06]">
+              <div className="w-6 h-6 rounded bg-neutral-800 flex items-center justify-center text-[10px] font-medium text-white shrink-0">
+                MA
+              </div>
+              <div className="overflow-hidden">
+                <div className="text-[11px] font-medium text-white truncate">Manas Hatwar</div>
+                <div className="text-[9px] text-neutral-400 truncate">Freelancer</div>
+              </div>
+            </div>
+
+            {/* Navigation links */}
+            <div className="space-y-1 pt-1">
+              <div className="text-[9px] font-mono uppercase text-neutral-400 px-2 mb-1">Workspace</div>
+              <div
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+                  activeNav === "jobs"
+                    ? "bg-blue-600/20 text-blue-300 border border-blue-500/30"
+                    : "text-neutral-400"
+                }`}
+              >
+                <BriefcaseBusiness className="w-3.5 h-3.5" />
+                <span>Jobs</span>
+              </div>
+              <div
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+                  activeNav === "arkiv"
+                    ? "bg-blue-600/20 text-blue-300 border border-blue-500/30"
+                    : "text-neutral-400"
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>Arkiv Board</span>
+              </div>
+              <div
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+                  activeNav === "payments"
+                    ? "bg-blue-600/20 text-blue-300 border border-blue-500/30"
+                    : "text-neutral-400"
+                }`}
+              >
+                <ArrowDownLeft className="w-3.5 h-3.5" />
+                <span>Payments</span>
+              </div>
+            </div>
+
+            {/* Recent jobs label */}
+            <div className="pt-2">
+              <div className="text-[9px] font-mono uppercase text-neutral-400 px-2 mb-1">Recent jobs</div>
+              <div className="text-[10px] text-neutral-300 px-2 flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-neutral-400" /> Webdev
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom user status */}
+          <div className="pt-3 border-t border-white/[0.06] text-[10px] text-neutral-400 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="font-mono">Arc Testnet</span>
+          </div>
+        </div>
+
+        {/* Right Main Content Area */}
+        <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between bg-black/40 overflow-hidden">
+          {/* Header Row */}
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/[0.08]">
+            <div className="flex items-center gap-1.5 text-[11px] text-neutral-400 font-mono">
+              <span className="text-neutral-400 hidden sm:inline">Workspace</span>
+              <span className="hidden sm:inline">&gt;</span>
+              <span className="text-white font-medium">{breadcrumb}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-[10px] text-neutral-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Arc Testnet
+              </span>
+              <span className="px-2 py-0.5 rounded bg-neutral-900 border border-white/10 text-[10px] text-neutral-400 font-mono hidden sm:inline-block">
+                0x0a33...1af0
+              </span>
+            </div>
+          </div>
+
+          {/* Child Page Content */}
+          <div className="flex-1 flex flex-col justify-between">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Mock Preview Components (Rendered with real dashboard screenshot feel) ─── */
 
 function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
   const { isAuthenticated } = useConvexAuth();
@@ -78,248 +203,237 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
 
   if (type === "escrow") {
     return (
-      <div className="w-full bg-[#0c0d10] p-5 sm:p-7 text-left font-sans select-none">
-        {/* Window Bar */}
-        <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/[0.08]">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <span className="text-[11px] text-neutral-400 font-mono ml-2">FairPayStableEscrow.sol (Arc 5042002)</span>
+      <AppWindowMock activeNav="jobs" breadcrumb="Jobs > Webdev">
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[10px] font-mono uppercase text-neutral-400">Job Agreement</div>
+              <h4 className="text-base font-semibold text-white tracking-tight flex items-center gap-2 mt-0.5">
+                <span>Webdev</span>
+                <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-mono">
+                  Deal agreed
+                </span>
+              </h4>
+            </div>
+            <div className="text-right">
+              <span className="text-xs font-semibold text-white font-mono block">500.0 USDC</span>
+              <span className="text-[9px] text-neutral-400 font-mono">0 USDC fee</span>
+            </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[10px] text-neutral-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-white" /> SafeERC20 USDC
-          </span>
-        </div>
 
-        {/* Card Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-          <div>
-            <div className="text-[11px] text-neutral-400 uppercase tracking-wider font-mono">Active Job Escrow</div>
-            <h4 className="text-base sm:text-lg font-semibold text-white tracking-tight mt-0.5">
-              Smart Contract Audit & Frontend
-            </h4>
-          </div>
-          <div className="px-3 py-1.5 rounded-lg border border-white/10 bg-neutral-900/90 text-right">
-            <div className="text-[10px] text-neutral-400 font-mono">Locked Escrow</div>
-            <div className="text-sm sm:text-base font-semibold text-white font-mono">4,500 USDC</div>
-          </div>
-        </div>
-
-        {/* Milestone Steps */}
-        <div className="space-y-2.5 mb-6">
-          <div className="flex items-center justify-between p-3 rounded-lg border border-white/[0.08] bg-neutral-900/40">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-4 h-4 text-white" />
-              <div>
-                <div className="text-xs font-medium text-white">Milestone 1: Security Specification</div>
-                <div className="text-[10px] text-neutral-500">Approved & Settled</div>
+          {/* Agreement Progress */}
+          <div className="p-3 rounded-lg border border-white/[0.08] bg-neutral-950/70 mb-3">
+            <div className="text-[10px] text-neutral-400 font-mono mb-2">Agreement progress</div>
+            <div className="grid grid-cols-5 gap-1 text-center text-[9px] font-mono">
+              <div className="p-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                1. Proposed ✓
+              </div>
+              <div className="p-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                2. Agreed ✓
+              </div>
+              <div className="p-1 rounded bg-neutral-900 text-neutral-400 border border-white/[0.06]">
+                3. Funded
+              </div>
+              <div className="p-1 rounded bg-neutral-900 text-neutral-400 border border-white/[0.06]">
+                4. Review
+              </div>
+              <div className="p-1 rounded bg-neutral-900 text-neutral-400 border border-white/[0.06]">
+                5. Paid
               </div>
             </div>
-            <span className="text-xs font-mono font-medium text-white">1,500 USDC</span>
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg border border-white/20 bg-neutral-900/80">
-            <div className="flex items-center gap-3">
-              <Clock className="w-4 h-4 text-neutral-300" />
-              <div>
-                <div className="text-xs font-medium text-white">Milestone 2: Test Suite & Fuzzing</div>
-                <div className="text-[10px] text-neutral-400">PR Submitted • Pending Approval</div>
-              </div>
+          {/* Client & Freelancer Identifiers */}
+          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+            <div className="p-2 rounded border border-white/[0.06] bg-neutral-900/40">
+              <span className="text-neutral-400 block text-[9px]">Client: Ritesh Sinha</span>
+              <span className="text-white">0x944d...48f8a</span>
             </div>
-            <span className="text-xs font-mono font-medium text-white">1,500 USDC</span>
-          </div>
-
-          <div className="flex items-center justify-between p-3 rounded-lg border border-white/[0.06] bg-neutral-900/20 opacity-60">
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 rounded-full border border-neutral-600 flex items-center justify-center text-[9px] text-neutral-500">3</div>
-              <div>
-                <div className="text-xs font-medium text-neutral-300">Milestone 3: Mainnet Remediation</div>
-                <div className="text-[10px] text-neutral-500">Locked in contract</div>
-              </div>
+            <div className="p-2 rounded border border-white/[0.06] bg-neutral-900/40">
+              <span className="text-neutral-400 block text-[9px]">Freelancer: Manas Hatwar</span>
+              <span className="text-white">0x0a33...f1af0</span>
             </div>
-            <span className="text-xs font-mono font-medium text-neutral-400">1,500 USDC</span>
           </div>
         </div>
 
-        {/* Bottom Status Row (Matching Image 4) */}
-        <div className="pt-4 flex items-center justify-between text-xs font-mono">
-          <span className="text-neutral-500">Non-Custodial Protocol</span>
-          <span className="text-white font-medium">Direct Wallet Settlement</span>
+        {/* Bottom Status Row */}
+        <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-neutral-400 mt-3">
+          <span>Escrow: FairPayStableEscrow.sol</span>
+          <span className="text-white">Direct Wallet Settlement</span>
         </div>
-      </div>
+      </AppWindowMock>
     );
   }
 
   if (type === "arkiv") {
     return (
-      <div className="w-full bg-[#0c0d10] p-5 sm:p-7 text-left font-sans select-none">
-        {/* Window Bar */}
-        <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/[0.08]">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <span className="text-[11px] text-neutral-400 font-mono ml-2">@arkiv-network/sdk (Rabdi 7794095)</span>
+      <AppWindowMock activeNav="arkiv" breadcrumb="Arkiv Board">
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[10px] font-mono uppercase text-neutral-400">Rabdi Testnet (7794095)</div>
+              <h4 className="text-base font-semibold text-white tracking-tight mt-0.5">
+                Decentralized RFP Board
+              </h4>
+            </div>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-[10px] text-neutral-300">
+              <Database className="w-3 h-3 text-white" /> Consensus TTL
+            </span>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[10px] text-neutral-300">
-            <Database className="w-3 h-3 text-white" /> Consensus TTL Active
-          </span>
-        </div>
 
-        {/* RFP Header */}
-        <div className="mb-5">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-mono text-neutral-400">RFP Posting • Arkiv Chain</span>
-            <span className="text-[11px] font-mono text-neutral-300">Lease: 48h 00m</span>
+          {/* Search bar simulation */}
+          <div className="flex items-center gap-2 p-2 rounded-lg border border-white/[0.08] bg-neutral-950/80 mb-3 text-[11px] text-neutral-400">
+            <Search className="w-3.5 h-3.5 text-neutral-400" />
+            <span>Search live RFPs by skill, budget or TTL...</span>
           </div>
-          <h4 className="text-base sm:text-lg font-semibold text-white tracking-tight">
-            Build Arkiv Contract Indexer & Graph
-          </h4>
-          <p className="text-xs text-neutral-400 mt-1">
-            Deterministic TTL pruning eliminates dead listings. Zero stale jobs.
-          </p>
-        </div>
 
-        {/* TTL Bar */}
-        <div className="p-3.5 rounded-lg border border-white/10 bg-neutral-900/60 mb-5">
-          <div className="flex justify-between text-xs mb-2">
-            <span className="text-neutral-400 font-mono text-[11px]">TTL Lease Countdown</span>
-            <span className="text-white font-mono text-[11px] font-medium">32h 45m Remaining</span>
-          </div>
-          <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full w-2/3" />
-          </div>
-        </div>
+          {/* 2 Live Arkiv RFP Postings */}
+          <div className="space-y-2 mb-2">
+            <div className="p-2.5 rounded-lg border border-white/[0.08] bg-neutral-900/50 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-white">Build Arc Smart Contract Escrow Subgraph</div>
+                <div className="text-[10px] text-neutral-400 font-mono mt-0.5 flex items-center gap-2">
+                  <span className="text-emerald-400 font-medium flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> 32h 45m Remaining
+                  </span>
+                  <span>•</span>
+                  <span>Poster: 0x944d...48f8a</span>
+                </div>
+              </div>
+              <span className="text-xs font-mono font-semibold text-white">2,500 USDC</span>
+            </div>
 
-        {/* Bids List */}
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center justify-between text-xs p-2.5 rounded border border-white/[0.06] bg-neutral-950/60">
-            <span className="text-white font-medium">Proposal #1 • 0x3d...f81c</span>
-            <span className="text-neutral-300 font-mono">2,200 USDC</span>
-          </div>
-          <div className="flex items-center justify-between text-xs p-2.5 rounded border border-white/[0.06] bg-neutral-950/60">
-            <span className="text-white font-medium">Proposal #2 • 0x9a...2b44</span>
-            <span className="text-neutral-300 font-mono">2,000 USDC</span>
+            <div className="p-2.5 rounded-lg border border-white/[0.08] bg-neutral-900/50 flex items-center justify-between">
+              <div>
+                <div className="text-xs font-medium text-white">Solidity Fuzzing Test Suite (Echidna)</div>
+                <div className="text-[10px] text-neutral-400 font-mono mt-0.5 flex items-center gap-2">
+                  <span className="text-emerald-400 font-medium flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> 18h 12m Remaining
+                  </span>
+                  <span>•</span>
+                  <span>Poster: 0x0a33...f1af0</span>
+                </div>
+              </div>
+              <span className="text-xs font-mono font-semibold text-white">1,800 USDC</span>
+            </div>
           </div>
         </div>
 
         {/* Bottom Status Row */}
-        <div className="pt-4 flex items-center justify-between text-xs font-mono">
-          <span className="text-neutral-500">Arkiv Decentralized DB</span>
-          <span className="text-white font-medium">Native TTL Auto-Pruning</span>
+        <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-neutral-400 mt-2">
+          <span>Arkiv DB-Chain SDK</span>
+          <span className="text-white">Zero Ghost Jobs • Auto-Pruning</span>
         </div>
-      </div>
-    );
-  }
-
-  if (type === "wallet") {
-    return (
-      <div className="w-full bg-[#0c0d10] p-6 sm:p-8 text-left font-sans select-none">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-xs text-neutral-300 mb-5">
-          <Wallet className="w-3.5 h-3.5 text-neutral-300" />
-          <span>Universal Web3 Access</span>
-        </div>
-
-        {/* Title & Subtitle */}
-        <h4 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">
-          Supported Wallets & Arc Network
-        </h4>
-        <p className="text-xs sm:text-sm text-neutral-400 mb-6 leading-relaxed">
-          Connect with your preferred EVM Web3 wallet. Instant authorization, zero centralized custody.
-        </p>
-
-        {/* Spec Rows */}
-        <div className="space-y-3 mb-6">
-          <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/[0.08] bg-neutral-900/40 text-xs sm:text-sm">
-            <span className="text-neutral-400">Supported Wallets:</span>
-            <span className="font-mono text-white font-medium">MetaMask, Rabby, Coinbase</span>
-          </div>
-          <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/[0.08] bg-neutral-900/40 text-xs sm:text-sm">
-            <span className="text-neutral-400">Settlement Asset:</span>
-            <span className="font-mono text-white font-medium">Native Circle USDC</span>
-          </div>
-          <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/[0.08] bg-neutral-900/40 text-xs sm:text-sm">
-            <span className="text-neutral-400">Target Layer:</span>
-            <span className="font-mono text-white font-medium">Arc Testnet (EVM)</span>
-          </div>
-        </div>
-
-        {/* Button */}
-        <Link
-          href={tryNowHref}
-          className="w-full py-3.5 px-6 rounded-full bg-white text-black font-semibold text-xs sm:text-sm hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
-        >
-          <span>Try Now</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
+      </AppWindowMock>
     );
   }
 
   if (type === "agreement") {
     return (
-      <div className="w-full bg-[#0c0d10] p-5 sm:p-7 text-left font-sans select-none">
-        {/* Window Bar */}
-        <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/[0.08]">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <span className="text-[11px] text-neutral-400 font-mono ml-2">convex: reactive_state_engine</span>
-          </div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[10px] text-neutral-300">
-            <ShieldCheck className="w-3 h-3 text-white" /> EIP-191 Verified
-          </span>
-        </div>
-
-        {/* Header */}
-        <div className="mb-5">
-          <div className="text-[11px] text-neutral-400 uppercase tracking-wider font-mono">Scope Agreement Lock</div>
-          <h4 className="text-base sm:text-lg font-semibold text-white tracking-tight mt-0.5">
-            Cryptographic Milestone Specification
-          </h4>
-        </div>
-
-        {/* Keccak-256 Box */}
-        <div className="p-3.5 rounded-lg border border-white/10 bg-neutral-900/60 mb-4">
-          <div className="flex justify-between text-xs mb-1.5">
-            <span className="text-neutral-400 font-mono text-[11px]">Canonical Keccak-256 Hash</span>
-            <span className="text-white font-mono text-[11px] font-medium">On-Chain Anchored</span>
-          </div>
-          <div className="text-[11px] font-mono text-neutral-200 bg-black/60 p-2.5 rounded border border-white/[0.06] break-all select-all">
-            0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
-          </div>
-        </div>
-
-        {/* Dual Signatures */}
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center justify-between text-xs p-2.5 rounded border border-white/[0.06] bg-neutral-950/60">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-              <span className="text-neutral-300">Client Signature (EIP-191):</span>
+      <AppWindowMock activeNav="jobs" breadcrumb="Jobs > Webdev > Agreement">
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[10px] font-mono uppercase text-neutral-400">Convex Reactive State</div>
+              <h4 className="text-base font-semibold text-white tracking-tight mt-0.5">
+                EIP-191 Scope Lock
+              </h4>
             </div>
-            <span className="text-white font-mono text-[11px]">0x48b2...a19f (Verified)</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-[10px] text-neutral-300">
+              <ShieldCheck className="w-3 h-3 text-white" /> Signed & Anchored
+            </span>
           </div>
-          <div className="flex items-center justify-between text-xs p-2.5 rounded border border-white/[0.06] bg-neutral-950/60">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-              <span className="text-neutral-300">Builder Signature (EIP-191):</span>
+
+          {/* Canonical Hash Box */}
+          <div className="p-2.5 rounded-lg border border-white/[0.08] bg-neutral-950/80 mb-3">
+            <div className="flex justify-between text-[10px] text-neutral-400 font-mono mb-1">
+              <span>Canonical Keccak-256 Hash</span>
+              <span className="text-emerald-400">On-Chain Locked</span>
             </div>
-            <span className="text-white font-mono text-[11px]">0x3df8...1c22 (Verified)</span>
+            <div className="text-[10px] font-mono text-neutral-200 bg-black/60 p-1.5 rounded border border-white/[0.06] truncate">
+              0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
+            </div>
+          </div>
+
+          {/* Dual Verified Signatures */}
+          <div className="space-y-1.5 mb-2 font-mono text-[10px]">
+            <div className="p-2 rounded border border-white/[0.06] bg-neutral-900/50 flex items-center justify-between">
+              <span className="text-neutral-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-white" /> Client EIP-191:
+              </span>
+              <span className="text-white">Ritesh Sinha (0x944d...48f8a) ✓</span>
+            </div>
+            <div className="p-2 rounded border border-white/[0.06] bg-neutral-900/50 flex items-center justify-between">
+              <span className="text-neutral-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3 text-white" /> Freelancer EIP-191:
+              </span>
+              <span className="text-white">Manas Hatwar (0x0a33...f1af0) ✓</span>
+            </div>
           </div>
         </div>
 
         {/* Bottom Status Row */}
-        <div className="pt-4 flex items-center justify-between text-xs font-mono">
-          <span className="text-neutral-500">Convex Coordination Engine</span>
-          <span className="text-white font-medium">Zero Scope Creep</span>
+        <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-neutral-400 mt-2">
+          <span>WebSocket Sync: 12ms</span>
+          <span className="text-white">Zero Scope Creep</span>
         </div>
-      </div>
+      </AppWindowMock>
     );
   }
-  return null;
+
+  // wallet / settlement view
+  return (
+    <AppWindowMock activeNav="payments" breadcrumb="Payments">
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[10px] font-mono uppercase text-neutral-400">Direct Wallet Settlement</div>
+            <h4 className="text-base font-semibold text-white tracking-tight mt-0.5">
+              0% Platform Extraction
+            </h4>
+          </div>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04] text-[10px] text-neutral-300">
+            <Wallet className="w-3 h-3 text-white" /> EVM Connected
+          </span>
+        </div>
+
+        {/* Payout Breakdown Table */}
+        <div className="p-3 rounded-lg border border-white/[0.08] bg-neutral-950/80 mb-3 font-mono text-[11px] space-y-1.5">
+          <div className="flex justify-between text-neutral-300">
+            <span>Escrow Approved:</span>
+            <span className="text-white font-semibold">2,500.00 USDC</span>
+          </div>
+          <div className="flex justify-between text-neutral-400">
+            <span>Upwork / Fiverr Cut (15%):</span>
+            <span className="text-red-400 line-through">-$375.00</span>
+          </div>
+          <div className="flex justify-between text-neutral-400">
+            <span>FairPay Platform Commission:</span>
+            <span className="text-emerald-400 font-semibold">$0.00 (0% Cut)</span>
+          </div>
+          <div className="pt-1.5 border-t border-white/[0.08] flex justify-between text-white font-semibold text-xs">
+            <span>Contractor Net Payout:</span>
+            <span>2,500.00 USDC (100%)</span>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <Link
+          href={tryNowHref}
+          className="w-full py-2.5 px-4 rounded-lg bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-colors flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+        >
+          <span>Try Now</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
+      {/* Bottom Status Row */}
+      <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-neutral-400 mt-2">
+        <span>MetaMask • Rabby • Coinbase</span>
+        <span className="text-white">&lt; 2s Instant Release</span>
+      </div>
+    </AppWindowMock>
+  );
 }
 
 /* ─── Feature Row Component with Exact WeKraft Appear Animation ─── */

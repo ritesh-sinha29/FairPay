@@ -23,12 +23,15 @@ export function AuthScreen({ children }: AuthScreenProps) {
             priority
             className="object-cover z-0 opacity-50"
           />
-          <div className="flex items-center gap-2 z-20 relative">
+          <Link
+            href="/web"
+            className="flex items-center gap-2 z-20 relative hover:opacity-85 transition-opacity"
+          >
             <FairPayLogo size={35} />
             <h1 className="text-xl font-semibold tracking-tight text-white">
               FairPay
             </h1>
-          </div>
+          </Link>
 
           <div className="absolute bottom-10 z-20">
             <h1 className="text-6xl font-semibold tracking-tight bg-gradient-to-r from-white to-neutral-800 text-transparent bg-clip-text">
@@ -47,12 +50,15 @@ export function AuthScreen({ children }: AuthScreenProps) {
         <div className="w-full lg:w-[35%] h-full flex flex-col justify-center items-center px-6 sm:px-12 relative overflow-hidden bg-black">
           {/* Header */}
           <div className="flex flex-col items-center gap-5 mb-12 relative z-10">
-            <div className="flex items-center gap-3">
+            <Link
+              href="/web"
+              className="flex items-center gap-3 hover:opacity-85 transition-opacity"
+            >
               <FairPayLogo size={40} />
               <h1 className="text-3xl font-bold tracking-tight text-white">
                 FairPay
               </h1>
-            </div>
+            </Link>
             <div className="text-center space-y-1">
               <p className="text-sm font-medium text-neutral-400 tracking-wide uppercase">
                 Building the future together

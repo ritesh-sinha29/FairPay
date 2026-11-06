@@ -25,6 +25,7 @@ export function Navbar() {
   const { isAuthenticated } = useConvexAuth();
 
   const tryNowHref = isAuthenticated ? "/jobs" : "/auth";
+  const logoHref = "/web";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,7 +52,10 @@ export function Navbar() {
         )}
       >
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+        <Link
+          href={logoHref}
+          className="flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity"
+        >
           <FairPayLogo size={scrolled ? 26 : 30} />
           <span className="font-semibold text-white text-base tracking-tight">
             FairPay

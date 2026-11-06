@@ -112,16 +112,23 @@ An external RPC is still a dependency for verification. Its failure can temporar
 
 | Route or source | Purpose |
 | --- | --- |
+| / | Root router: redirects authenticated users to /jobs (once per session) or displays landing page |
+| /web | Dedicated public landing page showcasing protocol layers, 0% fee comparison, and interactive FAQ |
+| /arkiv | Arkiv DB-Chain decentralized RFP board with live SQL query builder and native TTL auto-pruning |
 | /sign-up | Choose client or freelancer signup |
 | /sign-up/client and /sign-up/freelancer | Separate role-specific forms and wallet verification |
 | /sign-in | Return with the account's wallet |
-| / and /jobs | Account-scoped overview and jobs |
+| /jobs | Account-scoped overview and jobs |
 | /jobs/new | Client job form |
 | /jobs/[jobId] | Participant-only brief, funding, delivery, and payment |
 | /payments and /account | Payment history and account details |
+| /terms and /privacy | Protocol terms of service and privacy notice |
 | convex/auth.ts and walletActions.ts | Wallet authentication and signature verification |
 | convex/jobs.ts | Job queries, mutations, reservations, and protected writes |
 | convex/escrow.ts | Deployment, payment-status, and failed-funding verification |
+| src/lib/arkiv.ts | Typed Arkiv DB-Chain SDK public and wallet clients |
+| src/lib/blockscout.ts | Blockscout API v2 verification and contract bytecode inspector |
+| src/modules/web | Public showcase components (Hero, WhyFairPay, FAQ, Navbar, Footer) |
 | src/components/ui | Official shadcn component source |
 | contracts/FairPayEscrow.sol | Escrow payment rules |
 | contracts/FairPayStableEscrow.sol | Studio-generated Arc USDC escrow; locally compiled artifact is used by both the wallet and verifier |

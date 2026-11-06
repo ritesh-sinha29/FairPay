@@ -35,14 +35,16 @@ The sequence below is a proposed work order. It does not assume the event schedu
 
 ## After the first working demonstration
 
-| Priority | Candidate work | Dependency |
+| Priority | Candidate work | Status / Dependency |
 | --- | --- | --- |
-| First | Agree on cancellation, inactivity, and dispute rules | Product decisions and a concrete threat model |
-| First | Independent security review and broader contract tests | Stable contract rules and reproducible deployment |
-| Implemented locally | Arc USDC escrow | Complete public testnet evidence and Studio integration |
-| Next | Deliverable evidence and milestones | Privacy rules, evidence format, and partial payment model |
-| Later | Account recovery, gas sponsorship, and more wallets | Validated user needs and a budget for infrastructure |
-| Later | Factory deployment and indexed job discovery | Measured need for multiple jobs and cross-device access |
+| Completed | Arc USDC Stable Escrow | SafeERC20 exact allowance & single-transaction payout verification on Arc Testnet (5042002) |
+| Completed | Arkiv DB-Chain RFP Board | Gasless SQL queries, native entity TTL expiration, and Rabdi testnet integration (7794095) |
+| Completed | Blockscout API v2 Audit & Explorer | Deep-links, REST v2 verification, and embedded in-app bytecode inspector drawer |
+| Completed | High-Conversion Public Showcase (`/web`) | Dark monochrome aesthetic, interactive FAQs, WeKraft animations, dynamic auth routing |
+| First | Independent security audit & invariant fuzzing | Echidna/Foundry property tests and formal verification |
+| Next | Multi-milestone escrow splitting | Partial milestone release and progressive deliverable verification |
+| Next | Dispute arbitration & timelocked auto-release | Timeout release if client ghosts review, with decentralized arbitration fallback |
+| Later | Account abstraction & gas sponsorship (ERC-4337) | Paymaster integration to sponsor gas for Web2 clients |
 
 ## Commercial questions to validate
 

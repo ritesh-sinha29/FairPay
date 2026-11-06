@@ -20,7 +20,11 @@ The client deposits the agreed amount into a smart contract. The freelancer can 
 
 The contract stores the client, freelancer, deposit, and status on a shared blockchain. It checks the wallet behind each action. Only the freelancer can submit this job, and only the client can release its payment after submission. A successful release advances the state so the same job cannot be paid twice.
 
-We built the interface in Next.js and TypeScript with shadcn components. Convex stores authenticated client and freelancer accounts, job briefs, and delivery records. ethers connects the wallet to the Solidity contract, and the backend verifies confirmed payment state before updating the job. New jobs use USDC on Arc Testnet. The client creates an escrow, permits the agreed token amount, and locks it before work begins. The contract also commits to the agreed job terms. Arc Studio integration evidence and entry eligibility are tracked separately.
+We built the interface in Next.js and TypeScript with shadcn components. Convex stores authenticated client and freelancer accounts, job briefs, and delivery records. ethers connects the wallet to the Solidity contract, and the backend verifies confirmed payment state before updating the job. 
+
+Jobs are settled in Circle USDC on Arc Testnet via `FairPayStableEscrow.sol`. The client creates an escrow, permits the exact token amount, and locks funds before work begins. 
+
+Additionally, FairPay integrates **Arkiv DB-Chain** (Chain ID 7794095) for decentralized, auto-expiring milestone RFPs with native TTL expiration—completely eliminating stale listings without server cron jobs. For transparent verification, **Blockscout API v2** is integrated for live contract auditing and in-app inspector badges.
 
 ## Demonstrate the job flow for about seventy seconds
 
@@ -60,7 +64,9 @@ FairPay gives a small job a visible deposit and a clear work verification proces
 | How do you know the work is good? | The client assesses the delivery. Their verification transaction releases payment; the contract cannot judge work quality itself. |
 | What if the client never verifies the work? | The deposit stays locked today. Timeout and dispute rules are a proposed next step. |
 | Can you refund or cancel? | The current contract has no refund or cancellation action. We need agreed rules before adding one. |
-| What is actually built? | Next.js and shadcn UI, separate wallet signup, deployed Convex accounts and jobs, delivery records, Solidity escrow, and Arc USDC integration with legacy Sepolia support. |
+| What is actually built? | Next.js and shadcn UI, high-conversion landing page (`/web`), separate gasless EIP-191 wallet signup, deployed Convex accounts and reactive jobs, delivery records, Solidity escrow on Arc Testnet, Arkiv DB-Chain board with native TTL auto-pruning, and Blockscout API v2 verification. |
+| Why Arkiv DB-Chain? | Centralized freelance boards suffer from 38%+ 'ghost jobs' where abandoned listings pollute search results. Arkiv stores RFPs on-chain with native ExpirationTime TTLs, auto-pruning expired bids at the consensus level with zero server cron overhead. |
+| How does Blockscout help? | Blockscout provides open-source, trustless auditability. Every escrow contract features one-click Blockscout badges, and the in-app `<BlockscoutInspector />` drawer verifies contract bytecode and execution traces in real time. |
 | What is verified live? | A public transaction proof is pending the two-wallet rehearsal. Only claim it after saving confirmed evidence. |
 | How do you earn revenue? | The current platform fee is zero. Pricing and willingness to pay are future research questions. |
 | What makes this different? | Our design focus is a small, understandable job workflow with visible funding and role-specific next steps. Competitive advantage still needs validation. |

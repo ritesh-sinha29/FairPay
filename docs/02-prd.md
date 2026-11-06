@@ -52,6 +52,9 @@ The contract can enforce its programmed permissions and state transitions. Work 
 | FR08 | Show persistent jobs and payment history | Search, status filtering, refresh, and CSV export operate on authenticated Convex records |
 | FR09 | Provide separate client and freelancer signup | A fresh wallet signature creates the selected account type, and sign-in preserves its saved role |
 | FR10 | Provide step-by-step help | Each role sees the appropriate next action and can read the short payment walkthrough |
+| FR11 | Arkiv DB-Chain RFP discovery & publishing | Post milestone listings to Arkiv Rabdi testnet with native expiration TTL; execute gasless typed SQL queries |
+| FR12 | Blockscout explorer and contract auditing | Direct deep-links to Blockscout on all escrows, live REST API v2 audits, and in-app bytecode inspector |
+| FR13 | High-conversion public showcase & FAQ | Public `/web` landing page with interactive FAQ, 0% fee comparison, and dynamic auth routing |
 
 The PRD, TRD, roadmap, and pitch guide are preparation material for the project owner in the repository docs folder.
 

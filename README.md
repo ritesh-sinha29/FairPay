@@ -183,7 +183,7 @@ SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 # Arkiv DB-Chain Integration
 NEXT_PUBLIC_ARKIV_ACCESS_KEY=""
 NEXT_PUBLIC_ARKIV_WRITER_WALLET="0xE6E4bde21600b3c973E1CB2c6125C2E46bb96d24"
-ARKIV_PRIVATE_KEY="0x2fd275893df8f8ce35eae39707d9efd388a3d7259ee74c57da56027b528b330a"
+ARKIV_PRIVATE_KEY="<your-testnet-private-key>"
 NEXT_PUBLIC_ARKIV_EXPLORER_URL="https://rabdi.explorer.arkiv.network"
 NEXT_PUBLIC_ARKIV_CHAIN_ID=7794095
 NEXT_PUBLIC_ARKIV_RPC_URL="https://rpc.rabdi.db-chain.testnet.arkiv.network/"
@@ -322,7 +322,8 @@ pnpm run build
 │   ├── 05-pitch.md                 # Hackathon presentation and pitch deck notes
 │   ├── 06-glossary.md              # Web3 domain terminology and definitions
 │   ├── 07-arc-integration.md       # Arc Studio integration and USDC escrow evidence
-│   └── 08-arkiv-integration.md     # Arkiv DB-Chain integration, schema, and evidence
+│   ├── 08-arkiv-integration.md     # Arkiv DB-Chain integration, schema, and evidence
+│   └── 09-blockscout-integration.md # Blockscout verification and explorer integration
 ├── scripts/
 │   ├── check-arc.mjs               # Live Arc Testnet RPC diagnostic tool
 │   ├── compile-contract.mjs        # solc compiler pipeline & bytecode exporter
@@ -333,8 +334,12 @@ pnpm run build
 │   │   ├── arkiv/                  # Arkiv DB-Chain Escrow Board page
 │   │   ├── jobs/                   # Escrow job listings, creation, and detail views
 │   │   ├── payments/               # Payment history and CSV export
+│   │   ├── privacy/                # Privacy notice page
+│   │   ├── terms/                  # Protocol terms of service page
+│   │   ├── web/                    # Dedicated public landing page & features showcase
 │   │   └── (auth)/                 # Web3 gasless sign-in and sign-up flows
 │   ├── components/                 # UI components, modals, and app shell
+│   ├── modules/web/                # Public landing page components (Hero, WhyFairPay, FAQ, Navbar, Footer)
 │   └── lib/                        # Arkiv SDK helpers, Web3 provider, and contracts
 └── tests/
     ├── escrow.test.mjs             # Ganache tests for native ETH escrow
@@ -345,15 +350,17 @@ pnpm run build
 
 ## 📜 Complete Documentation
 
-Comprehensive engineering, product, and hackathon documentation is available in [`docs/`](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/>):
+Comprehensive engineering, product, and hackathon documentation is available in [`docs/`](<file:///docs/>):
 
-- [**01-start-here.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/01-start-here.md>) — Comprehensive operator walkthrough.
-- [**02-prd.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/02-prd.md>) — Product requirements and experience principles.
-- [**03-trd.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/03-trd.md>) — Technical requirements and contract specifications.
-- [**04-roadmap.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/04-roadmap.md>) — Feature progression and validation roadmap.
-- [**07-arc-integration.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/07-arc-integration.md>) — Arc Studio integration and prize submission evidence.
-- [**08-arkiv-integration.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/08-arkiv-integration.md>) — Arkiv DB-Chain integration, schema, native expiration, and hackathon judging evidence.
-- [**09-blockscout-integration.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/09-blockscout-integration.md>) — Blockscout API v2 integration, live escrow contract verification, and explorer deep-linking.
+- [**01-start-here.md**](<file:///docs/01-start-here.md>) — Comprehensive operator walkthrough.
+- [**02-prd.md**](<file:///docs/02-prd.md>) — Product requirements and experience principles.
+- [**03-trd.md**](<file:///docs/03-trd.md>) — Technical requirements and contract specifications.
+- [**04-roadmap.md**](<file:///docs/04-roadmap.md>) — Feature progression and validation roadmap.
+- [**05-pitch.md**](<file:///docs/05-pitch.md>) — Hackathon narrative, market metrics, and competitive advantages.
+- [**06-glossary.md**](<file:///docs/06-glossary.md>) — Web3 domain terminology and definitions.
+- [**07-arc-integration.md**](<file:///docs/07-arc-integration.md>) — Arc Studio integration and prize submission evidence.
+- [**08-arkiv-integration.md**](<file:///docs/08-arkiv-integration.md>) — Arkiv DB-Chain integration, schema, native expiration, and hackathon judging evidence.
+- [**09-blockscout-integration.md**](<file:///docs/09-blockscout-integration.md>) — Blockscout API v2 integration, live escrow contract verification, and explorer deep-linking.
 
 ---
 

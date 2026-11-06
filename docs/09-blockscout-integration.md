@@ -12,8 +12,8 @@ FairPay integrates **Blockscout** as its primary open-source verification and bl
 Blockscout developer access is configured in `.env.local` and `.env.example`:
 
 ```env
-BLOCKSCOUT_API_KEY="proapi_eGLUIW2IxlQlmhUUJdz1KZz92CmeGCJWgXnlB2BNsEJWVkJDEYZxPJQ0hg3OC3dm_eLiBzF"
-NEXT_PUBLIC_BLOCKSCOUT_API_KEY="proapi_eGLUIW2IxlQlmhUUJdz1KZz92CmeGCJWgXnlB2BNsEJWVkJDEYZxPJQ0hg3OC3dm_eLiBzF"
+BLOCKSCOUT_API_KEY="<your-blockscout-api-key>"
+NEXT_PUBLIC_BLOCKSCOUT_API_KEY="<your-blockscout-api-key>"
 ```
 
 ---
@@ -47,7 +47,7 @@ NEXT_PUBLIC_BLOCKSCOUT_API_KEY="proapi_eGLUIW2IxlQlmhUUJdz1KZz92CmeGCJWgXnlB2BNs
 ### Direct API Testing:
 Run the following curl command in your terminal:
 ```bash
-# Test Blockscout API v2 with FairPay API Key
-curl "https://api.blockscout.com/1/api/v2/addresses/0xd8da6bf26964af9d7eed9e03e53415d37aa96045/transactions?apikey=proapi_eGLUIW2IxlQlmhUUJdz1KZz92CmeGCJWgXnlB2BNsEJWVkJDEYZxPJQ0hg3OC3dm_eLiBzF"
+# Test Blockscout API v2 with API Key
+curl "https://api.blockscout.com/1/api/v2/addresses/0xd8da6bf26964af9d7eed9e03e53415d37aa96045/transactions?apikey=<your-blockscout-api-key>"
 ```
 

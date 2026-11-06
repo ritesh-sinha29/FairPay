@@ -2,6 +2,7 @@
  * Blockscout API Integration for FairPay
  * Provides real-time contract verification, transaction inspection, and explorer deep-linking.
  */
+import { ARC_TESTNET } from "./payments";
 
 export const BLOCKSCOUT_NETWORKS: Record<number, { name: string; baseUrl: string; apiUrl: string }> = {
   // Ethereum Sepolia Testnet
@@ -11,10 +12,10 @@ export const BLOCKSCOUT_NETWORKS: Record<number, { name: string; baseUrl: string
     apiUrl: "https://eth-sepolia.blockscout.com/api/v2",
   },
   // Arc Testnet
-  5042002: {
-    name: "Arc Testnet",
-    baseUrl: "https://explorer.testnet.arc.network",
-    apiUrl: "https://explorer.testnet.arc.network/api/v2",
+  [ARC_TESTNET.chainId]: {
+    name: ARC_TESTNET.name,
+    baseUrl: ARC_TESTNET.explorerUrl,
+    apiUrl: `${ARC_TESTNET.explorerUrl}/api/v2`,
   },
 };
 

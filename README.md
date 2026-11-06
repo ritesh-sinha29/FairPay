@@ -126,8 +126,8 @@ stateDiagram-v2
 | **Payment Asset**    | USDC (ERC-20, 6 decimals)                                 | tGLM (Gasless Public Reads)                                         | ETH (Native, 18 decimals)                            |
 | **Token / Contract** | `0x3600000000000000000000000000000000000000`            | Arkiv DB-Chain Primitives                                           | Native Ether                                         |
 | **RPC Endpoint**     | `https://rpc.testnet.arc.io`                            | `https://rpc.rabdi.db-chain.testnet.arkiv.network/`               | `https://ethereum-sepolia-rpc.publicnode.com`      |
-| **Block Explorer**   | [explorer.testnet.arc.network](https://explorer.testnet.arc.network) | [rabdi.explorer.arkiv.network](https://rabdi.explorer.arkiv.network) | [eth-sepolia.blockscout.com](https://eth-sepolia.blockscout.com) |
-| **Blockscout API**   | [Blockscout v2 REST](https://explorer.testnet.arc.network/api/v2) | N/A | [Blockscout v2 REST](https://eth-sepolia.blockscout.com/api/v2) |
+| **Block Explorer**   | [explorer.testnet.arc.io](https://explorer.testnet.arc.io) | [rabdi.explorer.arkiv.network](https://rabdi.explorer.arkiv.network) | [eth-sepolia.blockscout.com](https://eth-sepolia.blockscout.com) |
+| **Blockscout API**   | [Blockscout v2 REST](https://explorer.testnet.arc.io/api/v2) | N/A | [Blockscout v2 REST](https://eth-sepolia.blockscout.com/api/v2) |
 | **Faucet**           | [Circle Faucet](https://faucet.circle.com)                 | [Arkiv Faucet / Hub](https://hub.arkiv.network)                      | [Sepolia PoW Faucet](https://sepolia-faucet.pk910.de) |
 
 ---

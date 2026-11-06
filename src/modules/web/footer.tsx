@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useConvexAuth } from "convex/react";
 import { FairPayLogo } from "@/components/fairpay-logo";
+import { ARC_TESTNET } from "@/lib/payments";
 
 interface FooterLinkItem {
   label: string;
@@ -157,7 +158,7 @@ export function Footer() {
                 { label: "Arc Testnet", href: "https://arc.network", external: true },
                 { label: "Circle USDC", href: "https://www.circle.com/usdc", external: true },
                 { label: "Arkiv DB-Chain", href: "https://arkiv.network", external: true },
-                { label: "Blockscout Scan", href: "https://testnet.arcscan.io", external: true },
+                { label: "Blockscout Scan", href: ARC_TESTNET.explorerUrl, external: true },
                 { label: "Convex Cloud", href: "https://convex.dev", external: true },
               ]}
             />
@@ -171,7 +172,7 @@ export function Footer() {
                 { label: "Protocol FAQ", href: "/web#faq" },
                 { label: "Security & Specs", href: "/web#faq" },
                 { label: "Smart Contracts", href: "https://github.com", external: true },
-                { label: "Blockscout Audit", href: "https://testnet.arcscan.io", external: true },
+                { label: "Blockscout Audit", href: ARC_TESTNET.explorerUrl, external: true },
               ]}
             />
           </div>

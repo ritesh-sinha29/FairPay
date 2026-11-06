@@ -23,7 +23,7 @@ NEXT_PUBLIC_BLOCKSCOUT_API_KEY="<your-blockscout-api-key>"
 ### 1. Blockscout Service Layer ([`src/lib/blockscout.ts`](file:///src/lib/blockscout.ts))
 * **`fetchBlockscoutContract(chainId, address)`**: Queries Blockscout API v2 (`/smart-contracts/{address}`) to verify source code and bytecode matching.
 * **`fetchBlockscoutTx(chainId, txHash)`**: Queries Blockscout API v2 (`/transactions/{txHash}`) to fetch execution status, block height, and gas fees.
-* **Deep Links**: Constructs canonical explorer links for Ethereum Sepolia (`https://eth-sepolia.blockscout.com`) and Arc Testnet (`https://explorer.testnet.arc.network`).
+* **Deep Links**: Constructs canonical explorer links for Ethereum Sepolia (`https://eth-sepolia.blockscout.com`) and Arc Testnet (`https://explorer.testnet.arc.io`).
 
 ### 2. Live API Relayer ([`src/app/api/blockscout/route.ts`](file:///src/app/api/blockscout/route.ts))
 * Next.js server route handling cached requests to Blockscout with authenticated API key headers.

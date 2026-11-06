@@ -38,6 +38,7 @@ import {
   fetchArkivJobs,
   buildArkivQuery,
   getExpirationOptions,
+  publishJobToArkiv,
   ARKIV_CHAIN_ID,
   ARKIV_EXPLORER_URL,
   ARKIV_WRITER_WALLET,
@@ -49,7 +50,7 @@ export default function ArkivBoardPage() {
   const { user } = useWorkspace();
   const [entities, setEntities] = useState<ArkivJobEntity[]>([]);
   const [loading, setLoading] = useState(true);
-  const [source, setSource] = useState<"arkiv-live" | "arkiv-cache">("arkiv-cache");
+  const [source, setSource] = useState<"arkiv-live" | "arkiv-empty">("arkiv-empty");
   const [rawSql, setRawSql] = useState("");
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("open");
@@ -76,7 +77,32 @@ export default function ArkivBoardPage() {
         },
         user?.walletAddress,
       );
-      setEntities(res.entities);
+
+      // Purge any legacy demo cache from browser storage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("fairpay_arkiv_local_entities");
+      }
+
+      // Load user-published entities
+      const localSaved: ArkivJobEntity[] =
+        typeof window !== "undefined"
+          ? JSON.parse(
+              localStorage.getItem("fairpay_arkiv_user_entities") || "[]",
+            )
+          : [];
+
+      // Filter locally published items matching active filters (reject any legacy dummy items)
+      const filteredLocal = localSaved.filter((item) => {
+        if (!item || !item.title || item.title === "Arkiv Milestone RFP") return false;
+        if (category !== "all" && item.category !== category) return false;
+        if (status !== "all" && item.status !== status) return false;
+        if (minBudget > 0 && parseFloat(item.budgetEth) < minBudget) return false;
+        return true;
+      });
+
+      // Merge testnet entities with user items
+      const combined = [...filteredLocal, ...res.entities];
+      setEntities(combined);
       setRawSql(res.rawQuery);
       setSource(res.source);
     } catch {
@@ -104,36 +130,25 @@ export default function ArkivBoardPage() {
 
     setSubmitting(true);
     try {
-      // Simulate on-chain Arkiv entity creation
-      await new Promise((r) => setTimeout(r, 1200));
-
-      const newEntity: ArkivJobEntity = {
-        key: `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`,
-        owner: user?.walletAddress || ARKIV_WRITER_WALLET || "0x0000000000000000000000000000000000000000",
+      const created = await publishJobToArkiv({
         title: newTitle,
-        category: newCategory as any,
-        status: "open",
+        category: newCategory,
         budgetEth: newBudget,
         milestonesCount: newMilestones,
-        clientAddress: user?.walletAddress || ARKIV_WRITER_WALLET || "0x0000000000000000000000000000000000000000",
-        tags: [newCategory, "arkiv", "escrow"],
-        description: newDesc || "Decentralized milestone RFP published to Arkiv DB-Chain.",
-        createdAt: Date.now(),
-        expiresAt: Date.now() + newDays * 24 * 3600 * 1000,
-        remainingHours: newDays * 24,
-        isExpired: false,
-        txHash: `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`,
-      };
+        clientAddress: user?.walletAddress,
+        description: newDesc,
+        days: newDays,
+      });
 
-      setEntities((prev) => [newEntity, ...prev]);
+      setEntities((prev) => [created, ...prev]);
       setOpenDialog(false);
       setNewTitle("");
       setNewDesc("");
       toast.success(
         `Job published to Arkiv Rabdi Testnet! Lifetime: ${newDays} days (auto-expiring).`,
       );
-    } catch {
-      toast.error("Error creating Arkiv entity");
+    } catch (err: any) {
+      toast.error(err?.message || "Error creating Arkiv entity");
     } finally {
       setSubmitting(false);
     }
@@ -383,20 +398,38 @@ export default function ArkivBoardPage() {
           </div>
 
           {entities.length === 0 ? (
-            <div className="p-12 text-center rounded-xl border border-neutral-800 bg-neutral-950/50">
-              <p className="text-sm text-neutral-400">No active entities found matching this Arkiv filter.</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setCategory("all");
-                  setStatus("all");
-                  setMinBudget(0);
-                }}
-                className="mt-3 text-xs bg-neutral-900 border-neutral-800"
-              >
-                Reset Filters
-              </Button>
+            <div className="p-12 text-center rounded-2xl border border-neutral-800 bg-neutral-950/60 space-y-3">
+              <div className="mx-auto w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <Database className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-semibold text-white">
+                No active entities on Arkiv Rabdi Testnet
+              </h3>
+              <p className="text-xs text-neutral-400 max-w-md mx-auto">
+                No open milestone RFPs currently match your query filter. Post an auto-expiring RFP to publish the first listing on Rabdi testnet.
+              </p>
+              <div className="pt-2 flex items-center justify-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setCategory("all");
+                    setStatus("all");
+                    setMinBudget(0);
+                  }}
+                  className="text-xs bg-neutral-900 border-neutral-800 text-neutral-300"
+                >
+                  Reset Filters
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setOpenDialog(true)}
+                  className="text-xs bg-white hover:bg-neutral-200 text-black font-semibold"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  Post to Arkiv
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

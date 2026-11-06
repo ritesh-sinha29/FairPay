@@ -71,104 +71,6 @@ export function getArkivPublicClient() {
   });
 }
 
-// Verified Mock Feed for local testing & judging fallback
-export function getVerifiedArkivJobs(writerFallback: string = ""): ArkivJobEntity[] {
-  const activeWriter = ARKIV_WRITER_WALLET || writerFallback || "0x0000000000000000000000000000000000000000";
-
-  return [
-    {
-      key: "0x4a9f8b2c1d3e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcd",
-      owner: activeWriter,
-      title: "Zero-Knowledge Milestone Verifier for Arkiv DB-Chain",
-      category: "smart-contracts",
-      status: "open",
-      budgetEth: "2.50",
-      milestonesCount: 3,
-      clientAddress: activeWriter,
-      tags: ["solidity", "arkiv", "zk-snarks", "escrow"],
-      description:
-        "Design and deploy a trustless milestone verifier contract that queries Arkiv ephemeral entities to validate off-chain deliverable attestations before unlocking escrow funds.",
-      createdAt: Date.now() - 3600 * 1000 * 18,
-      expiresAt: Date.now() + 3600 * 1000 * (24 * 7 - 18),
-      remainingHours: 150,
-      isExpired: false,
-      txHash: "0x89e5a1b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f",
-    },
-    {
-      key: "0x1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef01",
-      owner: activeWriter,
-      title: "Realtime Arkiv SQL-Like Filter Dashboard for Next.js",
-      category: "frontend",
-      status: "open",
-      budgetEth: "1.20",
-      milestonesCount: 2,
-      clientAddress: activeWriter,
-      tags: ["react", "nextjs", "viem", "tailwind"],
-      description:
-        "Build a high-performance reactive query interface consuming @arkiv-network/sdk with live block listeners, debounce search, and syntax-highlighted SQL generator.",
-      createdAt: Date.now() - 3600 * 1000 * 8,
-      expiresAt: Date.now() + 3600 * 1000 * 64,
-      remainingHours: 64,
-      isExpired: false,
-      txHash: "0x12a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7081",
-    },
-    {
-      key: "0x7e8f90123456789abcdef0123456789abcdef0123456789abcdef0123456789a",
-      owner: activeWriter,
-      title: "Formal Verification of FairPay Milestone Multi-Token Escrow",
-      category: "security-audit",
-      status: "open",
-      budgetEth: "3.80",
-      milestonesCount: 4,
-      clientAddress: activeWriter,
-      tags: ["audit", "formal-verification", "openzeppelin", "security"],
-      description:
-        "Conduct in-depth threat modeling, invariant testing, and re-entrancy verification for FairPay's ERC20 and native ETH milestone escrow smart contracts.",
-      createdAt: Date.now() - 3600 * 1000 * 42,
-      expiresAt: Date.now() + 3600 * 1000 * 126,
-      remainingHours: 126,
-      isExpired: false,
-      txHash: "0x56a7b8c9d0e1f2031425364758697a8b9c0d1e2f30415263748596a7b8c9d0e1",
-    },
-    {
-      key: "0x3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef012345",
-      owner: activeWriter,
-      title: "Decentralized Escrow Notification Bot for Telegram & Discord",
-      category: "fullstack",
-      status: "awarded",
-      budgetEth: "0.95",
-      milestonesCount: 2,
-      clientAddress: activeWriter,
-      tags: ["typescript", "bots", "webhooks", "arkiv"],
-      description:
-        "Automated event listener indexing Arkiv milestone state transitions to alert clients and freelancers via signed webhook notifications.",
-      createdAt: Date.now() - 3600 * 1000 * 90,
-      expiresAt: Date.now() + 3600 * 1000 * 78,
-      remainingHours: 78,
-      isExpired: false,
-      txHash: "0x7890abcdef0123456789abcdef0123456789abcdef0123456789abcdef012345",
-    },
-    {
-      key: "0x2a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70819",
-      owner: activeWriter,
-      title: "Brand Identity & 3D Interactive Assets for FairPay",
-      category: "design",
-      status: "open",
-      budgetEth: "0.80",
-      milestonesCount: 2,
-      clientAddress: activeWriter,
-      tags: ["figma", "3d", "spline", "branding"],
-      description:
-        "Create high-fidelity dark-mode UI guidelines, design system tokens, and Spline 3D escrow checkmark animations for the FairPay portal.",
-      createdAt: Date.now() - 3600 * 1000 * 12,
-      expiresAt: Date.now() + 3600 * 1000 * 36,
-      remainingHours: 36,
-      isExpired: false,
-      txHash: "0x9876543210abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-    },
-  ];
-}
-
 // Helper to construct Arkiv SQL-like filter string
 export function buildArkivQuery(filters?: {
   category?: string;
@@ -199,7 +101,7 @@ export function buildArkivQuery(filters?: {
   return parts.length > 0 ? parts.join(" AND ") : "";
 }
 
-// Fetch live jobs with Arkiv fallback to ensure 100% testnet resilience
+// Fetch live jobs directly from Arkiv testnet (Zero hardcoded demo entities)
 export async function fetchArkivJobs(
   filters?: {
     category?: string;
@@ -210,7 +112,7 @@ export async function fetchArkivJobs(
 ): Promise<{
   entities: ArkivJobEntity[];
   rawQuery: string;
-  source: "arkiv-live" | "arkiv-cache";
+  source: "arkiv-live" | "arkiv-empty";
 }> {
   const queryStr = buildArkivQuery(filters);
   const fullSql = queryStr
@@ -219,64 +121,102 @@ export async function fetchArkivJobs(
 
   try {
     const client = getArkivPublicClient();
-    const result = await client.query(queryStr, { limit: 25 });
+    const result = await client.query(queryStr, { limit: 50 });
 
-    if (result && Array.isArray(result.entities) && result.entities.length > 0) {
-      const liveEntities: ArkivJobEntity[] = result.entities.map((e: any) => {
-        const expiresAt = Number(
-          e.expiresAt || e.$expiresAt || Date.now() + 86400000,
-        );
-        const remainingHours = Math.max(
-          0,
-          Math.round((expiresAt - Date.now()) / (3600 * 1000)),
-        );
-        return {
-          key: e.key || e.$key || "0x...",
-          owner: e.owner || e.$owner || ARKIV_WRITER_WALLET || writerFallback,
-          title: String(e.title || "Arkiv Milestone RFP"),
-          category: (e.category as any) || "smart-contracts",
-          status: (e.status as any) || "open",
-          budgetEth: String(e.budgetEth || "1.0"),
-          milestonesCount: Number(e.milestonesCount || 2),
-          clientAddress: String(
-            e.clientAddress || e.owner || ARKIV_WRITER_WALLET || writerFallback,
-          ),
-          tags: Array.isArray(e.tags)
-            ? e.tags
-            : String(e.tags || "escrow,arkiv").split(","),
-          description: String(
-            e.description || "Decentralized milestone escrow listing on Arkiv",
-          ),
-          createdAt: Number(e.createdAt || Date.now()),
-          expiresAt,
-          remainingHours,
-          isExpired: remainingHours <= 0,
-        };
-      });
+    if (result && Array.isArray(result.entities)) {
+      const liveEntities: ArkivJobEntity[] = result.entities
+        .map((e: any) => {
+          // Extract actual title from Arkiv entity attribute
+          const rawTitle =
+            e.title?.value !== undefined ? e.title.value : e.title;
+          const rawDesc =
+            e.description?.value !== undefined
+              ? e.description.value
+              : e.description;
+
+          // STRICT FILTER: Discard any raw testnet entity that lacks an actual FairPay title
+          if (
+            !rawTitle ||
+            typeof rawTitle !== "string" ||
+            !rawTitle.trim() ||
+            rawTitle === "Arkiv Milestone RFP"
+          ) {
+            return null;
+          }
+
+          const expiresAt = Number(e.expiresAt || e.$expiresAt || 0);
+          const remainingHours = Math.max(
+            0,
+            Math.round((expiresAt - Date.now()) / (3600 * 1000)),
+          );
+
+          // Only show active unexpired listings
+          if (remainingHours <= 0) {
+            return null;
+          }
+
+          const rawCategory =
+            e.category?.value !== undefined ? e.category.value : e.category;
+          const rawStatus =
+            e.status?.value !== undefined ? e.status.value : e.status;
+          const rawBudget =
+            e.budgetEth?.value !== undefined
+              ? e.budgetEth.value
+              : e.budgetEth;
+          const rawMilestones =
+            e.milestonesCount?.value !== undefined
+              ? e.milestonesCount.value
+              : e.milestonesCount;
+          const rawClient =
+            e.clientAddress?.value !== undefined
+              ? e.clientAddress.value
+              : e.clientAddress;
+          const rawTags =
+            e.tags?.value !== undefined ? e.tags.value : e.tags;
+
+          return {
+            key: e.key || e.$key || "0x...",
+            owner:
+              e.owner ||
+              e.$owner ||
+              rawClient ||
+              ARKIV_WRITER_WALLET ||
+              writerFallback,
+            title: String(rawTitle),
+            category: (rawCategory as any) || "smart-contracts",
+            status: (rawStatus as any) || "open",
+            budgetEth: String(rawBudget || "1.0"),
+            milestonesCount: Number(rawMilestones || 2),
+            clientAddress: String(
+              rawClient || e.owner || ARKIV_WRITER_WALLET || writerFallback,
+            ),
+            tags: Array.isArray(rawTags)
+              ? rawTags
+              : String(rawTags || "escrow")
+                  .split(",")
+                  .filter(Boolean),
+            description: String(
+              rawDesc || "Decentralized milestone escrow listing on Arkiv",
+            ),
+            createdAt: Number(e.createdAt || Date.now()),
+            expiresAt,
+            remainingHours,
+            isExpired: false,
+          };
+        })
+        .filter((item): item is ArkivJobEntity => item !== null);
+
       return { entities: liveEntities, rawQuery: fullSql, source: "arkiv-live" };
     }
   } catch (err) {
-    console.warn("Arkiv live query fell back to verified testnet cache:", err);
+    console.warn("Arkiv live query error:", err);
   }
 
-  // Resilient fallback with client-side filter simulation matching exact Arkiv semantics
-  let filtered = getVerifiedArkivJobs(writerFallback);
-  if (filters?.status && filters.status !== "all") {
-    filtered = filtered.filter((j) => j.status === filters.status);
-  }
-  if (filters?.category && filters.category !== "all") {
-    filtered = filtered.filter((j) => j.category === filters.category);
-  }
-  if (filters?.minBudget && filters.minBudget > 0) {
-    filtered = filtered.filter(
-      (j) => parseFloat(j.budgetEth) >= (filters.minBudget || 0),
-    );
-  }
-
+  // When no entities are present on testnet, return an empty list
   return {
-    entities: filtered,
+    entities: [],
     rawQuery: fullSql,
-    source: "arkiv-cache",
+    source: "arkiv-empty",
   };
 }
 
@@ -310,4 +250,39 @@ export function getExpirationOptions() {
       helper: "ExpirationTime.fromDays(30)",
     },
   ];
+}
+
+// Helper to publish job entity to Arkiv DB-Chain via API route
+export async function publishJobToArkiv(data: {
+  title: string;
+  category?: string;
+  budgetEth?: string;
+  milestonesCount?: number;
+  clientAddress?: string;
+  description?: string;
+  days?: number;
+}): Promise<ArkivJobEntity> {
+  const response = await fetch("/api/arkiv/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  const json = await response.json();
+  if (!response.ok || !json.entity) {
+    throw new Error(json.error || "Failed to publish entity to Arkiv DB-Chain");
+  }
+
+  // Persist to user session
+  if (typeof window !== "undefined") {
+    const existing: ArkivJobEntity[] = JSON.parse(
+      localStorage.getItem("fairpay_arkiv_user_entities") || "[]",
+    );
+    localStorage.setItem(
+      "fairpay_arkiv_user_entities",
+      JSON.stringify([json.entity, ...existing]),
+    );
+  }
+
+  return json.entity;
 }

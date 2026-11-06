@@ -15,9 +15,13 @@ import {
   ArrowRight,
   Coins,
   Copy,
+  Clock,
+  Database,
   LoaderCircle,
   ShieldCheck,
 } from "lucide-react";
+import { publishJobToArkiv, getExpirationOptions } from "@/lib/arkiv";
+import { Badge } from "@/components/ui/badge";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useWorkspace } from "@/components/workspace-provider";
@@ -58,6 +62,8 @@ export default function NewJobPage() {
   );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [syncToArkiv, setSyncToArkiv] = useState(true);
+  const [arkivDays, setArkivDays] = useState(7);
 
   const selectedPreset: TokenPreset | undefined = SUPPORTED_PAYMENT_TOKENS.find(
     (item) => item.id === selectedAssetId,
@@ -123,6 +129,22 @@ export default function NewJobPage() {
         tokenDecimals: activeDecimals,
         chainId: activeChainId,
       });
+
+      // Synchronize directly with Arkiv DB-Chain if enabled
+      if (syncToArkiv) {
+        try {
+          await publishJobToArkiv({
+            title,
+            description,
+            budgetEth: amount,
+            clientAddress: user.walletAddress,
+            days: arkivDays,
+          });
+        } catch (arkivErr) {
+          console.warn("Notice: Arkiv DB-Chain sync background notice:", arkivErr);
+        }
+      }
+
       router.push(`/jobs/${id}`);
     } catch (error) {
       setError(readableError(error));
@@ -383,6 +405,66 @@ export default function NewJobPage() {
                     : "Sepolia"}
                   . Make sure your wallet holds native gas to fund the transaction.
                 </p>
+              </div>
+
+              {/* Arkiv DB-Chain Integration Option */}
+              <div className="rounded-xl border border-blue-500/20 bg-blue-950/10 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs font-semibold text-white">
+                      Publish to Arkiv DB-Chain
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] bg-blue-500/10 text-blue-400 border-blue-500/20"
+                    >
+                      Auto-Expiring RFP
+                    </Badge>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={syncToArkiv}
+                      onChange={(e) => setSyncToArkiv(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                  Simultaneously stores an open milestone RFP on the Arkiv Rabdi testnet. Stale or abandoned proposals automatically prune off the public index when the deadline expires.
+                </p>
+
+                {syncToArkiv && (
+                  <div className="pt-2 border-t border-blue-500/10 space-y-1.5">
+                    <Label className="text-[11px] text-neutral-300 flex items-center justify-between">
+                      <span>Bidding Window Expiration</span>
+                      <Clock className="w-3 h-3 text-blue-400" />
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {getExpirationOptions().slice(0, 3).map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setArkivDays(opt.value)}
+                          className={`p-2 rounded-lg border text-left transition-all ${
+                            arkivDays === opt.value
+                              ? "bg-blue-600/20 border-blue-500 text-white font-medium"
+                              : "bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-neutral-200"
+                          }`}
+                        >
+                          <div className="text-xs font-semibold">
+                            {opt.value} {opt.value === 1 ? "Day" : "Days"}
+                          </div>
+                          <div className="text-[10px] text-neutral-500 truncate">
+                            {opt.value === 7 ? "Default" : "Sprint"}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {error && (

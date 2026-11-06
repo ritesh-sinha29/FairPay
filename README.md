@@ -6,6 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Arkiv Testnet](<https://img.shields.io/badge/Arkiv-Rabdi%207794095-purple>)](https://rabdi.explorer.arkiv.network)
 [![Arc Testnet](<https://img.shields.io/badge/Arc-USDC%205042002-blue>)](https://arc.io)
+[![Blockscout](https://img.shields.io/badge/Blockscout-Verified%20Explorer-emerald?logo=ethereum)](https://eth-sepolia.blockscout.com)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.30-363636?logo=solidity)](https://soliditylang.org/)
 [![Convex](https://img.shields.io/badge/Convex-1.49-orange)](https://www.convex.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
@@ -125,12 +126,21 @@ stateDiagram-v2
 | **Payment Asset**    | USDC (ERC-20, 6 decimals)                                 | tGLM (Gasless Public Reads)                                         | ETH (Native, 18 decimals)                            |
 | **Token / Contract** | `0x3600000000000000000000000000000000000000`            | Arkiv DB-Chain Primitives                                           | Native Ether                                         |
 | **RPC Endpoint**     | `https://rpc.testnet.arc.io`                            | `https://rpc.rabdi.db-chain.testnet.arkiv.network/`               | `https://ethereum-sepolia-rpc.publicnode.com`      |
-| **Block Explorer**   | [explorer.testnet.arc.io](https://explorer.testnet.arc.io) | [rabdi.explorer.arkiv.network](https://rabdi.explorer.arkiv.network) | [sepolia.etherscan.io](https://sepolia.etherscan.io)  |
+| **Block Explorer**   | [explorer.testnet.arc.network](https://explorer.testnet.arc.network) | [rabdi.explorer.arkiv.network](https://rabdi.explorer.arkiv.network) | [eth-sepolia.blockscout.com](https://eth-sepolia.blockscout.com) |
+| **Blockscout API**   | [Blockscout v2 REST](https://explorer.testnet.arc.network/api/v2) | N/A | [Blockscout v2 REST](https://eth-sepolia.blockscout.com/api/v2) |
 | **Faucet**           | [Circle Faucet](https://faucet.circle.com)                 | [Arkiv Faucet / Hub](https://hub.arkiv.network)                      | [Sepolia PoW Faucet](https://sepolia-faucet.pk910.de) |
 
 ---
 
-## 🚀 Quick Start Guide
+## 🔍 Blockscout Integration (Verification & Explorer Track)
+
+FairPay natively integrates **Blockscout** to deliver transparent, open-source auditability for both clients and freelancers:
+- **Direct Explorer Deep-Links**: One-click verification badges on all escrow contracts and transaction hashes for Ethereum Sepolia and Arc Testnet.
+- **Real-Time Blockscout API v2**: Integrated [`src/lib/blockscout.ts`](file:///src/lib/blockscout.ts) and [`src/app/api/blockscout/route.ts`](file:///src/app/api/blockscout/route.ts) querying live contract verification, execution status, and gas metrics.
+- **In-App Quick Audit Drawer**: Embedded `<BlockscoutInspector />` inside the job detail view allows one-click auditing of contract bytecode matching without leaving the application.
+- Full details in [**09-blockscout-integration.md**](file:///docs/09-blockscout-integration.md).
+
+---
 
 ### Prerequisites
 
@@ -343,6 +353,7 @@ Comprehensive engineering, product, and hackathon documentation is available in 
 - [**04-roadmap.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/04-roadmap.md>) — Feature progression and validation roadmap.
 - [**07-arc-integration.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/07-arc-integration.md>) — Arc Studio integration and prize submission evidence.
 - [**08-arkiv-integration.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/08-arkiv-integration.md>) — Arkiv DB-Chain integration, schema, native expiration, and hackathon judging evidence.
+- [**09-blockscout-integration.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/09-blockscout-integration.md>) — Blockscout API v2 integration, live escrow contract verification, and explorer deep-linking.
 
 ---
 

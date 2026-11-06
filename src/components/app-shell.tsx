@@ -105,13 +105,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
       <Sidebar className="border-sidebar-border" collapsible="offcanvas">
-        <SidebarHeader className="p-5">
+        <SidebarHeader className="p-5 flex items-center justify-center">
           <Link
             href="/"
-            className="flex items-center gap-2.5 text-2xl font-semibold tracking-tight"
+            className="flex items-center justify-center gap-2.5 text-2xl font-semibold tracking-tight w-full"
           >
             <FairPayLogo size={32} />
-            FairPay<span className="text-blue-400">.</span>
+            <span className="leading-none">FairPay</span>
           </Link>
         </SidebarHeader>
         <SidebarContent>

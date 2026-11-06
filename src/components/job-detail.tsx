@@ -32,6 +32,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { BlockscoutInspector } from "./blockscout-inspector";
+import { InrOfframpModal } from "./inr-offramp-modal";
 
 export function JobDetail({ jobId }: { jobId: string }) {
   const { user, jobs, ready, account, chainId, connect, notify } =
@@ -376,6 +378,18 @@ export function JobDetail({ jobId }: { jobId: string }) {
                       </p>
                     </div>
                   </div>
+                  {!client && (
+                    <div className="mt-5 border-t border-border/60 pt-4">
+                      <p className="mb-2.5 text-[11px] text-muted-foreground">
+                        Funds are secured in your wallet. Off-ramp directly to your Indian bank:
+                      </p>
+                      <InrOfframpModal
+                        amountUsdc={job.amount}
+                        freelancerAddress={job.freelancer}
+                        symbol={network.symbol}
+                      />
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
@@ -622,14 +636,17 @@ export function JobDetail({ jobId }: { jobId: string }) {
                 </Alert>
               )}
               {transactionHash && (
-                <a
-                  className="inline-flex items-center gap-2 text-xs text-blue-300"
-                  href={`${network.explorerUrl}/tx/${transactionHash}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  View latest transaction <ExternalLink size={12} />
-                </a>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <a
+                    className="inline-flex items-center gap-2 text-xs text-blue-300"
+                    href={`${network.explorerUrl}/tx/${transactionHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View latest transaction <ExternalLink size={12} />
+                  </a>
+                  <BlockscoutInspector chainId={job.chainId} txHash={transactionHash} />
+                </div>
               )}
             </CardContent>
           </Card>
@@ -669,9 +686,12 @@ export function JobDetail({ jobId }: { jobId: string }) {
               </div>
               {job.contractAddress && (
                 <div className="mt-6 border-t pt-5">
-                  <p className="mb-2 text-[10px] text-muted-foreground">
-                    Escrow contract
-                  </p>
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-[10px] text-muted-foreground">
+                      Escrow contract
+                    </p>
+                    <BlockscoutInspector chainId={job.chainId} contractAddress={job.contractAddress} />
+                  </div>
                   <a
                     href={`${network.explorerUrl}/address/${job.contractAddress}`}
                     target="_blank"

@@ -588,7 +588,7 @@ export default function NewJobPage() {
 
               <p className="text-[11px] leading-6 text-muted-foreground">
                 {jobMode === "open"
-                  ? `Publishing will post your RFP to Arkiv DB-Chain with a ${arkivDays}-day bidding window. Freelancers will browse and submit proposals, and you can approve your chosen builder with 1 click to lock escrow.`
+                  ? `Publishing will post your RFP to Arkiv DB-Chain with a ${arkivDays}-day bidding window. Accept a freelancer's proposal to create a shared deal. They confirm the agreement before you fund escrow.`
                   : `Sending this proposal confirms the scope and ${activeSymbol} payment from your side. The assigned freelancer must agree before you lock the deposit into escrow.`}
               </p>
 

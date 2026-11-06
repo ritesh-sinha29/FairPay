@@ -4,10 +4,15 @@ import {
   mutation,
   internalMutation,
   internalQuery,
+  action,
 } from "./_generated/server";
+import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireJob, requireUser } from "./lib/access";
 import { status } from "./schema";
 import { ARC_TESTNET } from "../src/lib/payments";
+import { isArkivKey, verifiedAwardTerms } from "./lib/arkivAward";
 
 async function withNames(
   ctx: Parameters<typeof requireUser>[0],
@@ -102,6 +107,107 @@ export const create = mutation({
       status: "Draft",
       updatedAt: Date.now(),
     });
+  },
+});
+
+export const arkivAwardStates = query({
+  args: { entityKeys: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    if (args.entityKeys.length > 100) throw new ConvexError("Too many listings.");
+    if (args.entityKeys.some(key => !isArkivKey(key))) throw new ConvexError("Invalid listing key.");
+    const keys = [...new Set(args.entityKeys.map((key) => key.toLowerCase()))];
+    const states = await Promise.all(keys.map(async (entityKey) => {
+      const deal = await ctx.db.query("jobs").withIndex("by_arkiv_entity", q => q.eq("arkivEntityKey", entityKey)).unique();
+      return deal ? { entityKey, awarded: true } : null;
+    }));
+    return states.filter((state): state is { entityKey: string; awarded: boolean } => state !== null);
+  },
+});
+
+export const forArkiv = query({
+  args: { entityKey: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+    const job = await ctx.db.query("jobs").withIndex("by_arkiv_entity", q => q.eq("arkivEntityKey", args.entityKey.toLowerCase())).unique();
+    if (!job || (job.clientId !== userId && job.freelancerId !== userId)) return null;
+    return { jobId: job._id, proposalKey: job.arkivProposalKey, status: job.status, acceptedAt: job.acceptedAt };
+  },
+});
+
+export const arkivAwardContext = internalQuery({
+  args: { entityKey: v.string(), proposalKey: v.string() },
+  handler: async (ctx, args) => {
+    const client = await requireUser(ctx);
+    if (client.role !== "client") throw new ConvexError("Only clients can accept proposals.");
+    const existing = await ctx.db.query("jobs").withIndex("by_arkiv_entity", q => q.eq("arkivEntityKey", args.entityKey.toLowerCase())).unique();
+    if (existing && (existing.clientId !== client._id || existing.arkivProposalKey !== args.proposalKey.toLowerCase())) {
+      throw new ConvexError("A different proposal has already been accepted for this listing.");
+    }
+    return { walletAddress: client.walletAddress, existingJobId: existing?._id };
+  },
+});
+
+export const createFromArkiv = internalMutation({
+  args: {
+    entityKey: v.string(), proposalKey: v.string(), freelancerAddress: v.string(),
+    title: v.string(), description: v.string(), amountWei: v.string(),
+    chainId: v.number(), paymentAsset: v.string(), tokenDecimals: v.number(),
+    paymentTokenAddress: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const client = await requireUser(ctx);
+    if (client.role !== "client") throw new ConvexError("Only clients can accept proposals.");
+    const entityKey = args.entityKey.toLowerCase();
+    const proposalKey = args.proposalKey.toLowerCase();
+    const existing = await ctx.db.query("jobs").withIndex("by_arkiv_entity", q => q.eq("arkivEntityKey", entityKey)).unique();
+    if (existing) {
+      if (existing.clientId === client._id && existing.arkivProposalKey === proposalKey) return existing._id;
+      throw new ConvexError("A different proposal has already been accepted for this listing.");
+    }
+    const freelancer = await ctx.db.query("users").withIndex("by_wallet", q => q.eq("walletAddress", args.freelancerAddress.toLowerCase())).unique();
+    if (!freelancer || freelancer.role !== "freelancer" || freelancer._id === client._id) {
+      throw new ConvexError("The applicant must have a registered freelancer account for this wallet.");
+    }
+    return ctx.db.insert("jobs", {
+      clientId: client._id, freelancerId: freelancer._id,
+      clientAddress: client.walletAddress, freelancerAddress: freelancer.walletAddress,
+      title: args.title, description: args.description, amountWei: args.amountWei,
+      chainId: args.chainId, paymentAsset: args.paymentAsset, tokenDecimals: args.tokenDecimals,
+      paymentTokenAddress: args.paymentTokenAddress,
+      arkivEntityKey: entityKey, arkivProposalKey: proposalKey,
+      status: "Draft", updatedAt: Date.now(),
+    });
+  },
+});
+
+export const awardArkivProposal = action({
+  args: {
+    entityKey: v.string(), proposalKey: v.string(), scope: v.string(),
+    currency: v.union(v.literal("arc-usdc"), v.literal("sepolia-eth")),
+  },
+  handler: async (ctx, args): Promise<Id<"jobs">> => {
+    if (!isArkivKey(args.entityKey) || !isArkivKey(args.proposalKey)) throw new ConvexError("Invalid Arkiv listing or proposal key.");
+    const context = await ctx.runQuery(internal.jobs.arkivAwardContext, { entityKey: args.entityKey, proposalKey: args.proposalKey });
+    if (context.existingJobId) return context.existingJobId;
+    const site = process.env.SITE_URL;
+    if (!site) throw new ConvexError("The application origin is not configured.");
+    async function read(path: string) {
+      const response = await fetch(new URL(path, site), { signal: AbortSignal.timeout(10000), redirect: "error" });
+      if (!response.ok) throw new ConvexError("Could not verify the live listing and proposal. Refresh and try again.");
+      return response.json();
+    }
+    const [listing, application] = await Promise.all([
+      read(`/api/arkiv/entities?key=${encodeURIComponent(args.entityKey)}`),
+      read(`/api/arkiv/proposals?key=${encodeURIComponent(args.proposalKey)}`),
+    ]);
+    let terms;
+    try {
+      terms = verifiedAwardTerms({ ...args, clientAddress: context.walletAddress, job: listing.entity, proposal: application.proposal });
+    } catch (error) {
+      throw new ConvexError(error instanceof Error ? error.message : "Invalid proposal terms.");
+    }
+    return ctx.runMutation(internal.jobs.createFromArkiv, { entityKey: args.entityKey, proposalKey: args.proposalKey, ...terms });
   },
 });
 

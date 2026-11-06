@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isEntityKey, readArkivJob, readArkivJobs } from "@/lib/arkiv-server";
+import { isEntityKey, readArkivJob, readArkivJobs, withArkivAwards } from "@/lib/arkiv-server";
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
@@ -11,14 +11,18 @@ export async function GET(request: Request) {
     if (key) {
       const entity = await readArkivJob(key);
       if (!entity) return NextResponse.json({ error: "Job not found or expired on Arkiv." }, { status: 404 });
-      return NextResponse.json({ success: true, source: "arkiv", entity }, { headers: { "Cache-Control": "no-store" } });
+      const [listing] = await withArkivAwards([entity]);
+      return NextResponse.json({ success: true, source: "arkiv", coordinationSource: "convex", entity: listing }, { headers: { "Cache-Control": "no-store" } });
     }
     const result = await readArkivJobs({
       category: params.get("category") || undefined,
-      status: params.get("status") || undefined,
+      status: "all",
       minBudget,
     });
-    return NextResponse.json({ success: true, source: "arkiv", ...result }, { headers: { "Cache-Control": "no-store" } });
+    const requestedStatus = params.get("status") || "open";
+    const listings = await withArkivAwards(result.entities);
+    const entities = listings.filter(job => requestedStatus === "all" || job.status === requestedStatus);
+    return NextResponse.json({ success: true, source: "arkiv", coordinationSource: "convex", entities, rawQuery: result.rawQuery }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Arkiv is unavailable. Please try again shortly." }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }

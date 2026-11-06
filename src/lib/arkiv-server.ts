@@ -133,3 +133,21 @@ export async function readArkivProposals(jobKey?: string) {
   return result.entities.map(proposalFromArkiv).filter((proposal): proposal is ArkivProposalEntity => proposal !== null)
     .sort((a, b) => b.createdAt - a.createdAt);
 }
+
+export async function readArkivProposal(key: string) {
+  try {
+    return proposalFromArkiv(await arkivReader().getEntity(key as `0x${string}`));
+  } catch (error) {
+    if (error instanceof Error && error.name === "NoEntityFoundError") return null;
+    throw error;
+  }
+}
+
+// Arkiv holds the published listing; Convex records the client's actual award.
+// Keep accepted listings out of the open feed even before their Arkiv TTL ends.
+export async function withArkivAwards(entities: ArkivJobEntity[]) {
+  if (!entities.length) return entities;
+  const awards = await fetchQuery(api.jobs.arkivAwardStates, { entityKeys: entities.map(job => job.key) });
+  const awarded = new Set(awards.map(award => award.entityKey.toLowerCase()));
+  return entities.map(job => awarded.has(job.key.toLowerCase()) ? { ...job, status: "awarded" as const } : job);
+}

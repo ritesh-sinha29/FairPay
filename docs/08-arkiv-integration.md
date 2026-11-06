@@ -161,5 +161,17 @@ NEXT_PUBLIC_ARKIV_RPC_URL="https://rpc.rabdi.db-chain.testnet.arkiv.network/"
 2. **Execute Queries**:
    Toggle category or budget filters to see the syntax-highlighted Arkiv SQL query update in real time.
 3. **Publish an Entity**:
-   Click **Post to Arkiv**, select an expiration lifetime (e.g. 7 Days), and submit. The entity will be cryptographically signed by your wallet and published to the Rabdi testnet.
+   Click **Post to Arkiv**, select an expiration lifetime (e.g. 7 Days), and submit. The backend signing wallet publishes the entity to Rabdi after authenticating the client.
+
+## 9. Proposal acceptance and shared deals
+
+1. A registered freelancer submits a proposal to an open Arkiv listing.
+2. The listing's client chooses **Accept proposal**, reviews the scope, and explicitly selects USDC on Arc Testnet or test ETH on Sepolia for the listed amount.
+3. The backend verifies the live listing and proposal, their relationship, and client ownership. A Convex transaction creates one draft deal assigned to that registered freelancer. Repeating the same request returns the existing deal; accepting a different proposal is rejected.
+4. The deal appears in both participant workspaces through Convex subscriptions. Other users cannot access the private deal.
+5. The selected freelancer confirms the agreement. Only then can the client fund escrow. The freelancer submits work, and client verification releases payment in the same contract transaction.
+
+Arkiv remains the source for public listings and proposals. Convex stores the award relationship and private deal state. The marketplace combines these real sources to exclude awarded listings from open results and reject further applications. Acceptance creates the deal; it does not fund escrow. The deal remains available after its original Arkiv listing expires.
+
+Run `npm run test:arkiv` to verify ownership, retry behavior, participant access, payment precision, and agreement-before-funding checks.
 

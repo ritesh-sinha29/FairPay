@@ -250,6 +250,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
           <p className="eyebrow">JOB AGREEMENT</p>
           <h1>{job.title}</h1>
           <StatusBadge status={job.status} acceptedAt={job.acceptedAt} />
+          {job.arkivEntityKey && <Link className="mt-2 block text-xs text-blue-400 hover:underline" href={`/arkiv/${job.arkivEntityKey}`}>View original listing and accepted proposal</Link>}
         </div>
         <Button
           variant="outline"

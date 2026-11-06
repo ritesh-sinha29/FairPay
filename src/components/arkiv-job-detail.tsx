@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { AwardProposalButton } from "./award-proposal-button";
 import {
   ArrowLeft,
   Check,
@@ -36,6 +39,7 @@ import {
 export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
   const workspace = useOptionalWorkspace();
   const user = workspace?.user;
+  const deal = useQuery(api.jobs.forArkiv, user ? { entityKey } : "skip");
   const [job, setJob] = useState<ArkivJobEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -147,6 +151,7 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
           <Button asChild variant="outline" size="sm">
             <Link href="/arkiv">Browse Explore Jobs</Link>
           </Button>
+          {deal && <Button asChild size="sm"><Link href={`/jobs/${deal.jobId}`}>Continue your deal</Link></Button>}
         </div>
       </div>
     );
@@ -154,13 +159,18 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
 
   const isClient = user?.role === "client";
   const isOwner = Boolean(
-    user?.walletAddress &&
-      (job.clientAddress?.toLowerCase() === user.walletAddress.toLowerCase() ||
-        job.owner?.toLowerCase() === user.walletAddress.toLowerCase()),
+    user?.role === "client" && user.walletAddress &&
+      job.clientAddress.toLowerCase() === user.walletAddress.toLowerCase(),
   );
 
   return (
     <div className="page-wrap max-w-6xl">
+      {deal && (
+        <div className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm">{user?.role === "freelancer" ? "Your proposal was accepted. Review your deal and confirm the agreement to begin." : "You accepted a proposal. Continue in the shared deal workspace."}</p>
+          <Button asChild size="sm"><Link href={`/jobs/${deal.jobId}`}>Open deal <ArrowRight size={13} /></Link></Button>
+        </div>
+      )}
       <Link
         href="/jobs"
         className="mb-7 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-white transition-colors"
@@ -312,17 +322,17 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
                             </a>
                           )}
                           <div className="pt-2 flex justify-end">
-                            <Button asChild size="sm" className="h-8 text-xs bg-white text-black hover:bg-neutral-200">
-                              <Link href={`/jobs/new?freelancer=${encodeURIComponent(p.freelancerAddress)}&amount=${job.budgetEth}&title=${encodeURIComponent(job.title)}`}>
-                                Award & Fund Escrow <ArrowRight size={12} className="ml-1" />
-                              </Link>
-                            </Button>
+                            <AwardProposalButton job={job} proposal={p} />
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
+              ) : deal ? (
+                <p className="text-sm text-neutral-300">Your deal is ready. Open it above to continue the agreement and escrow flow.</p>
+              ) : job.status !== "open" ? (
+                <p className="text-sm text-neutral-400">The client has already accepted a proposal for this listing.</p>
               ) : (
                 /* Freelancer View: Pitch & Apply Form */
                 <div>
@@ -331,7 +341,7 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
                       <CheckCircle2 size={32} className="mx-auto text-emerald-400" />
                       <h4 className="text-sm font-semibold text-white">Proposal Successfully Transmitted!</h4>
                       <p className="text-xs text-neutral-400 max-w-sm mx-auto">
-                        Your application has been delivered to the client. Once the client approves your proposal, they will lock the escrow deposit onchain.
+                        Your application has been delivered to the client. If accepted, your deal will appear in your workspace so you can confirm the agreement before escrow is funded.
                       </p>
                       <Button
                         variant="outline"

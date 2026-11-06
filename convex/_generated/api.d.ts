@@ -14,6 +14,7 @@ import type * as escrow from "../escrow.js";
 import type * as http from "../http.js";
 import type * as jobs from "../jobs.js";
 import type * as lib_access from "../lib/access.js";
+import type * as lib_arkivAward from "../lib/arkivAward.js";
 import type * as users from "../users.js";
 import type * as walletActions from "../walletActions.js";
 import type * as wallets from "../wallets.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   jobs: typeof jobs;
   "lib/access": typeof lib_access;
+  "lib/arkivAward": typeof lib_arkivAward;
   users: typeof users;
   walletActions: typeof walletActions;
   wallets: typeof wallets;

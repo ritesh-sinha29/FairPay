@@ -48,6 +48,8 @@ export default defineSchema({
     chainId: v.number(),
     status,
     acceptedAt: v.optional(v.number()),
+    arkivEntityKey: v.optional(v.string()),
+    arkivProposalKey: v.optional(v.string()),
     contractAddress: v.optional(v.string()),
     fundingHash: v.optional(v.string()),
     fundingReservation: v.optional(v.string()),
@@ -60,5 +62,6 @@ export default defineSchema({
   })
     .index("by_client", ["clientId"])
     .index("by_freelancer", ["freelancerId"])
+    .index("by_arkiv_entity", ["arkivEntityKey"])
     .index("by_contract", ["chainId", "contractAddress"]),
 });

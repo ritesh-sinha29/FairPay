@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
 import { ExpirationTime, str, addr, u64 } from "@arkiv-network/sdk";
 import { ArkivProposalSchema, type ArkivProposalEntity } from "@/lib/arkiv";
-import { arkivProfile, arkivWriter, isEntityKey, readArkivJob, readArkivProposals } from "@/lib/arkiv-server";
+import { arkivProfile, arkivWriter, isEntityKey, readArkivJob, readArkivProposal, readArkivProposals, withArkivAwards } from "@/lib/arkiv-server";
 
 export async function GET(request: Request) {
-  const jobKey = new URL(request.url).searchParams.get("jobKey") || undefined;
+  const params = new URL(request.url).searchParams;
+  const jobKey = params.get("jobKey") || undefined;
+  const key = params.get("key");
+  if (key && !isEntityKey(key)) return NextResponse.json({ error: "Invalid proposal key." }, { status: 400 });
   if (jobKey && !isEntityKey(jobKey)) return NextResponse.json({ error: "Invalid job key." }, { status: 400 });
   try {
+    if (key) {
+      const proposal = await readArkivProposal(key);
+      return proposal
+        ? NextResponse.json({ success: true, proposal }, { headers: { "Cache-Control": "no-store" } })
+        : NextResponse.json({ error: "Proposal not found or expired on Arkiv." }, { status: 404 });
+    }
     const proposals = await readArkivProposals(jobKey);
     return NextResponse.json({ success: true, source: "arkiv", proposals }, { headers: { "Cache-Control": "no-store" } });
   } catch {
@@ -27,6 +36,8 @@ export async function POST(request: Request) {
     }
     const job = await readArkivJob(jobKey);
     if (!job || job.status !== "open") return NextResponse.json({ error: "This job is not open on Arkiv." }, { status: 409 });
+    const [listing] = await withArkivAwards([job]);
+    if (listing.status !== "open") return NextResponse.json({ error: "The client has already accepted a proposal for this listing." }, { status: 409 });
     let wallet;
     try { wallet = arkivWriter(); } catch {
       return NextResponse.json({ error: "Arkiv publishing is not configured. Ask the administrator to configure the signing wallet." }, { status: 503 });

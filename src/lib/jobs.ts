@@ -23,6 +23,8 @@ export interface Job {
   tokenDecimals?: number;
   status: JobStatus;
   acceptedAt?: number;
+  arkivEntityKey?: string;
+  arkivProposalKey?: string;
   createdAt: string;
   updatedAt: string;
   chainId: number;

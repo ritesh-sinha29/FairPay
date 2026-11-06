@@ -31,6 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { AwardProposalButton } from "@/components/award-proposal-button";
 import {
   Dialog,
   DialogContent,
@@ -83,7 +84,7 @@ export default function ArkivBoardPage() {
   const [portfolioLink, setPortfolioLink] = useState("");
   const [submittingProposal, setSubmittingProposal] = useState(false);
   const [proposalSuccess, setProposalSuccess] = useState(false);
-  const [allProposals, setAllProposals] = useState<any[]>([]);
+  const [allProposals, setAllProposals] = useState<ArkivProposalEntity[]>([]);
 
   async function handleProposalSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -546,9 +547,8 @@ export default function ArkivBoardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredEntities.map((job) => {
                     const isOwner = Boolean(
-                      user?.walletAddress &&
-                      (job.clientAddress?.toLowerCase() === user.walletAddress.toLowerCase() ||
-                       job.owner?.toLowerCase() === user.walletAddress.toLowerCase())
+                      user?.role === "client" && user.walletAddress &&
+                      job.clientAddress.toLowerCase() === user.walletAddress.toLowerCase()
                     );
                     const proposalCount = allProposals.filter(
                       (p: any) => p?.jobKey && p.jobKey.toLowerCase() === job.key.toLowerCase()
@@ -673,7 +673,7 @@ export default function ArkivBoardPage() {
                                 onClick={() => setInspectingJob(job)}
                                 className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-medium transition-colors"
                               >
-                                <span>Your Listing • Open for Bids</span>
+                                <span>Your Listing • {job.status === "open" ? "Open for Bids" : job.status}</span>
                                 {proposalCount > 0 && (
                                   <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-500 text-white font-semibold">
                                     {proposalCount}
@@ -682,6 +682,7 @@ export default function ArkivBoardPage() {
                               </button>
                             ) : (
                               <Button
+                                disabled={job.status !== "open"}
                                 onClick={() => {
                                   setApplyingJob(job);
                                   setProposalSuccess(false);
@@ -689,7 +690,7 @@ export default function ArkivBoardPage() {
                                 }}
                                 className="flex-1 h-8 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center justify-center gap-1.5"
                               >
-                                <Sparkles className="w-3.5 h-3.5" /> Apply for RFP
+                                <Sparkles className="w-3.5 h-3.5" /> {job.status === "open" ? "Apply for RFP" : "Proposal accepted"}
                               </Button>
                             )}
 
@@ -757,8 +758,8 @@ export default function ArkivBoardPage() {
                 </h4>
                 <p className="text-xs text-neutral-400 leading-relaxed">
                   Your proposal and wallet address have been transmitted to the
-                  client. Once the client approves your proposal, the milestone
-                  escrow will be locked on Arc Testnet USDC.
+                  client. If accepted, the deal will appear in your workspace.
+                  Confirm the agreement there before the client funds escrow.
                 </p>
                 <Button
                   onClick={() => {
@@ -906,13 +907,16 @@ export default function ArkivBoardPage() {
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {proposals.map((p: any) => (
+                          {proposals.map((p) => (
                             <div key={p.id} className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-2.5 space-y-1">
                               <div className="flex items-center justify-between">
                                 <span className="font-semibold text-white">{p.freelancerName}</span>
                                 <span className="text-[10px] text-neutral-500">{new Date(p.createdAt).toLocaleTimeString()}</span>
                               </div>
                               <p className="text-neutral-400 text-xs">{p.proposalNote}</p>
+                              {user?.role === "client" && user.walletAddress.toLowerCase() === inspectingJob.clientAddress.toLowerCase() && (
+                                <div className="flex justify-end"><AwardProposalButton job={inspectingJob} proposal={p} /></div>
+                              )}
                               {p.portfolioLink && (
                                 <a
                                   href={p.portfolioLink.startsWith("http") ? p.portfolioLink : `https://${p.portfolioLink}`}

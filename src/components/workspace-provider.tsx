@@ -91,6 +91,8 @@ export function WorkspaceProvider({
     tokenDecimals: record.tokenDecimals,
     status: record.status,
     acceptedAt: record.acceptedAt,
+    arkivEntityKey: record.arkivEntityKey,
+    arkivProposalKey: record.arkivProposalKey,
     createdAt: new Date(record._creationTime).toISOString(),
     updatedAt: new Date(record.updatedAt).toISOString(),
     chainId: record.chainId,

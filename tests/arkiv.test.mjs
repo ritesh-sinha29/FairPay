@@ -19,7 +19,7 @@ async function load(entry, options = {}) {
         builder.onResolve({ filter: /^(server-only|@convex-dev\/auth\/nextjs\/server|convex\/nextjs)$/ }, args => ({ path: args.path, namespace: "test-only" }));
         builder.onLoad({ filter: /.*/, namespace: "test-only" }, args => ({ contents:
           args.path === "server-only" ? "" : args.path === "convex/nextjs"
-            ? "export async function fetchQuery() { return globalThis.testProfile; }"
+            ? "export async function fetchQuery(_ref, args) { return args?.entityKeys ? globalThis.testAwardStates : globalThis.testProfile; }"
             : "export async function convexAuthNextjsToken() { return globalThis.testToken; }",
         }));
       },
@@ -31,6 +31,7 @@ async function load(entry, options = {}) {
     process: { env: { ARKIV_ACCESS_KEY: "unit-test", ...options.env } },
     testToken: options.authenticated === false ? undefined : "unit-test-token",
     testProfile: options.profile || profile,
+    testAwardStates: options.awardStates || [],
     console, URL, URLSearchParams, Request, Response, AbortSignal, setTimeout, clearTimeout,
     fetch: (...args) => globalThis.fetch(...args),
   };

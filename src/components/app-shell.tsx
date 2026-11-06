@@ -8,6 +8,7 @@ import {
   BookOpen,
   BriefcaseBusiness,
   ChevronUp,
+  Database,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -72,16 +73,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigation = [
     { title: "Overview", href: "/", icon: LayoutDashboard },
     { title: "Jobs", href: "/jobs", icon: BriefcaseBusiness },
+    { title: "Arkiv Board", href: "/arkiv", icon: Database },
     { title: "Payments", href: "/payments", icon: ArrowDownLeft },
   ];
   const title =
     path === "/"
       ? "Overview"
-      : path.startsWith("/payments")
-        ? "Payments"
-        : path.startsWith("/account")
-          ? "Account"
-          : "Jobs";
+      : path.startsWith("/arkiv")
+        ? "Arkiv Board"
+        : path.startsWith("/payments")
+          ? "Payments"
+          : path.startsWith("/account")
+            ? "Account"
+            : "Jobs";
   const mismatch = account && account.toLowerCase() !== user.walletAddress;
   const pageJob = jobs.find((job) => path === jobUrl(job));
   const network = paymentNetwork(pageJob?.chainId ?? ARC_TESTNET.chainId);

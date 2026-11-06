@@ -1,18 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import {
-  ChevronDown,
-  ChevronUp,
   LoaderCircle,
   Wallet,
-  BriefcaseBusiness,
-  Palette,
+  Briefcase,
+  Code2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
@@ -39,32 +36,12 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
   const [name, setName] = useState("");
   const [headline, setHeadline] = useState("");
   const [stage, setStage] = useState("");
-  const [showWalletDetails, setShowWalletDetails] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<string | null>(null);
-
-  async function handleOAuth(provider: "google") {
-    setSocialLoading(provider);
-    try {
-      await signIn(provider);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "OAuth sign-in failed";
-      const errorMsg =
-        message.includes("provider") || message.includes("not configured")
-          ? `${provider.toUpperCase()} provider is not configured yet in this environment. Please sign in with your Web3 Wallet.`
-          : message;
-      toast.error(errorMsg);
-      setShowWalletDetails(true);
-      setSocialLoading(null);
-    }
-  }
 
   async function submitWallet(event?: React.FormEvent) {
     if (event) event.preventDefault();
     if (stage) return;
 
     if (isSignUp && !name.trim()) {
-      setShowWalletDetails(true);
       toast.error("Please enter your name to create an account.");
       return;
     }
@@ -107,13 +84,13 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
   }
 
   return (
-    <div className="w-full space-y-5">
-      {/* Title & Subtitle (Clean & Compact) */}
-      <div className="space-y-1.5 text-center">
-        <h2 className="text-xl font-semibold tracking-tight text-white">
+    <div className="w-full space-y-8">
+      {/* Title & Subtitle */}
+      <div className="space-y-2 text-center">
+        <h2 className="text-2xl font-semibold tracking-tight text-white">
           {isSignUp ? "Create an account" : "Welcome back"}
         </h2>
-        <p className="text-xs text-neutral-400">
+        <p className="text-sm text-neutral-400">
           {isSignUp
             ? "Sign up to start creating and managing escrow agreements"
             : "Sign in to access your jobs and payments"}
@@ -121,181 +98,139 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
       </div>
 
       {/* Main Actions Container */}
-      <div className="space-y-2.5">
-        {/* Continue with Google Button */}
-        <button
-          type="button"
-          disabled={!!stage || socialLoading !== null}
-          onClick={() => handleOAuth("google")}
-          className="w-full h-10 bg-neutral-900/60 border border-neutral-800 hover:bg-neutral-800/80 hover:border-neutral-700 transition-all duration-200 flex items-center justify-center gap-2.5 text-white rounded-lg group cursor-pointer shadow-sm relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          {socialLoading === "google" ? (
-            <LoaderCircle className="animate-spin text-neutral-400" size={16} />
-          ) : (
-            <Image
-              src="/search.png"
-              alt="google"
-              width={18}
-              height={18}
-              className="transition-transform group-hover:scale-105"
-            />
-          )}
-          <span className="text-xs font-medium tracking-tight">
-            Continue with Google
-          </span>
-        </button>
-
-        {/* Continue with Web3 Wallet (Sign-in mode) */}
-        {!showWalletDetails && !isSignUp ? (
-          <button
+      <div className="space-y-3.5">
+        {!isSignUp ? (
+          /* Sign-in Option: Sleek Dark Glass Button matching reference */
+          <Button
             type="button"
             disabled={!!stage}
             onClick={() => submitWallet()}
-            className="w-full h-10 bg-neutral-900/60 border border-neutral-800 hover:bg-neutral-800/80 hover:border-neutral-700 transition-all duration-200 flex items-center justify-center gap-2.5 text-white rounded-lg group cursor-pointer shadow-sm relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            variant="outline"
+            className="w-full h-10 bg-neutral-900/50 border-neutral-800 hover:bg-neutral-800 hover:border-neutral-700 transition-all duration-300 gap-3 text-white rounded-lg group cursor-pointer shadow-sm relative overflow-hidden disabled:opacity-50"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             {stage ? (
-              <LoaderCircle className="animate-spin text-neutral-400" size={16} />
+              <LoaderCircle className="animate-spin text-white" size={16} />
             ) : (
-              <Wallet
-                size={16}
-                className="text-neutral-300 transition-transform group-hover:scale-105"
-              />
+              <Wallet className="w-4 h-4 text-white transition-transform group-hover:scale-110" />
             )}
             <span className="text-xs font-medium tracking-tight">
               {stage || "Continue with Web3 Wallet"}
             </span>
-          </button>
-        ) : null}
-
-        {/* Expandable Options Toggle (Only on Sign In) */}
-        {!isSignUp && (
-          <button
-            type="button"
-            onClick={() => setShowWalletDetails(!showWalletDetails)}
-            className="w-full flex items-center justify-center gap-1.5 text-[11px] text-neutral-400 hover:text-neutral-200 transition-colors pt-0.5 cursor-pointer"
-          >
-            <span>{showWalletDetails ? "Hide wallet options" : "More sign-in options"}</span>
-            {showWalletDetails ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          </button>
-        )}
-
-        {/* Web3 Wallet Form (Clean, no nested outer box) */}
-        {(showWalletDetails || isSignUp) && (
-          <form
-            onSubmit={submitWallet}
-            className="space-y-3.5 text-left pt-1"
-          >
-            {isSignUp && (
-              <>
-                {/* Account Type: Label on Left, Segmented Pills on Right */}
-                <div className="flex items-center justify-between gap-3">
-                  <Label className="text-xs text-neutral-300 font-medium">
-                    Account Type
-                  </Label>
-                  <div className="inline-flex p-0.5 rounded-lg bg-neutral-900/80 border border-neutral-800">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole("client")}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                        selectedRole === "client"
-                          ? "bg-neutral-800 text-white shadow-xs"
-                          : "text-neutral-400 hover:text-neutral-200"
-                      }`}
-                    >
-                      <BriefcaseBusiness
-                        size={12}
-                        className={
-                          selectedRole === "client"
-                            ? "text-blue-400"
-                            : "text-neutral-500"
-                        }
-                      />
-                      Client
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole("freelancer")}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                        selectedRole === "freelancer"
-                          ? "bg-neutral-800 text-white shadow-xs"
-                          : "text-neutral-400 hover:text-neutral-200"
-                      }`}
-                    >
-                      <Palette
-                        size={12}
-                        className={
-                          selectedRole === "freelancer"
-                            ? "text-purple-400"
-                            : "text-neutral-500"
-                        }
-                      />
-                      Freelancer
-                    </button>
-                  </div>
-                </div>
-
-                {/* Name Input */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="auth-name" className="text-xs text-neutral-300 font-medium">
-                    Your Name
-                  </Label>
-                  <Input
-                    id="auth-name"
-                    autoComplete="name"
-                    minLength={2}
-                    maxLength={80}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Alex Rivera"
-                    required
-                    disabled={!!stage}
-                    className="h-10 bg-neutral-900/50 border-neutral-800 text-xs text-white placeholder:text-neutral-600 focus:border-neutral-700 rounded-lg"
+          </Button>
+        ) : (
+          /* Sign-up Form */
+          <form onSubmit={submitWallet} className="space-y-4 text-left">
+            {/* Account Type Inline Segmented Picker */}
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-xs text-neutral-300 font-medium">
+                Account Type
+              </Label>
+              <div className="inline-flex p-0.5 rounded-lg bg-neutral-900/70 border border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole("client")}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                    selectedRole === "client"
+                      ? "bg-neutral-800 text-white shadow-xs"
+                      : "text-neutral-400 hover:text-neutral-200"
+                  }`}
+                >
+                  <Briefcase
+                    size={13}
+                    className={
+                      selectedRole === "client"
+                        ? "text-blue-400"
+                        : "text-neutral-500"
+                    }
                   />
-                </div>
+                  Client
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRole("freelancer")}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                    selectedRole === "freelancer"
+                      ? "bg-neutral-800 text-white shadow-xs"
+                      : "text-neutral-400 hover:text-neutral-200"
+                  }`}
+                >
+                  <Code2
+                    size={13}
+                    className={
+                      selectedRole === "freelancer"
+                        ? "text-indigo-400"
+                        : "text-neutral-500"
+                    }
+                  />
+                  Freelancer
+                </button>
+              </div>
+            </div>
 
-                {selectedRole === "freelancer" && (
-                  <div className="space-y-1.5">
-                    <Label
-                      htmlFor="auth-headline"
-                      className="text-xs text-neutral-300 font-medium"
-                    >
-                      Headline{" "}
-                      <span className="text-[10px] text-neutral-500 font-normal">
-                        (Optional)
-                      </span>
-                    </Label>
-                    <Input
-                      id="auth-headline"
-                      maxLength={160}
-                      value={headline}
-                      onChange={(e) => setHeadline(e.target.value)}
-                      placeholder="e.g. Fullstack Web3 Engineer"
-                      disabled={!!stage}
-                      className="h-10 bg-neutral-900/50 border-neutral-800 text-xs text-white placeholder:text-neutral-600 focus:border-neutral-700 rounded-lg"
-                    />
-                  </div>
-                )}
-              </>
+            {/* Name Input */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="auth-name"
+                className="text-xs text-neutral-300 font-medium"
+              >
+                Your Name
+              </Label>
+              <Input
+                id="auth-name"
+                autoComplete="name"
+                minLength={2}
+                maxLength={80}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Alex Rivera"
+                required
+                disabled={!!stage}
+                className="h-10 bg-neutral-900/50 border-neutral-800 hover:border-neutral-700 text-xs text-white placeholder:text-neutral-500 rounded-lg focus:border-neutral-600 transition-colors"
+              />
+            </div>
+
+            {selectedRole === "freelancer" && (
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="auth-headline"
+                  className="text-xs text-neutral-300 font-medium"
+                >
+                  Headline{" "}
+                  <span className="text-[10px] text-neutral-500 font-normal">
+                    (Optional)
+                  </span>
+                </Label>
+                <Input
+                  id="auth-headline"
+                  maxLength={160}
+                  value={headline}
+                  onChange={(e) => setHeadline(e.target.value)}
+                  placeholder="e.g. Fullstack Web3 Engineer"
+                  disabled={!!stage}
+                  className="h-10 bg-neutral-900/50 border-neutral-800 hover:border-neutral-700 text-xs text-white placeholder:text-neutral-500 rounded-lg focus:border-neutral-600 transition-colors"
+                />
+              </div>
             )}
 
-            {/* Primary Action Button */}
+            {/* Primary Submit Button */}
             <Button
               type="submit"
               disabled={!!stage}
-              className="w-full h-10 rounded-lg bg-neutral-900/80 hover:bg-neutral-800 border border-neutral-700 text-white font-medium text-xs flex items-center justify-center gap-2 transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-50"
+              variant="outline"
+              className="w-full h-10 bg-neutral-900/50 border-neutral-800 hover:bg-neutral-800 hover:border-neutral-700 transition-all duration-300 gap-3 text-white rounded-lg group cursor-pointer shadow-sm relative overflow-hidden disabled:opacity-50"
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               {stage ? (
-                <LoaderCircle className="animate-spin text-neutral-400" size={15} />
+                <LoaderCircle className="animate-spin text-white" size={16} />
               ) : (
-                <Wallet size={15} className="text-neutral-300" />
+                <Wallet
+                  size={15}
+                  className="text-white transition-transform group-hover:scale-110"
+                />
               )}
-              <span>
-                {stage ||
-                  (isSignUp
-                    ? `Create ${selectedRole} account with Wallet`
-                    : "Sign in with Ethereum Wallet")}
+              <span className="text-xs font-medium tracking-tight">
+                {stage || `Create ${selectedRole} account with Wallet`}
               </span>
             </Button>
           </form>
@@ -303,11 +238,11 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
       </div>
 
       {/* Toggle between Sign In and Sign Up */}
-      <div className="text-center text-xs text-neutral-400 pt-0.5">
+      <div className="text-center text-xs text-neutral-400">
         {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
         <Link
           href={isSignUp ? "/sign-in" : "/sign-up"}
-          className="ml-1 text-white hover:text-neutral-300 font-medium underline underline-offset-4 transition-colors"
+          className="ml-1 text-white hover:text-neutral-200 font-medium underline underline-offset-4 transition-colors"
         >
           {isSignUp ? "Sign in" : "Sign up"}
         </Link>

@@ -34,6 +34,44 @@ Freelancers routinely face late payments, ghosting, and scope disputes, while cl
 - **Fail-Safe Preflight Protections**: Automatically inspects token contract state (`paused()`, `isBlacklisted()`) prior to deployment to prevent locked capital.
 - **Interrupted Recovery & Idempotent Retry**: Browser crashes or rejected wallet confirmations safely resume on the existing contract instance without double charges.
 - **Real-Time Synchronized State**: Convex database subscriptions reflect instant status updates across client and freelancer browser tabs.
+- **Arkiv DB-Chain Auto-Expiring RFPs**: Decentralized milestone job listings stored on the Arkiv Rabdi testnet with native cryptographic wallet ownership and automated time-based pruning.
+
+---
+
+## 🗄️ Arkiv DB-Chain Integration (ETHGlobal Mumbai Track)
+
+FairPay leverages **Arkiv** as an ephemeral, decentralized DB-chain layer for milestone job postings and Request for Proposals (RFPs).
+
+- **Writer Wallet Address**: `0xE6E4bde21600b3c973E1CB2c6125C2E46bb96d24` (configured in `NEXT_PUBLIC_ARKIV_WRITER_WALLET`)
+- **Network**: Arkiv Rabdi Testnet (Chain ID: `7794095`)
+- **Block Explorer**: [https://rabdi.explorer.arkiv.network](https://rabdi.explorer.arkiv.network)
+- **Live User-Facing Route**: Accessible in the FairPay portal navigation under **Arkiv Board** (`/arkiv`)
+
+### Runnable Arkiv SDK Query:
+```typescript
+import { createPublicClient } from "@arkiv-network/sdk";
+import { rabdi } from "@arkiv-network/sdk/chains";
+import { http } from "viem";
+
+const client = createPublicClient({
+  chain: rabdi({ accessKey: process.env.NEXT_PUBLIC_ARKIV_ACCESS_KEY || "" }),
+  transport: http(),
+});
+
+// Gas-free query for active milestone listings:
+const activeJobs = await client.query(
+  "status = str('open') AND category = str('smart-contracts')",
+  { limit: 10 }
+);
+console.log("Active Arkiv Listings:", activeJobs.entities);
+```
+
+### Arkiv Track Documentation (100% Judging Criteria):
+- [`/arkiv/schema.md`](file:///arkiv/schema.md) — Entity definition, indexed fields, and wallet ownership.
+- [`/arkiv/why-arkiv.md`](file:///arkiv/why-arkiv.md) — Rationale: what users lose without Arkiv vs. what stays on EVM.
+- [`/arkiv/how-you-use-arkiv.md`](file:///arkiv/how-you-use-arkiv.md) — SQL filters, ownership permissions, and user impact.
+- [`/arkiv/friction.md`](file:///arkiv/friction.md) — SDK developer feedback and onboarding suggestions.
+- [`/arkiv/reach.md`](file:///arkiv/reach.md) — Target audience, traction, and post-hackathon roadmap.
 
 ---
 

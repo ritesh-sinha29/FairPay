@@ -7,6 +7,7 @@ import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { ConvexProvider } from "@/components/convex-provider";
 import { Application } from "@/components/application";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "FairPay — Your work. Your payment.",
@@ -27,6 +28,7 @@ export default function RootLayout({
           <ConvexProvider>
             <TooltipProvider>
               <Application>{children}</Application>
+              <Toaster />
             </TooltipProvider>
           </ConvexProvider>
         </ConvexAuthNextjsServerProvider>

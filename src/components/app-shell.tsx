@@ -60,6 +60,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { FairPayLogo } from "./fairpay-logo";
 import { useWorkspace } from "./workspace-provider";
 import { jobUrl, shortAddress } from "@/lib/jobs";
 import { readableError } from "@/lib/ethereum";
@@ -109,24 +110,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             href="/"
             className="flex items-center gap-2.5 text-2xl font-semibold tracking-tight"
           >
-            <span className="brand-mark">
-              <ShieldCheck size={23} />
-            </span>
+            <FairPayLogo size={32} />
             FairPay<span className="text-blue-400">.</span>
           </Link>
-          <div className="mt-4 flex items-center gap-3 rounded-lg border bg-sidebar-accent/30 p-3">
-            <Avatar className="size-8 rounded-lg">
-              <AvatarFallback className="rounded-lg text-xs">
-                {user.name.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium">{user.name}</p>
-              <p className="mt-1 text-[11px] capitalize text-muted-foreground">
-                {user.role} workspace
-              </p>
-            </div>
-          </div>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
@@ -278,7 +264,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-17 shrink-0 items-center justify-between gap-4 border-b px-4 md:px-7">
+        <header className="sticky top-0 z-30 flex h-17 shrink-0 items-center justify-between gap-4 border-b border-sidebar-border bg-background/90 backdrop-blur-md px-4 md:px-7">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-4!" />

@@ -1,40 +1,42 @@
 # FairPay 🛡️
 
-**Trustless Web3 Freelance Escrow with Single-Transaction Verification Payouts on Arc Testnet (USDC) & Ethereum Sepolia.**
+**Trustless Web3 Freelance Escrow with Single-Transaction Verification Payouts on Arc Testnet (USDC) & Ethereum Sepolia, Powered by Arkiv DB-Chain for Auto-Expiring Milestone RFPs.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Arkiv Testnet](<https://img.shields.io/badge/Arkiv-Rabdi%207794095-purple>)](https://rabdi.explorer.arkiv.network)
+[![Arc Testnet](<https://img.shields.io/badge/Arc-USDC%205042002-blue>)](https://arc.io)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.30-363636?logo=solidity)](https://soliditylang.org/)
 [![Convex](https://img.shields.io/badge/Convex-1.49-orange)](https://www.convex.dev/)
-[![Arc Testnet](https://img.shields.io/badge/Arc-USDC%205042002-blue)](https://arc.io)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/Tests-7%20Passing-success)](https://github.com/ritesh-sinha29/FairPay)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## 📌 Executive Summary
 
-Freelancers routinely face late payments, ghosting, and scope disputes, while clients fear paying upfront for incomplete or subpar deliverables. Traditional escrow platforms charge steep 10–20% intermediary fees and impose arbitrary dispute arbitration.
+Freelancers routinely face late payments, ghosting, and scope disputes, while clients fear paying upfront for incomplete or subpar deliverables. Traditional escrow platforms charge steep 10–20% intermediary fees and impose arbitrary dispute arbitration. Furthermore, open job postings and bidding proposals frequently become stale or abandoned, polluting centralized databases with ghost listings.
 
-**FairPay** replaces middleman fee structures with non-custodial smart contracts and cryptographic agreement verification:
-1. **Both parties agree** on the scope, deadline, and payment terms off-chain.
-2. The client locks the deposit into a dedicated on-chain escrow smart contract.
-3. The freelancer verifies on-chain funding and delivers the work.
-4. **Client verification triggers payment in the same transaction** — no delayed payouts, no secondary release hurdles, and zero intermediary fees.
+**FairPay** combines non-custodial EVM smart contracts with **Arkiv DB-Chain**:
+
+1. **Decentralized RFP & Milestone Coordination**: Clients post milestone RFPs to Arkiv with cryptographic wallet ownership and automated time-based pruning (`ExpirationTime`). Once the bidding window closes, entities natively drop off the query index.
+2. **Cryptographic Agreement Fingerprinting**: Parties commit to scope, milestone checkpoints, and atomic payment terms using Keccak-256 agreement hashes.
+3. **On-Chain Milestone Escrow**: Clients lock deposits into dedicated smart contracts (`FairPayStableEscrow.sol` for Arc USDC or `FairPayEscrow.sol` for Sepolia ETH).
+4. **Single-Transaction Verification Payout**: Client verification releases funds directly to the freelancer in the exact same transaction—eliminating delayed payouts, secondary release friction, and middleman fees.
 
 ---
 
 ## ⚡ Key Capabilities
 
+- **Arkiv DB-Chain Auto-Expiring RFPs**: Decentralized milestone job listings stored on the Arkiv Rabdi testnet with native cryptographic wallet ownership, gas-free SQL-like querying, and automated time-based pruning.
 - **Programmable Stablecoin Escrow (`FairPayStableEscrow.sol`)**: Full ERC-20 / USDC support on Arc Testnet using OpenZeppelin `SafeERC20`, featuring exact deposit allowance approval, balance checks, and idempotent funding.
 - **Legacy Native Escrow (`FairPayEscrow.sol`)**: Native ETH milestone escrow on Ethereum Sepolia for single-deposit freelance agreements.
 - **Gasless Web3 Authentication**: EIP-191 / SIWE-style cryptographic wallet challenge signing powered by `@convex-dev/auth`. Users sign a secure challenge in their browser wallet costing **$0 in gas**.
-- **Role-Based Workspaces**: Separate signup flows and dashboard contexts for **Clients** and **Freelancers**.
+- **Role-Based Workspaces**: Context-aware workflows and dashboards for **Clients** and **Freelancers**.
 - **Canonical Agreement Fingerprinting**: Keccak-256 hashing of the job ID, chain ID, participant addresses, scope, and amount ensures terms cannot be altered after agreement.
 - **Fail-Safe Preflight Protections**: Automatically inspects token contract state (`paused()`, `isBlacklisted()`) prior to deployment to prevent locked capital.
 - **Interrupted Recovery & Idempotent Retry**: Browser crashes or rejected wallet confirmations safely resume on the existing contract instance without double charges.
 - **Real-Time Synchronized State**: Convex database subscriptions reflect instant status updates across client and freelancer browser tabs.
-- **Arkiv DB-Chain Auto-Expiring RFPs**: Decentralized milestone job listings stored on the Arkiv Rabdi testnet with native cryptographic wallet ownership and automated time-based pruning.
 
 ---
 
@@ -48,6 +50,7 @@ FairPay leverages **Arkiv** as an ephemeral, decentralized DB-chain layer for mi
 - **Live User-Facing Route**: Accessible in the FairPay portal navigation under **Arkiv Board** (`/arkiv`)
 
 ### Runnable Arkiv SDK Query:
+
 ```typescript
 import { createPublicClient } from "@arkiv-network/sdk";
 import { rabdi } from "@arkiv-network/sdk/chains";
@@ -67,11 +70,13 @@ console.log("Active Arkiv Listings:", activeJobs.entities);
 ```
 
 ### Arkiv Track Documentation (100% Judging Criteria):
+
 - [`/arkiv/schema.md`](file:///arkiv/schema.md) — Entity definition, indexed fields, and wallet ownership.
 - [`/arkiv/why-arkiv.md`](file:///arkiv/why-arkiv.md) — Rationale: what users lose without Arkiv vs. what stays on EVM.
 - [`/arkiv/how-you-use-arkiv.md`](file:///arkiv/how-you-use-arkiv.md) — SQL filters, ownership permissions, and user impact.
 - [`/arkiv/friction.md`](file:///arkiv/friction.md) — SDK developer feedback and onboarding suggestions.
 - [`/arkiv/reach.md`](file:///arkiv/reach.md) — Target audience, traction, and post-hackathon roadmap.
+- [`/docs/08-arkiv-integration.md`](file:///docs/08-arkiv-integration.md) — Complete technical architecture, schema specification, and submission evidence.
 
 ---
 
@@ -81,16 +86,19 @@ console.log("Active Arkiv Listings:", activeJobs.entities);
 flowchart TD
     Client["Client Wallet"]
     Freelancer["Freelancer Wallet"]
+    Arkiv["Arkiv Rabdi DB-Chain (Chain 7794095)"]
     Convex["Convex Backend (EIP-191 Auth & Jobs DB)"]
     Escrow["FairPayStableEscrow (Arc Testnet USDC)"]
 
-    Client -->|"1. Create proposal"| Convex
-    Freelancer -->|"2. Accept deal"| Convex
-    Client -->|"3. Approve allowance & deposit"| Escrow
-    Escrow -.->|"4. Verify on-chain state"| Convex
-    Freelancer -->|"5. Submit deliverable"| Escrow
-    Client -->|"6. Verify work & release payment"| Escrow
-    Escrow -->|"7. Instant USDC payout"| Freelancer
+    Client -->|"1. Publish expiring RFP (Auto-Prune)"| Arkiv
+    Freelancer -->|"2. Gas-Free SQL Query & Bid"| Arkiv
+    Client -->|"3. Accept proposal & create agreement"| Convex
+    Freelancer -->|"4. Confirm terms & scope"| Convex
+    Client -->|"5. Approve allowance & deposit USDC"| Escrow
+    Escrow -.->|"6. Verify on-chain deposit"| Convex
+    Freelancer -->|"7. Submit deliverable link"| Escrow
+    Client -->|"8. Verify work & release payment"| Escrow
+    Escrow -->|"9. Instant USDC payout"| Freelancer
 ```
 
 ### Escrow State Machine
@@ -109,31 +117,33 @@ stateDiagram-v2
 
 ## 🌐 Supported Networks & Contracts
 
-| Parameter | Arc Testnet (Default for new jobs) | Ethereum Sepolia (Legacy support) |
-| :--- | :--- | :--- |
-| **Network Name** | Arc Testnet | Sepolia Testnet |
-| **Chain ID** | `5042002` | `11155111` |
-| **Payment Asset** | USDC (ERC-20, 6 decimals) | ETH (Native, 18 decimals) |
-| **Token Address** | `0x3600000000000000000000000000000000000000` | N/A (Native Ether) |
-| **RPC Endpoint** | `https://rpc.testnet.arc.io` | `https://ethereum-sepolia-rpc.publicnode.com` |
-| **Block Explorer**| [explorer.testnet.arc.io](https://explorer.testnet.arc.io) | [sepolia.etherscan.io](https://sepolia.etherscan.io) |
-| **Faucet** | [Circle Faucet](https://faucet.circle.com) | [Sepolia PoW Faucet](https://sepolia-faucet.pk910.de) |
+| Parameter                  | Arc Testnet (Default for Escrow)                          | Arkiv Rabdi Testnet (Coordination DB-Chain)                         | Ethereum Sepolia (Legacy Escrow)                     |
+| :------------------------- | :-------------------------------------------------------- | :------------------------------------------------------------------ | :--------------------------------------------------- |
+| **Network Name**     | Arc Testnet                                               | Arkiv Rabdi Testnet                                                 | Sepolia Testnet                                      |
+| **Chain ID**         | `5042002`                                               | `7794095`                                                         | `11155111`                                         |
+| **Primary Role**     | USDC Escrow Financial Settlement                          | Ephemeral RFPs & Bids DB-Chain                                      | ETH Escrow Settlement                                |
+| **Payment Asset**    | USDC (ERC-20, 6 decimals)                                 | tGLM (Gasless Public Reads)                                         | ETH (Native, 18 decimals)                            |
+| **Token / Contract** | `0x3600000000000000000000000000000000000000`            | Arkiv DB-Chain Primitives                                           | Native Ether                                         |
+| **RPC Endpoint**     | `https://rpc.testnet.arc.io`                            | `https://rpc.rabdi.db-chain.testnet.arkiv.network/`               | `https://ethereum-sepolia-rpc.publicnode.com`      |
+| **Block Explorer**   | [explorer.testnet.arc.io](https://explorer.testnet.arc.io) | [rabdi.explorer.arkiv.network](https://rabdi.explorer.arkiv.network) | [sepolia.etherscan.io](https://sepolia.etherscan.io)  |
+| **Faucet**           | [Circle Faucet](https://faucet.circle.com)                 | [Arkiv Faucet / Hub](https://hub.arkiv.network)                      | [Sepolia PoW Faucet](https://sepolia-faucet.pk910.de) |
 
 ---
 
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
+
 - **Node.js**: v20.9.0 or higher
-- **npm** / **pnpm**
-- **Browser Wallet**: MetaMask, Rainbow, Rabby, or Coinbase Wallet with Arc Testnet or Sepolia testnet configured.
+- **pnpm** or **npm**
+- **Browser Wallet**: MetaMask, Rainbow, Rabby, or Coinbase Wallet with Arc Testnet or Sepolia configured.
 
 ### 1. Clone & Install Dependencies
 
 ```bash
 git clone https://github.com/ritesh-sinha29/FairPay.git
 cd FairPay
-npm install
+pnpm install
 ```
 
 ### 2. Configure Environment Variables
@@ -147,15 +157,26 @@ cp .env.example .env.local
 Ensure your `.env.local` contains:
 
 ```env
+# Convex Deployment
 CONVEX_DEPLOYMENT=dev:your-deployment-name
 NEXT_PUBLIC_CONVEX_URL=https://your-deployment-name.convex.cloud
 NEXT_PUBLIC_CONVEX_SITE_URL=https://your-deployment-name.convex.site
 
+# App Origins
 SITE_URL=http://localhost:3000
 FAIRPAY_SITE_URL=http://localhost:3000
 
+# RPC Endpoints
 ARC_RPC_URL=https://rpc.testnet.arc.io
 SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+
+# Arkiv DB-Chain Integration
+NEXT_PUBLIC_ARKIV_ACCESS_KEY=""
+NEXT_PUBLIC_ARKIV_WRITER_WALLET="0xE6E4bde21600b3c973E1CB2c6125C2E46bb96d24"
+ARKIV_PRIVATE_KEY="0x2fd275893df8f8ce35eae39707d9efd388a3d7259ee74c57da56027b528b330a"
+NEXT_PUBLIC_ARKIV_EXPLORER_URL="https://rabdi.explorer.arkiv.network"
+NEXT_PUBLIC_ARKIV_CHAIN_ID=7794095
+NEXT_PUBLIC_ARKIV_RPC_URL="https://rpc.rabdi.db-chain.testnet.arkiv.network/"
 ```
 
 ### 3. Initialize Convex & Cryptographic Keys
@@ -167,26 +188,26 @@ In your terminal, initialize Convex and generate the RSA key pairs for wallet au
 npx convex dev --configure new
 
 # In a separate terminal, generate JWT_PRIVATE_KEY and JWKS on the Convex server
-npm run backend:auth
+pnpm run backend:auth
 ```
 
 ### 4. Compile Smart Contracts & Run Local Tests
 
 ```bash
 # Compile Solidity contracts with solc 0.8.30
-npm run contracts:compile
+pnpm run contracts:compile
 
 # Run stablecoin escrow integration tests
-npm run test:stablecoin
+pnpm run test:stablecoin
 
 # Optional: Run live Arc RPC check
-npm run check:arc
+pnpm run check:arc
 ```
 
 ### 5. Launch Development Server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -197,29 +218,33 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 To test the complete workflow locally, use **two browser profiles** (or an Incognito window) with separate wallets:
 
-1. **Freelancer Onboarding**:
+1. **Arkiv RFP Discovery**:
+   - Navigate to `/arkiv`.
+   - Explore live milestone listings queryable via SQL-like filters.
+   - Click **Post to Arkiv** to create an auto-expiring RFP with custom expiration (e.g. 7 Days).
+2. **Freelancer Onboarding**:
    - Navigate to `/sign-up/freelancer`.
    - Enter your name and headline.
-   - Connect your wallet and sign the gasless challenge message.
-2. **Client Onboarding**:
+   - Connect your wallet and sign the gasless challenge message ($0 in gas).
+3. **Client Onboarding**:
    - In profile 2, navigate to `/sign-up/client`.
    - Connect a distinct wallet and sign the challenge.
-3. **Draft & Agreement**:
+4. **Draft & Agreement**:
    - As the client, click **New Escrow Job** (`/jobs/new`).
    - Fill in the title, deliverable description, select the registered freelancer, and enter the USDC budget.
    - Click **Save Proposal**.
    - As the freelancer, open the job and click **Agree to Deal**.
-4. **Funding Escrow**:
+5. **Funding Escrow**:
    - As the client, click **Fund Escrow**.
    - Your wallet prompts two actions:
      1. `approve`: Grants exact USDC allowance to the escrow contract.
      2. `deploy / deposit`: Locks the USDC deposit into the smart contract.
    - The Convex verifier checks deployment bytecode and transaction receipts on-chain; status turns to **Funded**.
-5. **Work Delivery**:
+6. **Work Delivery**:
    - As the freelancer, add your delivery link (e.g., GitHub PR, Figma link) and submission note.
    - Click **Submit Work for Review** and approve the on-chain `markComplete()` transaction.
    - Status updates to **In review**.
-6. **Verification & Payout**:
+7. **Verification & Payout**:
    - As the client, review the submitted deliverable.
    - Click **Verify Work & Release Payment**.
    - Confirm the transaction in your wallet. The contract automatically pays the full USDC deposit directly to the freelancer's wallet address.
@@ -229,35 +254,46 @@ To test the complete workflow locally, use **two browser profiles** (or an Incog
 
 ## 🧪 Test Suite & Verification
 
-FairPay includes unit, integration, and RPC test suites running on in-memory and live testnets:
+FairPay includes unit, integration, and RPC test suites:
 
 ```bash
 # Type check all TypeScript source files
-npm run typecheck
+pnpm run typecheck
 
-# Execute 7 automated stablecoin escrow test scenarios
-npm run test:stablecoin
+# Compile contracts with OpenZeppelin SafeERC20
+pnpm run contracts:compile
+
+# Execute automated stablecoin escrow tests
+pnpm run test:stablecoin
 
 # Verify live Arc Testnet connection and token contract
-npm run check:arc
+pnpm run check:arc
 
 # Build production bundle
-npm run build
+pnpm run build
 ```
 
 ### Tested Scenarios:
-- [x] Exact USDC allowance and single-transaction verification payout.
-- [x] Interrupted token allowance resumption on identical contract address.
-- [x] Funding preflight rejection for paused tokens or blacklisted addresses.
-- [x] Rollback of failed or partial deposits.
-- [x] Rejection of tampering with canonical agreement hashes.
-- [x] Preservation of contract state and deposit if freelancer receiver reverts.
+
+- [X] Exact USDC allowance and single-transaction verification payout.
+- [X] Interrupted token allowance resumption on identical contract address.
+- [X] Funding preflight rejection for paused tokens or blacklisted addresses.
+- [X] Rollback of failed or partial deposits.
+- [X] Rejection of tampering with canonical agreement hashes.
+- [X] Preservation of contract state and deposit if freelancer receiver reverts.
+- [X] Gasless typed queries against Arkiv Rabdi testnet.
 
 ---
 
 ## 📂 Project Directory Structure
 
 ```text
+├── arkiv/                          # Arkiv ETHGlobal Mumbai judging submission files
+│   ├── friction.md                 # Developer friction and SDK feedback report
+│   ├── how-you-use-arkiv.md        # Filter criteria, ownership rules, and user impact
+│   ├── reach.md                    # Target audience, reach, and roadmap
+│   ├── schema.md                   # Entity definitions, indexed fields, and expiration
+│   └── why-arkiv.md                # Architectural rationale: Arkiv vs. Postgres
 ├── contracts/
 │   ├── FairPayEscrow.sol           # Native ETH escrow contract
 │   └── FairPayStableEscrow.sol     # ERC-20 / USDC stablecoin escrow contract
@@ -269,14 +305,27 @@ npm run build
 │   ├── schema.ts                   # Data models (jobs, escrows, users, wallets)
 │   └── walletActions.ts            # EIP-191 challenge generation & verification
 ├── docs/                           # Specifications, TRD, PRD, and hackathon roadmap
+│   ├── 01-start-here.md            # Operator walkthrough and user journey
+│   ├── 02-prd.md                   # Product requirements document
+│   ├── 03-trd.md                   # Technical requirements document
+│   ├── 04-roadmap.md               # Delivery roadmap and feature progression
+│   ├── 05-pitch.md                 # Hackathon presentation and pitch deck notes
+│   ├── 06-glossary.md              # Web3 domain terminology and definitions
+│   ├── 07-arc-integration.md       # Arc Studio integration and USDC escrow evidence
+│   └── 08-arkiv-integration.md     # Arkiv DB-Chain integration, schema, and evidence
 ├── scripts/
 │   ├── check-arc.mjs               # Live Arc Testnet RPC diagnostic tool
 │   ├── compile-contract.mjs        # solc compiler pipeline & bytecode exporter
-│   └── configure-convex-auth.mjs   # RSA key generation for Convex deployment
+│   ├── configure-convex-auth.mjs   # RSA key generation for Convex deployment
+│   └── deploy-contract.mjs         # CLI deployment utility for escrow contracts
 ├── src/
-│   ├── app/                        # Next.js App Router (dashboard, jobs, auth)
+│   ├── app/
+│   │   ├── arkiv/                  # Arkiv DB-Chain Escrow Board page
+│   │   ├── jobs/                   # Escrow job listings, creation, and detail views
+│   │   ├── payments/               # Payment history and CSV export
+│   │   └── (auth)/                 # Web3 gasless sign-in and sign-up flows
 │   ├── components/                 # UI components, modals, and app shell
-│   └── lib/                        # Web3 provider, agreement hashing, and contracts
+│   └── lib/                        # Arkiv SDK helpers, Web3 provider, and contracts
 └── tests/
     ├── escrow.test.mjs             # Ganache tests for native ETH escrow
     └── stable-escrow.test.mjs      # Ganache tests for USDC stablecoin escrow
@@ -286,12 +335,14 @@ npm run build
 
 ## 📜 Complete Documentation
 
-Comprehensive engineering, product, and hackathon documentation is available in [`docs/`](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/):
-- [**01-start-here.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/01-start-here.md) — Comprehensive operator walkthrough.
-- [**02-prd.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/02-prd.md) — Product requirements and experience principles.
-- [**03-trd.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/03-trd.md) — Technical requirements and contract specifications.
-- [**04-roadmap.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/04-roadmap.md) — Feature progression and validation roadmap.
-- [**08-arc-integration.md**](file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/08-arc-integration.md) — Arc Studio integration and prize submission evidence.
+Comprehensive engineering, product, and hackathon documentation is available in [`docs/`](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/>):
+
+- [**01-start-here.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/01-start-here.md>) — Comprehensive operator walkthrough.
+- [**02-prd.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/02-prd.md>) — Product requirements and experience principles.
+- [**03-trd.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/03-trd.md>) — Technical requirements and contract specifications.
+- [**04-roadmap.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/04-roadmap.md>) — Feature progression and validation roadmap.
+- [**07-arc-integration.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/07-arc-integration.md>) — Arc Studio integration and prize submission evidence.
+- [**08-arkiv-integration.md**](<file:///e:/Users/Ritesh%20Sinha/Documents/ChatGPT/ethglobal/docs/08-arkiv-integration.md>) — Arkiv DB-Chain integration, schema, native expiration, and hackathon judging evidence.
 
 ---
 

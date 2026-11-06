@@ -21,7 +21,6 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -141,9 +140,8 @@ export default function ArkivBoardPage() {
   }
 
   return (
-    <AppShell>
-      <div className="space-y-8 max-w-7xl mx-auto pb-16">
-        {/* Hero Banner */}
+    <div className="page-wrap px-4 sm:px-6 lg:px-8 py-6 space-y-8 pb-16 max-w-7xl mx-auto w-full">
+      {/* Hero Banner */}
         <div className="relative overflow-hidden rounded-2xl border border-neutral-800 bg-gradient-to-br from-neutral-950 via-neutral-900 to-black p-6 sm:p-8">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -556,6 +554,5 @@ export default function ArkivBoardPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   );
 }

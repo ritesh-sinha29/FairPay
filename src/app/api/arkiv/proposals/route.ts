@@ -89,18 +89,19 @@ export async function GET(request: Request) {
       if (result && Array.isArray(result.entities)) {
         const mapped: (ArkivProposalEntity | null)[] = result.entities
           .map((e: any) => {
-            const rawJobKey = e.jobKey?.value !== undefined ? e.jobKey.value : e.jobKey;
-            const rawFreelancer = e.freelancerAddress?.value !== undefined ? e.freelancerAddress.value : e.freelancerAddress;
-            const rawName = e.freelancerName?.value !== undefined ? e.freelancerName.value : e.freelancerName;
-            const rawNote = e.proposalNote?.value !== undefined ? e.proposalNote.value : e.proposalNote;
-            const rawPortfolio = e.portfolioLink?.value !== undefined ? e.portfolioLink.value : e.portfolioLink;
-            const rawTime = e.createdAt?.value !== undefined ? e.createdAt.value : e.createdAt;
+            const attrs = e.$attributes || {};
+            const rawJobKey = attrs.jobKey?.value !== undefined ? attrs.jobKey.value : (e.jobKey?.value ?? e.jobKey);
+            const rawFreelancer = attrs.freelancerAddress?.value !== undefined ? attrs.freelancerAddress.value : (e.freelancerAddress?.value ?? e.freelancerAddress);
+            const rawName = attrs.freelancerName?.value !== undefined ? attrs.freelancerName.value : (e.freelancerName?.value ?? e.freelancerName);
+            const rawNote = attrs.proposalNote?.value !== undefined ? attrs.proposalNote.value : (e.proposalNote?.value ?? e.proposalNote);
+            const rawPortfolio = attrs.portfolioLink?.value !== undefined ? attrs.portfolioLink.value : (e.portfolioLink?.value ?? e.portfolioLink);
+            const rawTime = attrs.createdAt?.value !== undefined ? attrs.createdAt.value : (e.$createdAt ?? e.createdAt);
 
             if (!rawJobKey || !rawNote) return null;
 
             return {
-              id: e.key || e.$key || `prop-${Date.now()}`,
-              key: e.key || e.$key,
+              id: e.$key || e.key || `prop-${Date.now()}`,
+              key: e.$key || e.key,
               jobKey: String(rawJobKey),
               freelancerAddress: String(rawFreelancer || "0x0000000000000000000000000000000000000000"),
               freelancerName: String(rawName || "Freelancer"),

@@ -154,12 +154,15 @@ export async function fetchArkivJobs(
     if (result && Array.isArray(result.entities)) {
       const mapped: (ArkivJobEntity | null)[] = result.entities
         .map((e: any) => {
+          const attrs = e.$attributes || {};
           const rawTitle =
-            e.title?.value !== undefined ? e.title.value : e.title;
+            attrs.title?.value !== undefined
+              ? attrs.title.value
+              : (e.title?.value !== undefined ? e.title.value : e.title);
           const rawDesc =
-            e.description?.value !== undefined
-              ? e.description.value
-              : e.description;
+            attrs.description?.value !== undefined
+              ? attrs.description.value
+              : (e.description?.value !== undefined ? e.description.value : e.description);
 
           if (
             !rawTitle ||
@@ -170,10 +173,12 @@ export async function fetchArkivJobs(
             return null;
           }
 
-          const expiresAt = Number(e.expiresAt || e.$expiresAt || 0);
+          const expiresAt = Number(e.$expiresAt || e.expiresAt || 0);
           const computedHours = Math.round((expiresAt - Date.now()) / (3600 * 1000));
           const rawStatus =
-            e.status?.value !== undefined ? e.status.value : e.status;
+            attrs.status?.value !== undefined
+              ? attrs.status.value
+              : (e.status?.value !== undefined ? e.status.value : e.status);
           const status = (rawStatus as any) || "open";
 
           // Keep open RFPs active and visible for bidding
@@ -182,27 +187,31 @@ export async function fetchArkivJobs(
             return null;
           }
           const rawCategory =
-            e.category?.value !== undefined ? e.category.value : e.category;
+            attrs.category?.value !== undefined
+              ? attrs.category.value
+              : (e.category?.value !== undefined ? e.category.value : e.category);
           const rawBudget =
-            e.budgetEth?.value !== undefined
-              ? e.budgetEth.value
-              : e.budgetEth;
+            attrs.budgetEth?.value !== undefined
+              ? attrs.budgetEth.value
+              : (e.budgetEth?.value !== undefined ? e.budgetEth.value : e.budgetEth);
           const rawMilestones =
-            e.milestonesCount?.value !== undefined
-              ? e.milestonesCount.value
-              : e.milestonesCount;
+            attrs.milestonesCount?.value !== undefined
+              ? attrs.milestonesCount.value
+              : (e.milestonesCount?.value !== undefined ? e.milestonesCount.value : e.milestonesCount);
           const rawClient =
-            e.clientAddress?.value !== undefined
-              ? e.clientAddress.value
-              : e.clientAddress;
+            attrs.clientAddress?.value !== undefined
+              ? attrs.clientAddress.value
+              : (e.clientAddress?.value !== undefined ? e.clientAddress.value : e.clientAddress);
           const rawTags =
-            e.tags?.value !== undefined ? e.tags.value : e.tags;
+            attrs.tags?.value !== undefined
+              ? attrs.tags.value
+              : (e.tags?.value !== undefined ? e.tags.value : e.tags);
 
           return {
-            key: e.key || e.$key || "0x...",
+            key: e.$key || e.key || "0x...",
             owner:
-              e.owner ||
               e.$owner ||
+              e.owner ||
               rawClient ||
               ARKIV_WRITER_WALLET ||
               writerFallback,
@@ -212,7 +221,7 @@ export async function fetchArkivJobs(
             budgetEth: String(rawBudget || "1.0"),
             milestonesCount: Number(rawMilestones || 2),
             clientAddress: String(
-              rawClient || e.owner || ARKIV_WRITER_WALLET || writerFallback,
+              rawClient || e.$owner || e.owner || ARKIV_WRITER_WALLET || writerFallback,
             ),
             tags: Array.isArray(rawTags)
               ? rawTags
@@ -222,7 +231,7 @@ export async function fetchArkivJobs(
             description: String(
               rawDesc || "Decentralized milestone escrow listing on Arkiv",
             ),
-            createdAt: Number(e.createdAt || Date.now()),
+            createdAt: Number(e.$createdAt || e.createdAt || Date.now()),
             expiresAt,
             remainingHours,
             isExpired: false,
@@ -291,18 +300,19 @@ export async function fetchArkivProposals(jobKey?: string): Promise<ArkivProposa
     if (result && Array.isArray(result.entities)) {
       const mapped: (ArkivProposalEntity | null)[] = result.entities
         .map((e: any) => {
-          const rawJobKey = e.jobKey?.value !== undefined ? e.jobKey.value : e.jobKey;
-          const rawFreelancer = e.freelancerAddress?.value !== undefined ? e.freelancerAddress.value : e.freelancerAddress;
-          const rawName = e.freelancerName?.value !== undefined ? e.freelancerName.value : e.freelancerName;
-          const rawNote = e.proposalNote?.value !== undefined ? e.proposalNote.value : e.proposalNote;
-          const rawPortfolio = e.portfolioLink?.value !== undefined ? e.portfolioLink.value : e.portfolioLink;
-          const rawTime = e.createdAt?.value !== undefined ? e.createdAt.value : e.createdAt;
+          const attrs = e.$attributes || {};
+          const rawJobKey = attrs.jobKey?.value !== undefined ? attrs.jobKey.value : (e.jobKey?.value ?? e.jobKey);
+          const rawFreelancer = attrs.freelancerAddress?.value !== undefined ? attrs.freelancerAddress.value : (e.freelancerAddress?.value ?? e.freelancerAddress);
+          const rawName = attrs.freelancerName?.value !== undefined ? attrs.freelancerName.value : (e.freelancerName?.value ?? e.freelancerName);
+          const rawNote = attrs.proposalNote?.value !== undefined ? attrs.proposalNote.value : (e.proposalNote?.value ?? e.proposalNote);
+          const rawPortfolio = attrs.portfolioLink?.value !== undefined ? attrs.portfolioLink.value : (e.portfolioLink?.value ?? e.portfolioLink);
+          const rawTime = attrs.createdAt?.value !== undefined ? attrs.createdAt.value : (e.$createdAt ?? e.createdAt);
 
           if (!rawJobKey || !rawNote) return null;
 
           return {
-            id: e.key || e.$key || `prop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            key: e.key || e.$key,
+            id: e.$key || e.key || `prop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            key: e.$key || e.key,
             jobKey: String(rawJobKey),
             freelancerAddress: String(rawFreelancer || "0x0000000000000000000000000000000000000000"),
             freelancerName: String(rawName || "Freelancer"),

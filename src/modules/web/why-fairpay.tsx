@@ -422,7 +422,7 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
           href={tryNowHref}
           className="w-full py-2.5 px-4 rounded-lg bg-white text-black font-semibold text-xs hover:bg-neutral-200 transition-colors flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
         >
-          <span>Try Now</span>
+          <span>{isAuthenticated ? "Dashboard" : "Try Now"}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -453,10 +453,18 @@ function FeatureRow({
   const isImageRight = feature.imagePosition === "right";
   const targetHref = feature.link === "/jobs" ? tryNowHref : feature.link;
 
+  const rowId =
+    feature.mockType === "wallet"
+      ? "why-fairpay"
+      : index === 0
+        ? "how-it-works"
+        : undefined;
+
   return (
     <div
+      id={rowId}
       ref={rowRef}
-      className={`grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center ${
+      className={`grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center scroll-mt-28 ${
         index === features.length - 1 ? "pt-12 lg:pt-16 pb-4 lg:pb-6" : "py-12 lg:py-16"
       }`}
     >

@@ -110,8 +110,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar className="border-sidebar-border" collapsible="offcanvas">
         <SidebarHeader className="p-5 flex items-center justify-center">
           <Link
-            href="/jobs"
-            className="flex items-center justify-center gap-2.5 text-2xl font-semibold tracking-tight w-full"
+            href="/web"
+            className="flex items-center justify-center gap-2.5 text-2xl font-semibold tracking-tight w-full hover:opacity-90 transition-opacity"
           >
             <FairPayLogo size={32} />
             <span className="leading-none">FairPay</span>

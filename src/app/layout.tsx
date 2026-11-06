@@ -56,7 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${GeistSans.variable} ${GeistMono.variable}`}
+      className={`dark scroll-smooth ${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body>
         <ConvexAuthNextjsServerProvider>

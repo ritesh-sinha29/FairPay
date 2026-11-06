@@ -5,6 +5,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { useConvexAuth } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { FairPayLogo } from "@/components/fairpay-logo";
 import { Button } from "@/components/ui/button";
 
@@ -14,15 +15,44 @@ interface NavLink {
 }
 
 const navLinks: NavLink[] = [
-  { label: "How it works", href: "/web#features" },
-  { label: "Payment rules", href: "/payments" },
-  { label: "Arkiv Board", href: "/arkiv" },
+  { label: "How it works", href: "/web#how-it-works" },
+  { label: "Why FairPay", href: "/web#why-fairpay" },
+  { label: "FAQs", href: "/web#faq" },
 ];
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const { isAuthenticated } = useConvexAuth();
+  const { signOut } = useAuthActions();
+
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
+    if (href.includes("#") && typeof window !== "undefined") {
+      const targetId = href.split("#")[1];
+      const el = document.getElementById(targetId);
+      if (el) {
+        e.preventDefault();
+        el.scrollIntoView({ behavior: "smooth" });
+        window.history.pushState(null, "", href);
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
+      await signOut();
+      window.location.assign("/web");
+    } catch {
+      window.location.assign("/web");
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   const tryNowHref = isAuthenticated ? "/jobs" : "/auth";
   const logoHref = "/web";
@@ -73,6 +103,7 @@ export function Navbar() {
             <Link
               key={label}
               href={href}
+              onClick={(e) => handleNavClick(e, href)}
               className="relative cursor-pointer transition-all duration-300 text-neutral-300 hover:text-white px-3.5 py-1.5 text-xs group"
             >
               <span>{label}</span>
@@ -83,11 +114,22 @@ export function Navbar() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          <Link href={isAuthenticated ? "/jobs" : "/sign-in"} className="hidden sm:inline-block">
-            <span className="text-xs font-medium text-neutral-300 hover:text-white transition-colors px-2 py-1">
-              {isAuthenticated ? "Dashboard" : "Sign In"}
-            </span>
-          </Link>
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="hidden sm:inline-block text-xs font-medium text-neutral-300 hover:text-white transition-colors px-2 py-1 disabled:opacity-50"
+            >
+              {loggingOut ? "Logging out…" : "Logout"}
+            </button>
+          ) : (
+            <Link href="/sign-in" className="hidden sm:inline-block">
+              <span className="text-xs font-medium text-neutral-300 hover:text-white transition-colors px-2 py-1">
+                Login
+              </span>
+            </Link>
+          )}
+
           <Link href={tryNowHref}>
             <Button
               size="sm"
@@ -96,7 +138,7 @@ export function Navbar() {
                 scrolled ? "h-8 px-3.5" : "h-9 px-4"
               )}
             >
-              <span>Try Now</span>
+              <span>{isAuthenticated ? "Dashboard" : "Try Now"}</span>
               <ArrowRight size={12} className="ml-1" />
             </Button>
           </Link>
@@ -119,26 +161,42 @@ export function Navbar() {
             <Link
               key={link.label}
               href={link.href}
-              onClick={() => setIsMenuOpen(false)}
+              onClick={(e) => {
+                setIsMenuOpen(false);
+                handleNavClick(e, link.href);
+              }}
               className="text-neutral-300 text-xs font-medium hover:text-white transition-colors py-1"
             >
               {link.label}
             </Link>
           ))}
           <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
-            <Link
-              href={isAuthenticated ? "/jobs" : "/sign-in"}
-              onClick={() => setIsMenuOpen(false)}
-              className="text-xs text-neutral-300 hover:text-white py-1"
-            >
-              {isAuthenticated ? "Dashboard" : "Sign In"}
-            </Link>
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleLogout();
+                }}
+                disabled={loggingOut}
+                className="text-xs text-left text-neutral-300 hover:text-white py-1 disabled:opacity-50"
+              >
+                {loggingOut ? "Logging out…" : "Logout"}
+              </button>
+            ) : (
+              <Link
+                href="/sign-in"
+                onClick={() => setIsMenuOpen(false)}
+                className="text-xs text-neutral-300 hover:text-white py-1"
+              >
+                Login
+              </Link>
+            )}
             <Link
               href={tryNowHref}
               onClick={() => setIsMenuOpen(false)}
               className="text-xs text-white font-medium py-1"
             >
-              Try Now →
+              {isAuthenticated ? "Dashboard →" : "Try Now →"}
             </Link>
           </div>
         </div>

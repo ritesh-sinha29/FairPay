@@ -85,7 +85,7 @@ export function Hero() {
               size="lg"
               className="h-11 px-6 bg-white text-black hover:bg-neutral-200 font-medium text-xs rounded-lg transition-all shadow-lg shadow-white/5"
             >
-              <span>Try Now</span>
+              <span>{isAuthenticated ? "Dashboard" : "Try Now"}</span>
               <ArrowRight size={13} className="ml-1.5" />
             </Button>
           </Link>

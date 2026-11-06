@@ -140,11 +140,11 @@ export function Footer() {
             <FooterColumn
               title="Features"
               links={[
-                { label: "Milestone Escrow", href: "/web#features" },
-                { label: "Arkiv TTL Pruning", href: "/arkiv" },
-                { label: "One-Click Release", href: "/web#features" },
-                { label: "Zero Platform Fee", href: "/web#features" },
-                { label: "Arc USDC Collateral", href: "/web#features" },
+                { label: "How It Works", href: "/web#how-it-works" },
+                { label: "Why FairPay", href: "/web#why-fairpay" },
+                { label: "Protocol FAQ", href: "/web#faq" },
+                { label: "Arkiv Board", href: "/arkiv" },
+                { label: "Arc USDC Escrow", href: "/web#how-it-works" },
               ]}
             />
           </div>

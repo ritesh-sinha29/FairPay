@@ -114,24 +114,31 @@ export default function ArkivBoardPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [jobsRes, proposalsList] = await Promise.all([
-        fetchArkivJobs(
-          {
-            category: category !== "all" ? category : undefined,
-            status: status !== "all" ? status : undefined,
-            minBudget: minBudget > 0 ? minBudget : undefined,
-          },
-          user?.walletAddress,
-        ),
-        fetchArkivProposals(),
-      ]);
+      const jobsRes = await fetchArkivJobs(
+        {
+          category: category !== "all" ? category : undefined,
+          status: status !== "all" ? status : undefined,
+          minBudget: minBudget > 0 ? minBudget : undefined,
+        },
+        user?.walletAddress,
+      );
 
-      setEntities(jobsRes.entities);
-      setRawSql(jobsRes.rawQuery);
-      setSource(jobsRes.source);
-      setAllProposals(proposalsList);
-    } catch {
-      toast.error("Failed to fetch Arkiv DB-Chain entities");
+      if (jobsRes && Array.isArray(jobsRes.entities)) {
+        setEntities(jobsRes.entities);
+        setRawSql(jobsRes.rawQuery);
+        setSource(jobsRes.source);
+      }
+    } catch (jErr) {
+      console.warn("Arkiv jobs load error:", jErr);
+    }
+
+    try {
+      const proposalsList = await fetchArkivProposals();
+      if (Array.isArray(proposalsList)) {
+        setAllProposals(proposalsList);
+      }
+    } catch (pErr) {
+      console.warn("Arkiv proposals load error:", pErr);
     } finally {
       setLoading(false);
     }

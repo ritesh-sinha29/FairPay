@@ -84,7 +84,7 @@ export async function GET(request: Request) {
         chain: rabdi({ accessKey }),
         transport: http(),
       });
-      const queryStr = jobKey ? `jobKey = str('${jobKey.replace(/['"\\]/g, "")}')` : "";
+      const queryStr = jobKey ? `jobKey = str('${jobKey.replace(/['"\\]/g, "")}')` : "*";
       const result = await client.query(queryStr, { limit: 50 });
       if (result && Array.isArray(result.entities)) {
         const mapped: (ArkivProposalEntity | null)[] = result.entities

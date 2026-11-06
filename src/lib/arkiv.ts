@@ -123,7 +123,7 @@ export function buildArkivQuery(filters?: {
     parts.push(`clientAddress = addr('${sanitize(filters.clientAddress)}')`);
   }
 
-  return parts.length > 0 ? parts.join(" AND ") : "";
+  return parts.length > 0 ? parts.join(" AND ") : "*";
 }
 
 // Fetch live jobs directly from Arkiv DB-Chain
@@ -294,7 +294,7 @@ export async function fetchArkivProposals(jobKey?: string): Promise<ArkivProposa
     const client = getArkivPublicClient();
     const queryStr = jobKey
       ? `jobKey = str('${jobKey.replace(/['"\\]/g, "")}')`
-      : "";
+      : "*";
     const result = await client.query(queryStr, { limit: 50 });
 
     if (result && Array.isArray(result.entities)) {

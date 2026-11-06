@@ -122,7 +122,7 @@ export function Footer() {
                 { label: "Create Escrow", href: "/jobs/new" },
                 { label: "Arkiv Board", href: "/arkiv" },
                 { label: "Payment Rules", href: "/payments" },
-                { label: "Launch App", href: "/jobs" },
+                { label: "Try Now", href: "/jobs" },
               ]}
             />
           </div>
@@ -132,11 +132,11 @@ export function Footer() {
             <FooterColumn
               title="Features"
               links={[
-                { label: "Milestone Escrow", href: "#features" },
+                { label: "Milestone Escrow", href: "/web#features" },
                 { label: "Arkiv TTL Pruning", href: "/arkiv" },
-                { label: "One-Click Release", href: "#features" },
-                { label: "Zero Platform Fee", href: "#features" },
-                { label: "Arc USDC Collateral", href: "#features" },
+                { label: "One-Click Release", href: "/web#features" },
+                { label: "Zero Platform Fee", href: "/web#features" },
+                { label: "Arc USDC Collateral", href: "/web#features" },
               ]}
             />
           </div>
@@ -160,8 +160,8 @@ export function Footer() {
             <FooterColumn
               title="Resources"
               links={[
-                { label: "Protocol FAQ", href: "#faq" },
-                { label: "Security & Specs", href: "#faq" },
+                { label: "Protocol FAQ", href: "/web#faq" },
+                { label: "Security & Specs", href: "/web#faq" },
                 { label: "Smart Contracts", href: "https://github.com", external: true },
                 { label: "Blockscout Audit", href: "https://testnet.arcscan.io", external: true },
               ]}

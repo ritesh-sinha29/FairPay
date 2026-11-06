@@ -9,7 +9,7 @@ import {
   BriefcaseBusiness,
   ChevronUp,
   Database,
-  Globe,
+  Layers,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -76,7 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { title: "Jobs & Escrow", href: "/jobs", icon: BriefcaseBusiness },
     { title: "Arkiv Board", href: "/arkiv", icon: Database },
     { title: "Payments", href: "/payments", icon: ArrowDownLeft },
-    { title: "Landing Page", href: "/", icon: Globe },
+    { title: "Features", href: "/web#features", icon: Layers },
   ];
   const title =
     path === "/jobs"
@@ -87,8 +87,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           ? "Payments"
           : path.startsWith("/account")
             ? "Account"
-            : path === "/"
-              ? "Landing Page"
+            : path.startsWith("/web")
+              ? "Features"
               : "Workspace";
   const mismatch = account && account.toLowerCase() !== user.walletAddress;
   const pageJob = jobs.find((job) => path === jobUrl(job));
@@ -127,7 +127,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <SidebarMenuButton
                       asChild
                       isActive={
-                        href === "/" ? path === href : path.startsWith(href)
+                        href.startsWith("/web")
+                          ? path.startsWith("/web")
+                          : path.startsWith(href)
                       }
                       className="h-10 gap-3 data-[active=true]:bg-blue-500/15 data-[active=true]:text-blue-300"
                     >

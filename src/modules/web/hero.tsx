@@ -71,39 +71,38 @@ export function Hero() {
 
         {/* Subhead (clean neutral) */}
         <p className="text-neutral-300 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-10 font-normal">
-          Non-custodial milestone escrow in Circle USDC with auto-expiring RFPs
-          powered by Arkiv DB-Chain. Zero platform cuts, zero custody risk.
+          71% of freelancers face late payments or client ghosting. FairPay secures 100% of milestone USDC in deterministic smart contracts before work begins. Zero platform commission, zero custody risk, instant wallet payout.
         </p>
 
         {/* CTA Buttons (WeKraft black & white styles) */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 mb-14">
-          <Link href="/jobs/new">
+          <Link href="/jobs">
             <Button
               size="lg"
               className="h-11 px-6 bg-white text-black hover:bg-neutral-200 font-medium text-xs rounded-lg transition-all shadow-lg shadow-white/5"
             >
-              <span>Create Escrow</span>
+              <span>Try Now</span>
               <ArrowRight size={13} className="ml-1.5" />
             </Button>
           </Link>
-          <Link href="/arkiv">
+          <Link href="/jobs/new">
             <Button
               size="lg"
               variant="outline"
               className="h-11 px-6 border-white/15 bg-neutral-900/60 hover:bg-neutral-800 text-neutral-200 text-xs rounded-lg backdrop-blur-md"
             >
-              <span>Browse Arkiv RFPs</span>
+              <span>Create Escrow</span>
             </Button>
           </Link>
         </div>
 
-        {/* Minimalist Metrics Strip */}
+        {/* Minimalist Metrics Strip with Real Facts */}
         <div className="inline-flex items-center gap-6 px-5 py-2 rounded-full border border-white/10 bg-neutral-950/70 text-[11px] text-neutral-400 backdrop-blur-md">
-          <span className="text-neutral-300">0% Platform Cut</span>
+          <span className="text-neutral-300">0% Cut vs 15% Upwork</span>
           <span className="text-neutral-700">•</span>
-          <span className="text-neutral-300">Arc USDC Escrow</span>
+          <span className="text-neutral-300">&lt; 2s Instant Release</span>
           <span className="text-neutral-700">•</span>
-          <span className="text-neutral-300">Arkiv TTL Pruning</span>
+          <span className="text-neutral-300">Arkiv TTL Ghost-Job Shield</span>
         </div>
       </main>
 

@@ -15,69 +15,57 @@ export interface FeatureBlock {
   imagePosition: "left" | "right";
   link?: string;
   linkText?: string;
-  mockType: "escrow" | "arkiv" | "wallet" | "settlement" | "audit";
+  mockType: "escrow" | "arkiv" | "agreement" | "wallet";
 }
 
 const features: FeatureBlock[] = [
   {
-    tag: "Milestone Escrow",
-    title: "Lock funds upfront before work begins.",
+    tag: "Settlement Layer • Arc Testnet 5042002",
+    title: "Trustless USDC Escrow via FairPayStableEscrow.sol",
     description:
-      "Deposit Circle USDC directly into deterministic on-chain smart contracts on Arc Testnet. Funds are secured trustlessly before any code is committed — eliminating client ghosting and contractor non-payment.",
+      "Clients lock milestone funds upfront into our smart contract on Arc Testnet (Chain ID 5042002) utilizing Circle USDC and OpenZeppelin's SafeERC20. The contract manages the complete milestone lifecycle: deposit lockup, deliverable submission, client release triggers, and automated timeout refunds. Contractors start work knowing payment is 100% secured.",
     image: "",
-    imageAlt: "FairPay milestone escrow smart contract management",
+    imageAlt: "FairPay milestone escrow smart contract management on Arc Testnet",
     imagePosition: "right",
     link: "/jobs/new",
     linkText: "Create an escrow",
     mockType: "escrow",
   },
   {
-    tag: "Arkiv DB-Chain",
-    title: "Eliminate ghost jobs with protocol TTL.",
+    tag: "Ephemeral RFP Layer • Rabdi 7794095",
+    title: "Auto-Expiring RFPs on Arkiv DB-Chain",
     description:
-      "Every Request for Proposal (RFP) is published to Arkiv's decentralized database chain with a native block-lease timer. Open bids auto-prune upon expiration, guaranteeing active budgets and zero dead listings.",
+      "Integrated via @arkiv-network/sdk on Rabdi testnet (Chain ID 7794095). FairPay stores live freelance postings as on-chain entities with native protocol-level ExpirationTime TTLs (24h to 7d). When an RFP expires or is fulfilled, Arkiv's consensus layer prunes it without manual transaction overhead, dead ghost listings, or state bloat.",
     image: "",
-    imageAlt: "Arkiv decentralized database RFP board with TTL",
+    imageAlt: "Arkiv decentralized database RFP board with native TTL pruning",
     imagePosition: "left",
     link: "/arkiv",
     linkText: "Explore Arkiv board",
     mockType: "arkiv",
   },
   {
-    tag: "Universal Web3 Access",
-    title: "Supported Wallets & Arc Network",
+    tag: "Gasless Auth & Reactive State • Convex",
+    title: "Cryptographic Agreement Verification via Keccak-256",
     description:
-      "Connect with your preferred EVM Web3 wallet. Instant authorization, zero centralized custody.",
+      "Off-chain coordination powered by Convex. Clients and contractors authenticate gaslessly using EIP-191 (Sign-In with Ethereum). The agreed scope and deliverables generate a canonical Keccak-256 agreement hash locked on-chain before funds lock — permanently preventing scope creep and revision disputes.",
     image: "",
-    imageAlt: "Supported EVM wallets and Arc Testnet settlement layer",
+    imageAlt: "Convex reactive state and cryptographic Keccak-256 agreement verification",
     imagePosition: "right",
     link: "/jobs",
-    linkText: "Connect Wallet & Launch",
-    mockType: "wallet",
+    linkText: "View agreement flow",
+    mockType: "agreement",
   },
   {
-    tag: "Instant Settlement",
-    title: "One-click release. Zero platform fee.",
+    tag: "Zero Custody Risk • 0% Platform Fee",
+    title: "Atomic Wallet Payouts. Zero Intermediary Cut.",
     description:
-      "Review deliverables, verify milestone completion, and release funds instantly in a single transaction. Funds transfer directly from smart contract to contractor wallet with 0% platform extraction.",
+      "Legacy Web2 freelance platforms extract 10% to 20% in fees while holding your money in centralized bank accounts for 5 to 10 days. FairPay charges 0% platform cuts. Approved milestone funds release atomically from the smart contract directly to your self-custody EVM wallet (MetaMask, Rabby, Coinbase).",
     image: "",
-    imageAlt: "One-click milestone release and instant payout",
+    imageAlt: "Supported EVM Web3 wallets and zero fee direct wallet settlement",
     imagePosition: "left",
     link: "/jobs",
-    linkText: "View settlement flow",
-    mockType: "settlement",
-  },
-  {
-    tag: "Audit Trail",
-    title: "Verifiable escrow proofs on Blockscout.",
-    description:
-      "Every milestone deposit, work submission, and disbursement is immutably indexed with verifiable execution receipts. Direct Blockscout Explorer links provide transparent proof for every party.",
-    image: "",
-    imageAlt: "Blockscout cryptographic audit trail and explorer verification",
-    imagePosition: "right",
-    link: "https://testnet.arcscan.io",
-    linkText: "Inspect verified contracts",
-    mockType: "audit",
+    linkText: "Try Now",
+    mockType: "wallet",
   },
 ];
 
@@ -93,10 +81,10 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <span className="text-[11px] text-neutral-500 font-mono ml-2">contract: 0x48b2...a19f</span>
+            <span className="text-[11px] text-neutral-400 font-mono ml-2">FairPayStableEscrow.sol (Arc 5042002)</span>
           </div>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[10px] text-neutral-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-white" /> Arc Testnet
+            <span className="w-1.5 h-1.5 rounded-full bg-white" /> SafeERC20 USDC
           </span>
         </div>
 
@@ -168,10 +156,10 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <span className="text-[11px] text-neutral-500 font-mono ml-2">arkiv-db: lease_id_902</span>
+            <span className="text-[11px] text-neutral-400 font-mono ml-2">@arkiv-network/sdk (Rabdi 7794095)</span>
           </div>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[10px] text-neutral-300">
-            <Database className="w-3 h-3 text-white" /> TTL Active
+            <Database className="w-3 h-3 text-white" /> Consensus TTL Active
           </span>
         </div>
 
@@ -259,14 +247,14 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
           href="/jobs"
           className="w-full py-3.5 px-6 rounded-full bg-white text-black font-semibold text-xs sm:text-sm hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
         >
-          <span>Connect Wallet & Launch</span>
+          <span>Try Now</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
     );
   }
 
-  if (type === "settlement") {
+  if (type === "agreement") {
     return (
       <div className="w-full bg-[#0c0d10] p-5 sm:p-7 text-left font-sans select-none">
         {/* Window Bar */}
@@ -275,110 +263,59 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
             <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <span className="text-[11px] text-neutral-500 font-mono ml-2">settlement: instant_release</span>
+            <span className="text-[11px] text-neutral-400 font-mono ml-2">convex: reactive_state_engine</span>
           </div>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[10px] text-neutral-300">
-            0% Cut
+            <ShieldCheck className="w-3 h-3 text-white" /> EIP-191 Verified
           </span>
         </div>
 
+        {/* Header */}
         <div className="mb-5">
-          <div className="text-[11px] text-neutral-400 uppercase tracking-wider font-mono">Receipt Breakdown</div>
+          <div className="text-[11px] text-neutral-400 uppercase tracking-wider font-mono">Scope Agreement Lock</div>
           <h4 className="text-base sm:text-lg font-semibold text-white tracking-tight mt-0.5">
-            Single-Transaction Escrow Payout
+            Cryptographic Milestone Specification
           </h4>
         </div>
 
-        {/* Calculation Table */}
-        <div className="rounded-lg border border-white/10 bg-neutral-900/50 p-4 space-y-3 mb-5 font-mono text-xs">
-          <div className="flex justify-between text-neutral-300">
-            <span>Escrow Approved:</span>
-            <span className="text-white font-semibold">2,500.00 USDC</span>
+        {/* Keccak-256 Box */}
+        <div className="p-3.5 rounded-lg border border-white/10 bg-neutral-900/60 mb-4">
+          <div className="flex justify-between text-xs mb-1.5">
+            <span className="text-neutral-400 font-mono text-[11px]">Canonical Keccak-256 Hash</span>
+            <span className="text-white font-mono text-[11px] font-medium">On-Chain Anchored</span>
           </div>
-          <div className="flex justify-between text-neutral-400">
-            <span>Platform Commission:</span>
-            <span className="text-white font-semibold">$0.00 (0%)</span>
-          </div>
-          <div className="flex justify-between text-neutral-400">
-            <span>Arc Network Gas:</span>
-            <span className="text-neutral-300">$0.00018</span>
-          </div>
-          <div className="pt-2 border-t border-white/10 flex justify-between text-white font-semibold text-sm">
-            <span>Contractor Net Payout:</span>
-            <span>2,500.00 USDC</span>
+          <div className="text-[11px] font-mono text-neutral-200 bg-black/60 p-2.5 rounded border border-white/[0.06] break-all select-all">
+            0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
           </div>
         </div>
 
-        <div className="p-3 rounded-lg border border-white/[0.08] bg-neutral-950/70 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-white" />
-            <span className="text-neutral-200">Execution Speed: 1.2s</span>
+        {/* Dual Signatures */}
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center justify-between text-xs p-2.5 rounded border border-white/[0.06] bg-neutral-950/60">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+              <span className="text-neutral-300">Client Signature (EIP-191):</span>
+            </div>
+            <span className="text-white font-mono text-[11px]">0x48b2...a19f (Verified)</span>
           </div>
-          <span className="font-mono text-neutral-400 text-[11px]">Confirmed</span>
+          <div className="flex items-center justify-between text-xs p-2.5 rounded border border-white/[0.06] bg-neutral-950/60">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+              <span className="text-neutral-300">Builder Signature (EIP-191):</span>
+            </div>
+            <span className="text-white font-mono text-[11px]">0x3df8...1c22 (Verified)</span>
+          </div>
         </div>
 
         {/* Bottom Status Row */}
-        <div className="mt-4 pt-3 flex items-center justify-between text-xs font-mono">
-          <span className="text-neutral-500">Smart Contract Escrow</span>
-          <span className="text-white font-medium">0% Commission Fee</span>
+        <div className="pt-4 flex items-center justify-between text-xs font-mono">
+          <span className="text-neutral-500">Convex Coordination Engine</span>
+          <span className="text-white font-medium">Zero Scope Creep</span>
         </div>
       </div>
     );
   }
-
-  // audit
-  return (
-    <div className="w-full bg-[#0c0d10] p-5 sm:p-7 text-left font-sans select-none">
-      {/* Window Bar */}
-      <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/[0.08]">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-          <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-          <div className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-          <span className="text-[11px] text-neutral-500 font-mono ml-2">explorer.testnet.arc.network</span>
-        </div>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-[10px] text-neutral-300">
-          <ShieldCheck className="w-3 h-3 text-white" /> Verified
-        </span>
-      </div>
-
-      <div className="mb-5">
-        <div className="text-[11px] text-neutral-400 uppercase tracking-wider font-mono">Immutable Audit Record</div>
-        <h4 className="text-base sm:text-lg font-semibold text-white tracking-tight mt-0.5">
-          Blockscout Verified Contract Call
-        </h4>
-      </div>
-
-      <div className="space-y-2.5 mb-5 font-mono text-xs">
-        <div className="p-2.5 rounded border border-white/[0.08] bg-neutral-950/70 flex justify-between items-center">
-          <span className="text-neutral-400">Method</span>
-          <span className="text-white font-medium">releaseMilestone(uint256,address)</span>
-        </div>
-        <div className="p-2.5 rounded border border-white/[0.08] bg-neutral-950/70 flex justify-between items-center">
-          <span className="text-neutral-400">Transaction Hash</span>
-          <span className="text-neutral-200">0x9f4a...28d1</span>
-        </div>
-        <div className="p-2.5 rounded border border-white/[0.08] bg-neutral-950/70 flex justify-between items-center">
-          <span className="text-neutral-400">Block Number</span>
-          <span className="text-neutral-200">#3,904,118</span>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between p-3 rounded-lg border border-white/10 bg-neutral-900/60 text-xs">
-        <span className="text-neutral-300">Verification Hash</span>
-        <span className="text-white font-mono flex items-center gap-1">
-          Cryptographically Validated
-          <ExternalLink className="w-3 h-3 text-neutral-400" />
-        </span>
-      </div>
-
-      {/* Bottom Status Row */}
-      <div className="mt-4 pt-3 flex items-center justify-between text-xs font-mono">
-        <span className="text-neutral-500">Arc Network Explorer</span>
-        <span className="text-white font-medium">Blockscout Verified Contract</span>
-      </div>
-    </div>
-  );
+  return null;
 }
 
 /* ─── Feature Row Component with Exact WeKraft Appear Animation ─── */
@@ -559,12 +496,12 @@ export function WhyFairPay() {
           transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           <div className="font-semibold text-3xl sm:text-4xl md:text-5xl tracking-tight mb-4 leading-[1.1] max-w-4xl mx-auto">
-            <h2 className="text-white">Built for speed.</h2>
-            <h2 className="text-neutral-400 mt-1">Designed for simplicity.</h2>
+            <h2 className="text-white">Three Core Layers.</h2>
+            <h2 className="text-neutral-400 mt-1">Zero Intermediary Risk.</h2>
           </div>
 
-          <p className="text-neutral-400 text-sm sm:text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-            Everything you need to agree, fund, and settle — in one decentralized workspace that guarantees payment.
+          <p className="text-neutral-400 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+            Non-custodial Arc Testnet USDC escrow, auto-expiring Arkiv DB-Chain RFPs, and Convex reactive state — eliminating client ghosting and 20% platform extraction.
           </p>
         </motion.div>
 

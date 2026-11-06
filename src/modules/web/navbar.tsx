@@ -13,7 +13,7 @@ interface NavLink {
 }
 
 const navLinks: NavLink[] = [
-  { label: "How it works", href: "#features" },
+  { label: "How it works", href: "/web#features" },
   { label: "Payment rules", href: "/payments" },
   { label: "Arkiv Board", href: "/arkiv" },
 ];
@@ -88,7 +88,7 @@ export function Navbar() {
                 scrolled ? "h-8 px-3.5" : "h-9 px-4"
               )}
             >
-              <span>Launch App</span>
+              <span>Try Now</span>
               <ArrowRight size={12} className="ml-1" />
             </Button>
           </Link>

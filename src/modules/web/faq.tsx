@@ -13,39 +13,39 @@ export interface FAQItem {
 const defaultFaqs: FAQItem[] = [
   {
     id: "escrow-mechanics",
-    question: "How does non-custodial milestone escrow work on FairPay?",
+    question: "How does FairPay protect contractors from client ghosting and non-payment?",
     answer:
-      "Clients deposit Circle USDC directly into deterministic on-chain smart contracts on Arc Testnet before work commences. Neither FairPay nor any central party holds custody of your funds. Once the builder submits deliverables and the client reviews and approves the milestone, funds release directly to the contractor wallet in a single gas-efficient transaction.",
-  },
-  {
-    id: "arkiv-ttl",
-    question: "What is Arkiv DB-Chain and how does native protocol TTL eliminate ghost jobs?",
-    answer:
-      "Arkiv is a decentralized database chain. Every Request for Proposal (RFP) posted to FairPay is assigned an on-chain Time-To-Live (TTL) lease (e.g. 24 hours to 7 days). If an RFP is unfulfilled or the lease expires, protocol-level state pruning automatically deletes the listing, ensuring every opportunity on the board has an active budget and verified sponsor.",
+      "Over 71% of freelancers have experienced delayed payment or complete client ghosting. On FairPay, clients must deposit 100% of the agreed milestone funds in native Circle USDC into an Arc Testnet smart contract before any code is committed. Once locked in contract escrow, the client cannot unilaterally retract or charge back funds. When you submit deliverables and the client approves, funds release instantly to your wallet.",
   },
   {
     id: "platform-fees",
-    question: "What are the platform fees on FairPay?",
+    question: "Why does FairPay charge 0% platform fees? What is the catch?",
     answer:
-      "FairPay charges 0% platform extraction on milestone payouts. Unlike legacy freelance platforms that take 10% to 20% of your earnings, FairPay charges zero platform cuts. Both parties pay only standard Arc network execution gas (fractions of a cent), keeping 100% of the funds with the builders.",
+      "There is no catch. Legacy freelance marketplaces (Upwork, Fiverr) operate massive centralized overhead and extract 10% to 20% from every paycheck, plus 3-5% payment processing fees and paid 'Connects' to pitch. FairPay is a decentralized Web3 protocol: smart contracts handle escrow on Arc Testnet, and Arkiv DB-Chain handles RFP storage. Because there are no middlemen, 100% of the funds go straight to the builder. Users pay only standard network gas (< $0.0002).",
+  },
+  {
+    id: "arkiv-ttl",
+    question: "How does Arkiv DB-Chain eliminate fake and 'Ghost Jobs'?",
+    answer:
+      "On traditional job boards, over 38% of postings are dead listings where clients interview nobody and let posts expire, burning paid Connects without a refund. On FairPay, every RFP is published to Arkiv's decentralized database chain with a native block-lease Time-To-Live (TTL). When the timer expires without an active contract, the listing automatically prunes from the network. Every opportunity you see on FairPay is backed by an active, verifiable budget.",
+  },
+  {
+    id: "payout-speed",
+    question: "How fast do payouts settle compared to traditional platforms?",
+    answer:
+      "Immediately (< 2 seconds). Upwork and freelance escrow companies enforce a 5 to 10-day 'security review' hold before clearing funds, followed by 2 to 3 days of bank processing. With FairPay, once a milestone is approved by the client, funds release directly into your self-custody EVM wallet in a single gas-efficient transaction. Zero holds, zero bank delays.",
+  },
+  {
+    id: "custody-risk",
+    question: "Can FairPay freeze my account, seize funds, or block withdrawals?",
+    answer:
+      "No. FairPay is strictly non-custodial. We never hold your private keys, deposit funds into a centralized bank, or act as a custodial custodian. All escrow logic is enforced autonomously by immutable smart contracts on Arc Testnet. You connect directly with your self-custodial wallet (MetaMask, Rabby, Coinbase), ensuring you maintain 100% ownership of your money at all times.",
   },
   {
     id: "audit-explorer",
-    question: "How are milestone submissions and payouts audited?",
+    question: "How are milestone deliverables and contract proofs audited?",
     answer:
-      "Every contract deployment, collateral deposit, milestone submission, and payout disbursement produces an immutable execution receipt indexed on Blockscout Explorer. Both clients and contractors can independently verify cryptographic transaction proofs, block numbers, and contract state anytime.",
-  },
-  {
-    id: "dispute-resolution",
-    question: "How are milestone disputes handled?",
-    answer:
-      "Milestones are strictly segmented into granular deliverables agreed upon before work begins. Funds remain locked trustlessly inside the contract and cannot be unilaterally withdrawn by either party while a milestone is under review, protecting contractors from non-payment and clients from unverified deliverables.",
-  },
-  {
-    id: "supported-wallets",
-    question: "Which networks and wallets are supported?",
-    answer:
-      "FairPay supports all standard EVM Web3 wallets (including MetaMask, Rabby, Coinbase Wallet, and WalletConnect). All settlement contracts execute on the Arc Testnet using native Circle USDC for stable, non-volatile settlement.",
+      "Every contract creation, deposit, deliverable submission, and payout disbursement produces an immutable cryptographic execution receipt indexed on Blockscout Explorer. Both clients and contractors can verify transaction hashes, timestamps, and contract balances on-chain with zero reliance on subjective customer support agents.",
   },
 ];
 

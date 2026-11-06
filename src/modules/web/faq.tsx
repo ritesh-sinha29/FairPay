@@ -59,7 +59,7 @@ export function FAQ() {
   return (
     <section
       id="faq"
-      className="relative w-full bg-black pt-32 sm:pt-40 pb-24 sm:pb-36 px-6 md:px-12 font-sans overflow-hidden scroll-mt-24"
+      className="relative w-full bg-black pt-6 sm:pt-10 pb-20 sm:pb-28 px-6 md:px-12 font-sans overflow-hidden scroll-mt-24"
     >
       <div className="max-w-3xl mx-auto relative z-10">
         {/* Section Header */}

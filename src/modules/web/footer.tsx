@@ -51,11 +51,11 @@ export function Footer() {
   return (
     <footer
       id="footer"
-      className="bg-[#050505] pt-20 pb-0 px-6 md:px-12 lg:px-16 border-t border-white/[0.04] font-sans relative overflow-hidden"
+      className="bg-[#050505] pt-20 pb-10 sm:pb-14 border-t border-white/[0.04] font-sans relative overflow-x-hidden"
     >
-      <div className="max-w-7xl mx-auto">
-        {/* Top Section: Branding + Links Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-12 lg:gap-8 mb-20">
+      {/* 1. Header Grid + Links + Copyright (Contained inside max-w-7xl) */}
+      <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-12 lg:gap-8 mb-16 md:mb-20">
           {/* Brand Column (Spans 2 columns on lg screens) */}
           <div className="lg:col-span-2 flex flex-col gap-5 text-left">
             <Link href="/" className="flex items-center gap-2.5">
@@ -182,7 +182,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Section: Copyright */}
-        <div className="pt-8 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="pt-8 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-4 mb-4 md:mb-6">
           <span className="text-neutral-500 text-xs font-normal">
             &copy; {new Date().getFullYear()} FairPay Protocol. Non-custodial & open source.
           </span>
@@ -190,17 +190,26 @@ export function Footer() {
             Built for global builders, secured by smart contracts.
           </span>
         </div>
+      </div>
 
-        {/* Giant Sarvam-Style Brand Typography Banner fitted cleanly edge-to-edge */}
-        <div className="w-full overflow-hidden flex justify-center -mb-4 sm:-mb-6 md:-mb-8 pt-10 sm:pt-16 select-none pointer-events-none">
-          <span className="text-[13vw] sm:text-[14.5vw] md:text-[15.5vw] font-black tracking-tight leading-none text-center font-sans bg-clip-text text-transparent bg-gradient-to-b from-white via-neutral-300 to-neutral-800">
-            fairpay
-          </span>
-        </div>
+      {/* 2. Giant Edge-To-Edge Brand Typography Banner (Full ascenders & descenders completely unclipped) */}
+      <div className="w-full flex justify-center items-center select-none pointer-events-none py-2 sm:py-4 overflow-visible">
+        <h1
+          className="w-full text-[23vw] font-black tracking-tighter leading-[1.14] text-center font-sans block bg-clip-text text-transparent py-2"
+          style={{
+            backgroundImage:
+              "linear-gradient(to bottom, rgba(255,255,255,0.98) 0%, rgba(200,220,250,0.7) 50%, rgba(45,65,110,0.35) 100%), url('/images/hero-globe.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center 30%",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          fairpay
+        </h1>
       </div>
     </footer>
   );
 }
 
 export default Footer;
-

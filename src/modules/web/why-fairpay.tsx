@@ -4,7 +4,7 @@ import React, { useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
-import { ArrowRight, CheckCircle2, Clock, ShieldCheck, ExternalLink, Database } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, ShieldCheck, ExternalLink, Database, Wallet } from "lucide-react";
 
 export interface FeatureBlock {
   tag: string;
@@ -15,7 +15,7 @@ export interface FeatureBlock {
   imagePosition: "left" | "right";
   link?: string;
   linkText?: string;
-  mockType: "escrow" | "arkiv" | "settlement" | "audit";
+  mockType: "escrow" | "arkiv" | "wallet" | "settlement" | "audit";
 }
 
 const features: FeatureBlock[] = [
@@ -24,7 +24,7 @@ const features: FeatureBlock[] = [
     title: "Lock funds upfront before work begins.",
     description:
       "Deposit Circle USDC directly into deterministic on-chain smart contracts on Arc Testnet. Funds are secured trustlessly before any code is committed — eliminating client ghosting and contractor non-payment.",
-    image: "", // Place your screenshot path here (e.g. "/features/escrow.png")
+    image: "",
     imageAlt: "FairPay milestone escrow smart contract management",
     imagePosition: "right",
     link: "/jobs/new",
@@ -36,7 +36,7 @@ const features: FeatureBlock[] = [
     title: "Eliminate ghost jobs with protocol TTL.",
     description:
       "Every Request for Proposal (RFP) is published to Arkiv's decentralized database chain with a native block-lease timer. Open bids auto-prune upon expiration, guaranteeing active budgets and zero dead listings.",
-    image: "", // Place your screenshot path here (e.g. "/features/arkiv.png")
+    image: "",
     imageAlt: "Arkiv decentralized database RFP board with TTL",
     imagePosition: "left",
     link: "/arkiv",
@@ -44,13 +44,25 @@ const features: FeatureBlock[] = [
     mockType: "arkiv",
   },
   {
+    tag: "Universal Web3 Access",
+    title: "Supported Wallets & Arc Network",
+    description:
+      "Connect with your preferred EVM Web3 wallet. Instant authorization, zero centralized custody.",
+    image: "",
+    imageAlt: "Supported EVM wallets and Arc Testnet settlement layer",
+    imagePosition: "right",
+    link: "/jobs",
+    linkText: "Connect Wallet & Launch",
+    mockType: "wallet",
+  },
+  {
     tag: "Instant Settlement",
     title: "One-click release. Zero platform fee.",
     description:
       "Review deliverables, verify milestone completion, and release funds instantly in a single transaction. Funds transfer directly from smart contract to contractor wallet with 0% platform extraction.",
-    image: "", // Place your screenshot path here (e.g. "/features/settlement.png")
+    image: "",
     imageAlt: "One-click milestone release and instant payout",
-    imagePosition: "right",
+    imagePosition: "left",
     link: "/jobs",
     linkText: "View settlement flow",
     mockType: "settlement",
@@ -60,9 +72,9 @@ const features: FeatureBlock[] = [
     title: "Verifiable escrow proofs on Blockscout.",
     description:
       "Every milestone deposit, work submission, and disbursement is immutably indexed with verifiable execution receipts. Direct Blockscout Explorer links provide transparent proof for every party.",
-    image: "", // Place your screenshot path here (e.g. "/features/audit.png")
+    image: "",
     imageAlt: "Blockscout cryptographic audit trail and explorer verification",
-    imagePosition: "left",
+    imagePosition: "right",
     link: "https://testnet.arcscan.io",
     linkText: "Inspect verified contracts",
     mockType: "audit",
@@ -138,10 +150,10 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
           </div>
         </div>
 
-        {/* Placeholder helper indicator */}
-        <div className="pt-3 border-t border-dashed border-white/10 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
-          <span>Structure placeholder</span>
-          <span>Ready for screenshot image</span>
+        {/* Bottom Status Row (Matching Image 4) */}
+        <div className="pt-4 flex items-center justify-between text-xs font-mono">
+          <span className="text-neutral-500">Non-Custodial Protocol</span>
+          <span className="text-white font-medium">Direct Wallet Settlement</span>
         </div>
       </div>
     );
@@ -200,11 +212,56 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
           </div>
         </div>
 
-        {/* Placeholder helper indicator */}
-        <div className="pt-3 border-t border-dashed border-white/10 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
-          <span>Structure placeholder</span>
-          <span>Ready for screenshot image</span>
+        {/* Bottom Status Row */}
+        <div className="pt-4 flex items-center justify-between text-xs font-mono">
+          <span className="text-neutral-500">Arkiv Decentralized DB</span>
+          <span className="text-white font-medium">Native TTL Auto-Pruning</span>
         </div>
+      </div>
+    );
+  }
+
+  if (type === "wallet") {
+    return (
+      <div className="w-full bg-[#0c0d10] p-6 sm:p-8 text-left font-sans select-none">
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-xs text-neutral-300 mb-5">
+          <Wallet className="w-3.5 h-3.5 text-neutral-300" />
+          <span>Universal Web3 Access</span>
+        </div>
+
+        {/* Title & Subtitle */}
+        <h4 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">
+          Supported Wallets & Arc Network
+        </h4>
+        <p className="text-xs sm:text-sm text-neutral-400 mb-6 leading-relaxed">
+          Connect with your preferred EVM Web3 wallet. Instant authorization, zero centralized custody.
+        </p>
+
+        {/* Spec Rows */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/[0.08] bg-neutral-900/40 text-xs sm:text-sm">
+            <span className="text-neutral-400">Supported Wallets:</span>
+            <span className="font-mono text-white font-medium">MetaMask, Rabby, Coinbase</span>
+          </div>
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/[0.08] bg-neutral-900/40 text-xs sm:text-sm">
+            <span className="text-neutral-400">Settlement Asset:</span>
+            <span className="font-mono text-white font-medium">Native Circle USDC</span>
+          </div>
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-white/[0.08] bg-neutral-900/40 text-xs sm:text-sm">
+            <span className="text-neutral-400">Target Layer:</span>
+            <span className="font-mono text-white font-medium">Arc Testnet (EVM)</span>
+          </div>
+        </div>
+
+        {/* Button */}
+        <Link
+          href="/jobs"
+          className="w-full py-3.5 px-6 rounded-full bg-white text-black font-semibold text-xs sm:text-sm hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+        >
+          <span>Connect Wallet & Launch</span>
+          <ArrowRight className="w-4 h-4" />
+        </Link>
       </div>
     );
   }
@@ -260,10 +317,10 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
           <span className="font-mono text-neutral-400 text-[11px]">Confirmed</span>
         </div>
 
-        {/* Placeholder helper indicator */}
-        <div className="mt-5 pt-3 border-t border-dashed border-white/10 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
-          <span>Structure placeholder</span>
-          <span>Ready for screenshot image</span>
+        {/* Bottom Status Row */}
+        <div className="mt-4 pt-3 flex items-center justify-between text-xs font-mono">
+          <span className="text-neutral-500">Smart Contract Escrow</span>
+          <span className="text-white font-medium">0% Commission Fee</span>
         </div>
       </div>
     );
@@ -315,10 +372,10 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
         </span>
       </div>
 
-      {/* Placeholder helper indicator */}
-      <div className="mt-5 pt-3 border-t border-dashed border-white/10 flex items-center justify-between text-[11px] text-neutral-500 font-mono">
-        <span>Structure placeholder</span>
-        <span>Ready for screenshot image</span>
+      {/* Bottom Status Row */}
+      <div className="mt-4 pt-3 flex items-center justify-between text-xs font-mono">
+        <span className="text-neutral-500">Arc Network Explorer</span>
+        <span className="text-white font-medium">Blockscout Verified Contract</span>
       </div>
     </div>
   );
@@ -341,8 +398,8 @@ function FeatureRow({
   return (
     <div
       ref={rowRef}
-      className={`grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center py-20 ${
-        index !== features.length - 1 ? "border-b border-white/[0.06]" : ""
+      className={`grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center ${
+        index === features.length - 1 ? "pt-12 lg:pt-16 pb-4 lg:pb-6" : "py-12 lg:py-16 border-b border-white/[0.06]"
       }`}
     >
       {/* Text Block — Exact WeKraft entrance: y: 50 -> 0, duration: 0.9, cubic-bezier, delay: 0.1 */}
@@ -491,7 +548,7 @@ export function WhyFairPay() {
   }, []);
 
   return (
-    <section id="features" className="bg-black py-20 md:py-32 px-6 md:px-12 font-sans overflow-hidden">
+    <section id="features" className="bg-black pt-16 md:pt-24 pb-4 md:pb-6 px-6 md:px-12 font-sans overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Section Header (Exact WeKraft appear animation: y: 24 -> 0, duration: 0.6) */}
         <motion.div

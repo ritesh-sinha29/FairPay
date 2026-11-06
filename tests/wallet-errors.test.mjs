@@ -51,6 +51,10 @@ test("Cancellation, pending requests, and nonces have distinct recovery messages
   assert.match(walletErrorMessage({ code: "REPLACEMENT_UNDERPRICED" }), /already pending/);
 });
 
+test("Revoked wallet permissions explain how to restore account access", () => {
+  assert.match(walletErrorMessage(wrapped({ code: 4100, message: "The requested account and/or method has not been authorized by the user." })), /approve account access in MetaMask/);
+});
+
 test("Opaque wallet errors offer the correct RPC settings without claiming a confirmed cause", () => {
   const text = walletErrorMessage({ code: "UNKNOWN_ERROR", shortMessage: "could not coalesce error" }, context);
   assert.match(text, /MetaMask could not broadcast/);

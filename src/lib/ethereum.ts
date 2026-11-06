@@ -41,12 +41,13 @@ export async function connectWallet() {
 }
 
 async function requireSigner(expectedAddress: string, chainId: number) {
-  const provider = browserWallet();
-  if (Number((await provider.getNetwork()).chainId) !== chainId)
+  // Job actions are user initiated. Renew account access before reading the
+  // signer: MetaMask may revoke permissions while the workspace stays open.
+  const signer = await connectWallet();
+  if (Number((await signer.provider.getNetwork()).chainId) !== chainId)
     throw new Error(
       `Switch your wallet to ${paymentNetwork(chainId).name} to continue.`,
     );
-  const signer = await provider.getSigner();
   if (
     (await signer.getAddress()).toLowerCase() !== expectedAddress.toLowerCase()
   )

@@ -11,7 +11,7 @@
     "test:contract": "node --test tests/escrow.test.mjs",
     "test:arkiv": "node --test tests/arkiv.test.mjs tests/arkiv-award.test.mjs",
     "test:delivery": "node --test tests/delivery-review.test.mjs",
-    "test:wallet": "node --test tests/wallet-errors.test.mjs",
+    "test:wallet": "node --test tests/wallet-errors.test.mjs tests/wallet-authorization.test.mjs",
     "backend:dev": "convex dev",
     "backend:push": "convex dev --once",
     "backend:auth": "node scripts/configure-convex-auth.mjs",

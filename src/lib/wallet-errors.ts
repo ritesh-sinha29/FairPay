@@ -49,6 +49,7 @@ export function walletErrorMessage(error: unknown, context: WalletErrorContext =
   const rpcHint = network ? ` Check the RPC URL in MetaMask's ${network.name} network settings: ${network.rpcUrl}.` : " Check the selected network's RPC settings in MetaMask.";
 
   if (codes.has("4001") || codes.has("ACTION_REJECTED")) return "Request cancelled in your wallet. You can try again.";
+  if (codes.has("4100") || /account and\/or method has not been authorized/i.test(text)) return "MetaMask has not authorized this account for FairPay. Connect the wallet linked to your FairPay account and approve account access in MetaMask, then try again.";
   if (codes.has("-32002")) return "A request is already open in MetaMask. Open the wallet and complete or cancel it first.";
   if (codes.has("429") || codes.has("-32005") || /rate.?limit|too many requests|request limit exceeded/i.test(text)) {
     return "The network RPC is rate-limiting requests. Wait briefly, then check the job status before retrying. If MetaMask shows a pending transaction, wait for it to finish.";

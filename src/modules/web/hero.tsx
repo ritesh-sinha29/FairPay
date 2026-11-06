@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useConvexAuth } from "convex/react";
 import { Navbar } from "./navbar";
 import { Button } from "@/components/ui/button";
 
 export function Hero() {
+  const { isAuthenticated } = useConvexAuth();
+  const tryNowHref = isAuthenticated ? "/jobs" : "/auth";
+
   return (
     <div className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-black text-white font-sans select-none">
       {/* 1. WeKraft floating pill navbar */}
@@ -76,7 +80,7 @@ export function Hero() {
 
         {/* CTA Buttons (WeKraft black & white styles) */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 mb-14">
-          <Link href="/jobs">
+          <Link href={tryNowHref}>
             <Button
               size="lg"
               className="h-11 px-6 bg-white text-black hover:bg-neutral-200 font-medium text-xs rounded-lg transition-all shadow-lg shadow-white/5"

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { ArrowRight, Menu, X } from "lucide-react";
+import { useConvexAuth } from "convex/react";
 import { FairPayLogo } from "@/components/fairpay-logo";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,9 @@ const navLinks: NavLink[] = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated } = useConvexAuth();
+
+  const tryNowHref = isAuthenticated ? "/jobs" : "/auth";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,12 +79,12 @@ export function Navbar() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          <Link href="/sign-in" className="hidden sm:inline-block">
+          <Link href={isAuthenticated ? "/jobs" : "/sign-in"} className="hidden sm:inline-block">
             <span className="text-xs font-medium text-neutral-300 hover:text-white transition-colors px-2 py-1">
-              Sign In
+              {isAuthenticated ? "Dashboard" : "Sign In"}
             </span>
           </Link>
-          <Link href="/jobs">
+          <Link href={tryNowHref}>
             <Button
               size="sm"
               className={clsx(
@@ -119,11 +123,18 @@ export function Navbar() {
           ))}
           <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
             <Link
-              href="/sign-in"
+              href={isAuthenticated ? "/jobs" : "/sign-in"}
               onClick={() => setIsMenuOpen(false)}
               className="text-xs text-neutral-300 hover:text-white py-1"
             >
-              Sign In
+              {isAuthenticated ? "Dashboard" : "Sign In"}
+            </Link>
+            <Link
+              href={tryNowHref}
+              onClick={() => setIsMenuOpen(false)}
+              className="text-xs text-white font-medium py-1"
+            >
+              Try Now →
             </Link>
           </div>
         </div>

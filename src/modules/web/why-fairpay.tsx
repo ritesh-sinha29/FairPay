@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, CheckCircle2, Clock, ShieldCheck, ExternalLink, Database, Wallet } from "lucide-react";
+import { useConvexAuth } from "convex/react";
 
 export interface FeatureBlock {
   tag: string;
@@ -21,11 +22,11 @@ export interface FeatureBlock {
 const features: FeatureBlock[] = [
   {
     tag: "Settlement Layer • Arc Testnet 5042002",
-    title: "Trustless USDC Escrow via FairPayStableEscrow.sol",
+    title: "From Deal Agreed to Paid. Every Milestone Guaranteed.",
     description:
-      "Clients lock milestone funds upfront into our smart contract on Arc Testnet (Chain ID 5042002) utilizing Circle USDC and OpenZeppelin's SafeERC20. The contract manages the complete milestone lifecycle: deposit lockup, deliverable submission, client release triggers, and automated timeout refunds. Contractors start work knowing payment is 100% secured.",
-    image: "",
-    imageAlt: "FairPay milestone escrow smart contract management on Arc Testnet",
+      "Once client and freelancer agree on scope, the job progresses through 5 deterministic on-chain stages: Proposed, Agreed, Funded, In Review, and Paid. Milestone USDC locks upfront into FairPayStableEscrow.sol on Arc Testnet with 0 USDC platform fee. Zero custody risk, zero client ghosting.",
+    image: "/images/job-agreement-escrow.jpg",
+    imageAlt: "FairPay live job agreement escrow dashboard with 5-stage progress and verified smart contract settlement",
     imagePosition: "right",
     link: "/jobs/new",
     linkText: "Create an escrow",
@@ -72,6 +73,9 @@ const features: FeatureBlock[] = [
 /* ─── Mock Preview Components (Rendered when no screenshot image is provided) ─── */
 
 function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
+  const { isAuthenticated } = useConvexAuth();
+  const tryNowHref = isAuthenticated ? "/jobs" : "/auth";
+
   if (type === "escrow") {
     return (
       <div className="w-full bg-[#0c0d10] p-5 sm:p-7 text-left font-sans select-none">
@@ -244,7 +248,7 @@ function MockPreview({ type }: { type: FeatureBlock["mockType"] }) {
 
         {/* Button */}
         <Link
-          href="/jobs"
+          href={tryNowHref}
           className="w-full py-3.5 px-6 rounded-full bg-white text-black font-semibold text-xs sm:text-sm hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
         >
           <span>Try Now</span>
@@ -327,16 +331,19 @@ function FeatureRow({
   feature: FeatureBlock;
   index: number;
 }) {
+  const { isAuthenticated } = useConvexAuth();
+  const tryNowHref = isAuthenticated ? "/jobs" : "/auth";
   const rowRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(rowRef, { once: true, margin: "-80px 0px" });
 
   const isImageRight = feature.imagePosition === "right";
+  const targetHref = feature.link === "/jobs" ? tryNowHref : feature.link;
 
   return (
     <div
       ref={rowRef}
       className={`grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16 items-center ${
-        index === features.length - 1 ? "pt-12 lg:pt-16 pb-4 lg:pb-6" : "py-12 lg:py-16 border-b border-white/[0.06]"
+        index === features.length - 1 ? "pt-12 lg:pt-16 pb-4 lg:pb-6" : "py-12 lg:py-16"
       }`}
     >
       {/* Text Block — Exact WeKraft entrance: y: 50 -> 0, duration: 0.9, cubic-bezier, delay: 0.1 */}
@@ -373,10 +380,10 @@ function FeatureRow({
         </p>
 
         {/* CTA Link */}
-        {feature.link && (
+        {targetHref && (
           <div className="mt-2">
             <Link
-              href={feature.link}
+              href={targetHref}
               className="inline-flex items-center gap-2 text-neutral-300 text-sm font-medium group/link hover:text-white transition-colors duration-200"
             >
               <span>{feature.linkText || "Learn more"}</span>
@@ -409,7 +416,7 @@ function FeatureRow({
         {/* Ambient Top Glow */}
         <div className="absolute -inset-x-4 -top-4 bottom-1/4 bg-gradient-to-b from-neutral-800/90 to-transparent rounded-t-2xl blur-2xl pointer-events-none" />
 
-        {/* Frame with WeKraft subtle gradient bottom mask */}
+        {/* Frame with WeKraft subtle gradient bottom mask (applied to both mock cards and photos) */}
         <div
           className="relative rounded-xl overflow-hidden border border-white/10 shadow-[0_8px_60px_rgba(0,0,0,0.5)] group bg-[#0c0d10]"
           style={{

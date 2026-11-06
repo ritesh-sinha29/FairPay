@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useConvexAuth } from "convex/react";
 import { FairPayLogo } from "@/components/fairpay-logo";
 
 interface FooterLinkItem {
@@ -48,6 +49,9 @@ const FooterColumn = ({
 );
 
 export function Footer() {
+  const { isAuthenticated } = useConvexAuth();
+  const tryNowHref = isAuthenticated ? "/jobs" : "/auth";
+
   return (
     <footer
       id="footer"
@@ -122,7 +126,7 @@ export function Footer() {
                 { label: "Create Escrow", href: "/jobs/new" },
                 { label: "Arkiv Board", href: "/arkiv" },
                 { label: "Payment Rules", href: "/payments" },
-                { label: "Try Now", href: "/jobs" },
+                { label: "Try Now", href: tryNowHref },
               ]}
             />
           </div>

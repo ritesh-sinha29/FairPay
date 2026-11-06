@@ -40,35 +40,28 @@ export function Dashboard({
   const [userArkivJobs, setUserArkivJobs] = useState<ArkivJobEntity[]>([]);
 
   async function loadArkivListings() {
-    if (typeof window === "undefined") return;
     try {
-      // 1. Fetch live entities directly from Arkiv DB-Chain
+      // Fetch live entities directly from Arkiv DB-Chain
       const res = await fetchArkivJobs({}, user?.walletAddress);
 
-      // 2. Load locally cached entities
-      const raw = localStorage.getItem("fairpay_arkiv_user_entities");
-      const localList: ArkivJobEntity[] = raw ? JSON.parse(raw) : [];
-
-      const combined = [...localList, ...(res.entities || [])];
       const seen = new Set<string>();
-      const myJobs = combined.filter((item) => {
+      const myJobs = (res.entities || []).filter((item) => {
         if (!item || !item.title || item.title === "Arkiv Milestone RFP") return false;
         const key = item.key || item.title;
-        if (seen.has(key)) return false;
-        seen.add(key);
+        if (seen.has(key.toLowerCase())) return false;
+        seen.add(key.toLowerCase());
 
         if (!user?.walletAddress) return true;
         const w = user.walletAddress.toLowerCase();
         return (
           item.clientAddress?.toLowerCase() === w ||
-          item.owner?.toLowerCase() === w ||
-          localList.some((l) => l.key === item.key)
+          item.owner?.toLowerCase() === w
         );
       });
 
       setUserArkivJobs(myJobs);
     } catch (e) {
-      console.warn("Could not load Arkiv jobs in dashboard:", e);
+      console.warn("Could not load Arkiv listings:", e);
     }
   }
 

@@ -41,13 +41,16 @@ import {
 } from "@/components/ui/dialog";
 import {
   fetchArkivJobs,
+  fetchArkivProposals,
   buildArkivQuery,
   getExpirationOptions,
   publishJobToArkiv,
+  publishProposalToArkiv,
   ARKIV_CHAIN_ID,
   ARKIV_EXPLORER_URL,
   ARKIV_WRITER_WALLET,
   type ArkivJobEntity,
+  type ArkivProposalEntity,
 } from "@/lib/arkiv";
 import { useWorkspace } from "@/components/workspace-provider";
 
@@ -80,80 +83,55 @@ export default function ArkivBoardPage() {
   const [portfolioLink, setPortfolioLink] = useState("");
   const [submittingProposal, setSubmittingProposal] = useState(false);
   const [proposalSuccess, setProposalSuccess] = useState(false);
+  const [allProposals, setAllProposals] = useState<any[]>([]);
 
-  function handleProposalSubmit(e: React.FormEvent) {
+  async function handleProposalSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!applyingJob) return;
     setSubmittingProposal(true);
-    setTimeout(() => {
-      setSubmittingProposal(false);
+
+    try {
+      const created = await publishProposalToArkiv({
+        jobKey: applyingJob.key,
+        jobTitle: applyingJob.title,
+        freelancerAddress: user?.walletAddress || "0x...",
+        freelancerName: user?.name || "Freelancer",
+        proposalNote,
+        portfolioLink,
+      });
+
+      setAllProposals((prev) => [created, ...prev.filter((p) => p.id !== created.id)]);
       setProposalSuccess(true);
-      if (applyingJob && user?.walletAddress) {
-        try {
-          const raw = localStorage.getItem("fairpay_arkiv_proposals");
-          const existing = raw ? JSON.parse(raw) : [];
-          const newProposal = {
-            id: `prop-${Date.now()}`,
-            jobKey: applyingJob.key,
-            jobTitle: applyingJob.title,
-            freelancerAddress: user.walletAddress,
-            freelancerName: user.name || "Freelancer",
-            proposalNote,
-            portfolioLink,
-            createdAt: Date.now(),
-          };
-          localStorage.setItem(
-            "fairpay_arkiv_proposals",
-            JSON.stringify([newProposal, ...existing]),
-          );
-        } catch {
-          // Ignore storage error
-        }
-      }
-      toast.success("Proposal submitted to client!");
-    }, 1200);
+      toast.success("Proposal published directly to Arkiv DB-Chain!");
+    } catch (err: any) {
+      console.error("Proposal submit error:", err);
+      toast.error(err?.message || "Failed to submit proposal to Arkiv");
+    } finally {
+      setSubmittingProposal(false);
+    }
   }
 
   async function loadData() {
     setLoading(true);
     try {
-      const res = await fetchArkivJobs(
-        {
-          category: category !== "all" ? category : undefined,
-          status: status !== "all" ? status : undefined,
-          minBudget: minBudget > 0 ? minBudget : undefined,
-        },
-        user?.walletAddress,
-      );
+      const [jobsRes, proposalsList] = await Promise.all([
+        fetchArkivJobs(
+          {
+            category: category !== "all" ? category : undefined,
+            status: status !== "all" ? status : undefined,
+            minBudget: minBudget > 0 ? minBudget : undefined,
+          },
+          user?.walletAddress,
+        ),
+        fetchArkivProposals(),
+      ]);
 
-      // Purge any legacy demo cache from browser storage
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("fairpay_arkiv_local_entities");
-      }
-
-      // Load user-published entities
-      const localSaved: ArkivJobEntity[] =
-        typeof window !== "undefined"
-          ? JSON.parse(
-              localStorage.getItem("fairpay_arkiv_user_entities") || "[]",
-            )
-          : [];
-
-      // Filter locally published items matching active filters (reject any legacy dummy items)
-      const filteredLocal = localSaved.filter((item) => {
-        if (!item || !item.title || item.title === "Arkiv Milestone RFP") return false;
-        if (category !== "all" && item.category !== category) return false;
-        if (status !== "all" && item.status !== status) return false;
-        if (minBudget > 0 && parseFloat(item.budgetEth) < minBudget) return false;
-        return true;
-      });
-
-      // Merge testnet entities with user items
-      const combined = [...filteredLocal, ...res.entities];
-      setEntities(combined);
-      setRawSql(res.rawQuery);
-      setSource(res.source);
+      setEntities(jobsRes.entities);
+      setRawSql(jobsRes.rawQuery);
+      setSource(jobsRes.source);
+      setAllProposals(proposalsList);
     } catch {
-      toast.error("Failed to fetch Arkiv entities");
+      toast.error("Failed to fetch Arkiv DB-Chain entities");
     } finally {
       setLoading(false);
     }
@@ -551,10 +529,9 @@ export default function ArkivBoardPage() {
                       (job.clientAddress?.toLowerCase() === user.walletAddress.toLowerCase() ||
                        job.owner?.toLowerCase() === user.walletAddress.toLowerCase())
                     );
-                    const proposalCount = (typeof window !== "undefined"
-                      ? JSON.parse(localStorage.getItem("fairpay_arkiv_proposals") || "[]")
-                      : []
-                    ).filter((p: any) => p.jobKey === job.key).length;
+                    const proposalCount = allProposals.filter(
+                      (p: any) => p?.jobKey && p.jobKey.toLowerCase() === job.key.toLowerCase()
+                    ).length;
 
                     return (
                       <div
@@ -887,10 +864,9 @@ export default function ArkivBoardPage() {
 
                 {/* Submitted Proposals Log */}
                 {(() => {
-                  const proposals = (typeof window !== "undefined"
-                    ? JSON.parse(localStorage.getItem("fairpay_arkiv_proposals") || "[]")
-                    : []
-                  ).filter((p: any) => p.jobKey === inspectingJob.key);
+                  const proposals = allProposals.filter(
+                    (p: any) => p?.jobKey && p.jobKey.toLowerCase() === inspectingJob.key.toLowerCase()
+                  );
 
                   return (
                     <div className="space-y-2">

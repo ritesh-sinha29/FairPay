@@ -27,7 +27,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   ARKIV_CHAIN_ID,
   ARKIV_EXPLORER_URL,
+  fetchArkivProposals,
+  publishProposalToArkiv,
   type ArkivJobEntity,
+  type ArkivProposalEntity,
 } from "@/lib/arkiv";
 import seedEntities from "@/data/arkiv-entities.json";
 
@@ -41,47 +44,32 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
   const [portfolioLink, setPortfolioLink] = useState("");
   const [submittingProposal, setSubmittingProposal] = useState(false);
   const [proposalSuccess, setProposalSuccess] = useState(false);
-  const [proposals, setProposals] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<ArkivProposalEntity[]>([]);
 
   useEffect(() => {
     async function fetchJob() {
       setLoading(true);
       try {
-        // 1. Fetch from server entities API
+        // 1. Fetch directly from Arkiv entity registry API
         const res = await fetch(`/api/arkiv/entities?key=${encodeURIComponent(entityKey)}`);
         if (res.ok) {
           const json = await res.json();
           if (json.entity) {
             setJob(json.entity);
-            loadProposals(json.entity.key);
+            await loadProposals(json.entity.key);
             setLoading(false);
             return;
           }
         }
 
-        // 2. Fallback to localStorage
-        if (typeof window !== "undefined") {
-          const raw = localStorage.getItem("fairpay_arkiv_user_entities");
-          const localList: ArkivJobEntity[] = raw ? JSON.parse(raw) : [];
-          const found = localList.find(
-            (e) => e.key.toLowerCase() === entityKey.toLowerCase(),
-          );
-          if (found) {
-            setJob(found);
-            loadProposals(found.key);
-            setLoading(false);
-            return;
-          }
-        }
-
-        // 3. Fallback to bundled seedEntities
+        // 2. Fallback to bundled seedEntities
         if (Array.isArray(seedEntities)) {
           const seedMatch = (seedEntities as ArkivJobEntity[]).find(
             (e) => e.key.toLowerCase() === entityKey.toLowerCase(),
           );
           if (seedMatch) {
             setJob(seedMatch);
-            loadProposals(seedMatch.key);
+            await loadProposals(seedMatch.key);
             setLoading(false);
             return;
           }
@@ -96,43 +84,40 @@ export function ArkivJobDetail({ entityKey }: { entityKey: string }) {
     void fetchJob();
   }, [entityKey]);
 
-  function loadProposals(jobKey: string) {
-    if (typeof window === "undefined") return;
+  async function loadProposals(jobKey: string) {
     try {
-      const raw = localStorage.getItem("fairpay_arkiv_proposals");
-      const all: any[] = raw ? JSON.parse(raw) : [];
-      setProposals(all.filter((p) => p.jobKey === jobKey));
-    } catch {}
+      const list = await fetchArkivProposals(jobKey);
+      setProposals(list);
+    } catch (err) {
+      console.warn("Could not fetch Arkiv proposals:", err);
+    }
   }
 
-  function handleProposalSubmit(e: React.FormEvent) {
+  async function handleProposalSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!job) return;
     setSubmittingProposal(true);
-    setTimeout(() => {
-      setSubmittingProposal(false);
+
+    try {
+      const created = await publishProposalToArkiv({
+        jobKey: job.key,
+        jobTitle: job.title,
+        freelancerAddress: user?.walletAddress || "0x...",
+        freelancerName: user?.name || "Freelancer",
+        proposalNote,
+        portfolioLink,
+      });
+
+      setProposals((prev) => [created, ...prev.filter((p) => p.id !== created.id)]);
       setProposalSuccess(true);
-      try {
-        const raw = localStorage.getItem("fairpay_arkiv_proposals");
-        const existing = raw ? JSON.parse(raw) : [];
-        const newProposal = {
-          id: `prop-${Date.now()}`,
-          jobKey: job.key,
-          jobTitle: job.title,
-          freelancerAddress: user?.walletAddress || "0x...",
-          freelancerName: user?.name || "Freelancer",
-          proposalNote,
-          portfolioLink,
-          createdAt: Date.now(),
-        };
-        const updated = [newProposal, ...existing];
-        localStorage.setItem("fairpay_arkiv_proposals", JSON.stringify(updated));
-        setProposals((prev) => [newProposal, ...prev]);
-        notify("Proposal submitted to client!");
-      } catch {
-        toast.error("Could not save proposal");
-      }
-    }, 1000);
+      notify("Proposal submitted to Arkiv DB-Chain!");
+      toast.success("Proposal published to Arkiv DB-Chain!");
+    } catch (err: any) {
+      console.error("Proposal submission error:", err);
+      toast.error(err?.message || "Failed to submit proposal to Arkiv");
+    } finally {
+      setSubmittingProposal(false);
+    }
   }
 
   function copyText(text: string, label: string) {

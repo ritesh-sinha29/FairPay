@@ -105,12 +105,15 @@ export function WorkspaceProvider({
     verifiedAt: record.verifiedAt,
   }));
   async function connect() {
+    let signer: Awaited<ReturnType<typeof connectWallet>> | undefined;
     try {
-      const signer = await connectWallet();
+      signer = await connectWallet();
       setAccount(await signer.getAddress());
       setChainId(Number((await signer.provider.getNetwork()).chainId));
     } catch (error) {
       notify(readableError(error));
+    } finally {
+      signer?.provider.destroy();
     }
   }
   async function refresh() {

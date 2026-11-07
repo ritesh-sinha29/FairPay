@@ -2,15 +2,17 @@ import {
   BrowserProvider,
   Contract,
   ContractFactory,
+  isError,
   type Eip1193Provider,
   type ContractTransactionResponse,
+  type JsonRpcSigner,
 } from "ethers";
 import legacyArtifact from "./escrow-artifact.json";
 import stableArtifact from "./stable-escrow-artifact.json";
 import type { Job } from "./jobs";
 import { ARC_TESTNET, USDC_ABI, paymentNetwork } from "./payments";
 import { agreementHash } from "./agreement";
-import { walletErrorMessage, type WalletErrorContext } from "./wallet-errors";
+import { isRpcRateLimit, isWalletAuthorizationError, walletErrorMessage, type WalletErrorContext } from "./wallet-errors";
 
 interface WalletProvider extends Eip1193Provider {
   on?: (event: string, listener: (...args: unknown[]) => void) => void;
@@ -39,48 +41,77 @@ export function browserWallet() {
 }
 
 export async function connectWallet() {
-  const wallet = injectedWallet();
+  return connectInjectedWallet(injectedWallet(), true);
+}
+
+async function connectInjectedWallet(wallet: WalletProvider, recoverPermissions: boolean): Promise<JsonRpcSigner> {
   // Ask the extension directly, before ethers starts network discovery.
   try {
     await wallet.request({ method: "eth_requestAccounts" });
   } catch (cause) {
+    if (recoverPermissions && isWalletAuthorizationError(cause)) {
+      await requestAccountPermissions(wallet);
+      return connectInjectedWallet(wallet, false);
+    }
     throw Object.assign(new Error("MetaMask account access failed.", { cause }), { method: "eth_requestAccounts" });
   }
-  return new BrowserProvider(wallet).getSigner();
+  const provider = new BrowserProvider(wallet);
+  try {
+    const signer = await provider.getSigner();
+    // MetaMask permissions cover networks as well as accounts. Include this
+    // read in the bounded permission-recovery flow before returning a signer.
+    await provider.getNetwork();
+    return signer;
+  } catch (error) {
+    provider.destroy();
+    if (recoverPermissions && isWalletAuthorizationError(error)) {
+      await requestAccountPermissions(wallet);
+      return connectInjectedWallet(wallet, false);
+    }
+    throw error;
+  }
 }
 
-export async function reconnectWallet() {
+async function requestAccountPermissions(wallet: WalletProvider) {
   // Explicit recovery action only. Reopens the permission picker even if
   // eth_requestAccounts considers this origin already connected.
   try {
-    await injectedWallet().request({
+    await wallet.request({
       method: "wallet_requestPermissions",
       params: [{ eth_accounts: {} }],
     });
   } catch (cause) {
     throw Object.assign(new Error("MetaMask permission request failed.", { cause }), { method: "wallet_requestPermissions" });
   }
-  return connectWallet();
+}
+
+export async function reconnectWallet() {
+  const wallet = injectedWallet();
+  await requestAccountPermissions(wallet);
+  return connectInjectedWallet(wallet, false);
 }
 
 async function requireSigner(expectedAddress: string, chainId: number) {
   // Job actions are user initiated. Renew account access before reading the
   // signer: MetaMask may revoke permissions while the workspace stays open.
   const signer = await connectWallet();
-  if (Number((await signer.provider.getNetwork()).chainId) !== chainId)
-    throw new Error(
-      `Switch your wallet to ${paymentNetwork(chainId).name} to continue.`,
-    );
-  if (
-    (await signer.getAddress()).toLowerCase() !== expectedAddress.toLowerCase()
-  )
-    throw new Error("Switch to the wallet linked to your FairPay account.");
-  return signer;
+  try {
+    if (Number((await signer.provider.getNetwork()).chainId) !== chainId)
+      throw new Error(
+        `Switch your wallet to ${paymentNetwork(chainId).name} to continue.`,
+      );
+    if ((await signer.getAddress()).toLowerCase() !== expectedAddress.toLowerCase())
+      throw new Error("Switch to the wallet linked to your FairPay account.");
+    return signer;
+  } catch (error) {
+    signer.provider.destroy();
+    throw error;
+  }
 }
 
 export async function switchToPaymentNetwork(chainId: number) {
   const network = paymentNetwork(chainId);
-  browserWallet();
+  injectedWallet();
   const hexChainId = `0x${chainId.toString(16)}`;
   try {
     await window.ethereum!.request({
@@ -137,6 +168,33 @@ export async function fundJob(
   progress: (stage: string, hash?: string) => void = () => {},
 ) {
   const signer = await requireSigner(job.client, job.chainId);
+  try {
+    return await fundWithSigner(job, signer, onDeployment, progress);
+  } finally {
+    signer.provider.destroy();
+  }
+}
+
+// Optional token extensions may be absent. Transport/rate-limit failures must
+// stop preflight rather than being treated as a successful safety check.
+async function optionalTokenFlag(read: () => Promise<boolean>) {
+  try {
+    return await read();
+  } catch (error) {
+    // ethers can classify an eth_call RPC error as CALL_EXCEPTION too.
+    if (isRpcRateLimit(error)) throw error;
+    if (isError(error, "CALL_EXCEPTION") && error.data !== null) return false;
+    if (isError(error, "BAD_DATA") && error.value === "0x") return false;
+    throw error;
+  }
+}
+
+async function fundWithSigner(
+  job: Job,
+  signer: JsonRpcSigner,
+  onDeployment: (hash: string) => Promise<void>,
+  progress: (stage: string, hash?: string) => void,
+) {
   const isNativeEth =
     job.paymentAsset === "ETH" && !job.paymentTokenAddress;
 
@@ -156,24 +214,14 @@ export async function fundJob(
   const token = new Contract(tokenAddress, USDC_ABI, signer);
   const assetSymbol = job.paymentAsset || "token";
 
-  try {
-    const [paused, clientBlocked, freelancerBlocked] = await Promise.all([
-      token.paused().catch(() => false),
-      token.isBlacklisted(job.client).catch(() => false),
-      token.isBlacklisted(job.freelancer).catch(() => false),
-    ]);
-    if (paused)
-      throw new Error(
-        `${assetSymbol} transfers are paused. Try funding again when transfers resume.`,
-      );
-    if (clientBlocked || freelancerBlocked)
-      throw new Error(
-        `${assetSymbol} transfers are blocked for an assigned wallet. Do not fund this agreement.`,
-      );
-  } catch (err: unknown) {
-    const msg = (err as { message?: string }).message || "";
-    if (msg.includes("paused") || msg.includes("blocked")) throw err;
-  }
+  // Avoid bursting all preflight reads against the wallet's public RPC.
+  const paused = await optionalTokenFlag(() => token.paused());
+  if (paused)
+    throw new Error(`${assetSymbol} transfers are paused. Try funding again when transfers resume.`);
+  const clientBlocked = await optionalTokenFlag(() => token.isBlacklisted(job.client));
+  const freelancerBlocked = clientBlocked ? false : await optionalTokenFlag(() => token.isBlacklisted(job.freelancer));
+  if (clientBlocked || freelancerBlocked)
+    throw new Error(`${assetSymbol} transfers are blocked for an assigned wallet. Do not fund this agreement.`);
 
   let address = job.contractAddress;
   let deploymentHash = job.fundingHash;
@@ -205,16 +253,9 @@ export async function fundJob(
       "The escrow deployment record is missing. Refresh this job.",
     );
 
-  try {
-    const isEscrowBlocked = await token.isBlacklisted(address).catch(() => false);
-    if (isEscrowBlocked)
-      throw new Error(
-        `${assetSymbol} transfers are blocked for this escrow. Funding stopped.`,
-      );
-  } catch (err: unknown) {
-    const msg = (err as { message?: string }).message || "";
-    if (msg.includes("Funding stopped")) throw err;
-  }
+  const isEscrowBlocked = await optionalTokenFlag(() => token.isBlacklisted(address));
+  if (isEscrowBlocked)
+    throw new Error(`${assetSymbol} transfers are blocked for this escrow. Funding stopped.`);
 
   const escrow = new Contract(address, stableArtifact.abi, signer);
   if (Number(await escrow.status()) !== 0) return deploymentHash;
@@ -250,24 +291,28 @@ export async function advanceJob(job: Job, onSent: (hash: string) => void) {
     job.status === "Funded" ? job.freelancer : job.client,
     job.chainId,
   );
-  const isTokenEscrow = Boolean(
-    job.paymentTokenAddress ||
-      (job.paymentAsset && job.paymentAsset !== "ETH") ||
-      job.chainId === ARC_TESTNET.chainId,
-  );
-  const contract = new Contract(
-    job.contractAddress,
-    (isTokenEscrow ? stableArtifact : legacyArtifact).abi,
-    signer,
-  );
-  const transaction =
-    job.status === "Funded"
-      ? await contract.markComplete()
-      : isTokenEscrow
-        ? await contract.verifyAndRelease()
-        : await contract.releasePayment();
-  onSent(transaction.hash);
-  await confirmed(transaction);
+  try {
+    const isTokenEscrow = Boolean(
+      job.paymentTokenAddress ||
+        (job.paymentAsset && job.paymentAsset !== "ETH") ||
+        job.chainId === ARC_TESTNET.chainId,
+    );
+    const contract = new Contract(
+      job.contractAddress,
+      (isTokenEscrow ? stableArtifact : legacyArtifact).abi,
+      signer,
+    );
+    const transaction =
+      job.status === "Funded"
+        ? await contract.markComplete()
+        : isTokenEscrow
+          ? await contract.verifyAndRelease()
+          : await contract.releasePayment();
+    onSent(transaction.hash);
+    await confirmed(transaction);
+  } finally {
+    signer.provider.destroy();
+  }
 }
 
 export function readableError(error: unknown, context?: WalletErrorContext): string {

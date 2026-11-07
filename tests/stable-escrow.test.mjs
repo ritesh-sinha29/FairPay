@@ -197,7 +197,12 @@ test("wallet flow resumes a rejected USDC permission on the same escrow and veri
 
 test("funding preflight rejects paused USDC and blocked participants before deployment", async () => {
   const previousWindow = globalThis.window;
-  globalThis.window = { ethereum: chain };
+  globalThis.window = { ethereum: {
+    request: ({ method, params }) => chain.request({
+      method: method === "eth_requestAccounts" ? "eth_accounts" : method,
+      params,
+    }),
+  } };
   const job = {
     id: "blocked-job",
     title: "Funding preflight",

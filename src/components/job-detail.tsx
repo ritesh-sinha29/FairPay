@@ -150,7 +150,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
       await synchronize({ jobId: job.id, fundingHash: hash });
       notify("Your job is funded. The freelancer can begin work.");
     } catch (error) {
-      setError(readableError(error));
+      setError(readableError(error, { chainId: job.chainId, operation: "fund" }));
       // Persist a deployed but unfunded escrow so the same contract can be resumed.
       if (sent || job.contractAddress)
         await synchronize({ jobId: job.id }).catch(() => undefined);
@@ -206,8 +206,9 @@ export function JobDetail({ jobId }: { jobId: string }) {
     if (lock.current) return;
     lock.current = true;
     setStage("Review FairPay's account and network permissions in MetaMask…");
+    let signer: Awaited<ReturnType<typeof reconnectWallet>> | undefined;
     try {
-      const signer = await reconnectWallet();
+      signer = await reconnectWallet();
       if ((await signer.getAddress()).toLowerCase() !== user.walletAddress.toLowerCase())
         throw new Error("Select the wallet linked to your FairPay account in MetaMask.");
       await connect();
@@ -216,6 +217,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
     } catch (error) {
       setError(readableError(error));
     } finally {
+      signer?.provider.destroy();
       lock.current = false;
       setStage("");
     }

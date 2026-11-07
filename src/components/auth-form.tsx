@@ -46,9 +46,10 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
       return;
     }
 
+    let signer: Awaited<ReturnType<typeof connectWallet>> | undefined;
     try {
       setStage("Connecting wallet…");
-      const signer = await connectWallet();
+      signer = await connectWallet();
       const address = await signer.getAddress();
 
       setStage("Preparing challenge…");
@@ -80,6 +81,8 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
       const errMsg = readableError(err);
       toast.error(errMsg);
       setStage("");
+    } finally {
+      signer?.provider.destroy();
     }
   }
 

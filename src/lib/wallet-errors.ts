@@ -17,7 +17,7 @@ function cleanMessage(message: string) {
     .split("\n")[0].slice(0, 500).trim();
 }
 
-export function walletErrorMessage(error: unknown, context: WalletErrorContext = {}): string {
+function errorDetails(error: unknown) {
   const codes = new Set<string>();
   const messages: string[] = [];
   const methods = new Set<string>();
@@ -46,6 +46,25 @@ export function walletErrorMessage(error: unknown, context: WalletErrorContext =
     }
   }
   visit(error);
+  return { codes, messages, methods };
+}
+
+function rateLimited(codes: Set<string>, text: string) {
+  return codes.has("429") || codes.has("-32005") || /rate.?limit|too many requests|request limit exceeded/i.test(text);
+}
+
+export function isRpcRateLimit(error: unknown) {
+  const { codes, messages } = errorDetails(error);
+  return rateLimited(codes, messages.join(" "));
+}
+
+export function isWalletAuthorizationError(error: unknown) {
+  const { codes, messages } = errorDetails(error);
+  return codes.has("4100") || /account and\/or method has not been authorized/i.test(messages.join(" "));
+}
+
+export function walletErrorMessage(error: unknown, context: WalletErrorContext = {}): string {
+  const { codes, messages, methods } = errorDetails(error);
   const text = messages.join(" ");
   let network: ReturnType<typeof paymentNetwork> | undefined;
   try { if (context.chainId) network = paymentNetwork(context.chainId); } catch { /* Unknown network. */ }
@@ -55,8 +74,8 @@ export function walletErrorMessage(error: unknown, context: WalletErrorContext =
   if (codes.has("4001") || codes.has("ACTION_REJECTED")) return "Request cancelled in your wallet. You can try again.";
   if (codes.has("4100") || /account and\/or method has not been authorized/i.test(text)) return `MetaMask has not authorized this account for FairPay. Use Reconnect wallet to review account and network permissions in MetaMask.${methods.size ? ` Denied request: ${[...methods].join(", ")}.` : ""}`;
   if (codes.has("-32002")) return "A request is already open in MetaMask. Open the wallet and complete or cancel it first.";
-  if (codes.has("429") || codes.has("-32005") || /rate.?limit|too many requests|request limit exceeded/i.test(text)) {
-    return "The network RPC is rate-limiting requests. Wait briefly, then check the job status before retrying. If MetaMask shows a pending transaction, wait for it to finish.";
+  if (rateLimited(codes, text)) {
+    return `The network RPC is rate-limiting requests. Wait briefly, then check the job status before retrying. If MetaMask shows a pending transaction, wait for it to finish.${methods.size ? ` Failed request: ${[...methods].join(", ")}.` : ""}`;
   }
   if (codes.has("INSUFFICIENT_FUNDS") || /insufficient funds|not enough funds|balance.*too low/i.test(text)) {
     if (context.chainId === ARC_TESTNET.chainId && context.operation !== "fund") return "This wallet needs Arc Testnet USDC for transaction gas. Claim test USDC for the wallet sending this transaction.";

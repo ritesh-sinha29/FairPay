@@ -6,28 +6,30 @@ import { build } from "esbuild";
 import * as ethers from "ethers";
 
 const result = await build({ entryPoints: ["src/lib/ethereum.ts"], bundle: true, write: false, platform: "node", format: "cjs", external: ["ethers"] });
-const freelancer = "0x" + "1".repeat(40);
+const signingWallet = ethers.Wallet.createRandom();
+const freelancer = signingWallet.address.toLowerCase();
 const contractAddress = "0x" + "2".repeat(40);
 const job = { status: "Funded", freelancer, contractAddress, chainId: 5042002 };
 
-function wallet({ account = freelancer, chainId = job.chainId, cancelAccess = false, requiresPermissionPicker = false, requiresChainPermission = false, cancelPermissions = false, rateLimited = false, ratePreflight = false } = {}) {
+function wallet({ account = freelancer, chainId = job.chainId, cancelAccess = false, requiresPermissionPicker = false, requiresChainPermission = false, cancelPermissions = false, rateLimited = false, ratePreflight = false, requiresSigningPermission = false, denyEverySignature = false, cancelSignature = false, accountAfterPermission, chainAfterPermission } = {}) {
   let authorized = false;
   let permissionsRenewed = false;
   const calls = [];
   const providers = [];
+  const activeAccount = () => permissionsRenewed && accountAfterPermission ? accountAfterPermission : account;
   const ethereum = { request: async ({ method, params }) => {
     calls.push({ method, params });
     if (method === "eth_chainId") {
       if (requiresChainPermission && !permissionsRenewed) throw { code: 4100, message: "The requested account and/or method has not been authorized by the user." };
       if (rateLimited) throw { code: -32005, message: "Request is being rate limited." };
-      return `0x${chainId.toString(16)}`;
+      return `0x${(permissionsRenewed && chainAfterPermission ? chainAfterPermission : chainId).toString(16)}`;
     }
     if (method === "eth_blockNumber") return "0x1";
     if (method === "eth_requestAccounts") {
       if (cancelAccess) throw { code: 4001, message: "User rejected account access" };
       if (requiresPermissionPicker && !permissionsRenewed) throw { code: 4100, message: "Account has not been authorized" };
       authorized = true;
-      return [account];
+      return [activeAccount()];
     }
     if (method === "wallet_requestPermissions") {
       if (cancelPermissions) throw { code: 4001, message: "User rejected permissions" };
@@ -37,7 +39,13 @@ function wallet({ account = freelancer, chainId = job.chainId, cancelAccess = fa
     if (method === "eth_accounts") {
       if (rateLimited) throw { code: -32005, message: "Request is being rate limited." };
       if (!authorized) throw { code: 4100, message: "Account access has been revoked" };
-      return [account];
+      return [activeAccount()];
+    }
+    if (method === "personal_sign") {
+      if (cancelSignature) throw { code: 4001, message: "User rejected signature" };
+      if (denyEverySignature || (requiresSigningPermission && !permissionsRenewed)) throw { code: 4100, message: "The requested account and/or method has not been authorized by the user." };
+      assert.equal(params[1].toLowerCase(), activeAccount().toLowerCase());
+      return signingWallet.signMessage(ethers.getBytes(params[0]));
     }
     if (method === "eth_estimateGas") return "0x7530";
     if (method === "eth_call" && ratePreflight) throw { code: -32005, message: "Request is being rate limited." };
@@ -55,7 +63,7 @@ function wallet({ account = freelancer, chainId = job.chainId, cancelAccess = fa
   const module = { exports: {} };
   const require = createRequire(import.meta.url);
   vm.runInNewContext(result.outputFiles[0].text, { module, exports: module.exports, require: name => name === "ethers" ? { ...ethers, BrowserProvider: TrackedProvider } : require(name), window: { ethereum } });
-  return { advanceJob: module.exports.advanceJob, fundJob: module.exports.fundJob, connectWallet: module.exports.connectWallet, reconnectWallet: module.exports.reconnectWallet, readableError: module.exports.readableError, calls, providers };
+  return { advanceJob: module.exports.advanceJob, fundJob: module.exports.fundJob, connectWallet: module.exports.connectWallet, reconnectWallet: module.exports.reconnectWallet, signWalletMessage: module.exports.signWalletMessage, readableError: module.exports.readableError, calls, providers };
 }
 
 test("A rate-limited connection stops its provider instead of leaving network discovery retrying", async () => {
@@ -140,5 +148,62 @@ test("Reauthorizing the wrong account or chain cannot submit work", async () => 
     const { advanceJob, calls } = wallet(options);
     await assert.rejects(() => advanceJob(job, () => {}), expected);
     assert.ok(!calls.some(call => call.method === "eth_sendTransaction"));
+  }
+});
+
+test("A denied login signature renews permissions once and signs the same message/account", async () => {
+  const { connectWallet, signWalletMessage, calls } = wallet({ requiresSigningPermission: true });
+  const signer = await connectWallet();
+  try {
+    let prompted = 0;
+    const message = "Sign in to FairPay on Arc Testnet";
+    const signature = await signWalletMessage(signer, message, job.chainId, () => prompted++);
+    assert.equal(ethers.verifyMessage(message, signature).toLowerCase(), freelancer);
+    assert.equal(prompted, 1);
+    assert.equal(calls.filter(call => call.method === "wallet_requestPermissions").length, 1);
+    const signatures = calls.filter(call => call.method === "personal_sign");
+    assert.equal(signatures.length, 2);
+    assert.deepEqual(signatures[0].params, signatures[1].params);
+    assert.ok(!calls.some(call => call.method === "eth_sendTransaction"));
+  } finally { signer.provider.destroy(); }
+});
+
+test("Normal login signing and declined signatures do not open permission recovery", async () => {
+  for (const cancelSignature of [false, true]) {
+    const { connectWallet, signWalletMessage, calls } = wallet({ cancelSignature });
+    const signer = await connectWallet();
+    try {
+      const operation = () => signWalletMessage(signer, "FairPay sign-in", job.chainId);
+      if (cancelSignature) await assert.rejects(operation, error => error.code === "ACTION_REJECTED"); else await operation();
+      assert.equal(calls.filter(call => call.method === "personal_sign").length, 1);
+      assert.equal(calls.filter(call => call.method === "wallet_requestPermissions").length, 0);
+    } finally { signer.provider.destroy(); }
+  }
+});
+
+test("Declined recovery and persistent signature denial stop without looping", async () => {
+  for (const cancelPermissions of [false, true]) {
+    const { connectWallet, signWalletMessage, calls } = wallet({ denyEverySignature: true, cancelPermissions });
+    const signer = await connectWallet();
+    try {
+      await assert.rejects(() => signWalletMessage(signer, "FairPay sign-in", job.chainId));
+      assert.equal(calls.filter(call => call.method === "wallet_requestPermissions").length, 1);
+      assert.equal(calls.filter(call => call.method === "personal_sign").length, cancelPermissions ? 1 : 2);
+      assert.ok(!calls.some(call => call.method === "eth_sendTransaction"));
+    } finally { signer.provider.destroy(); }
+  }
+});
+
+test("Changing account or chain during permission recovery cannot sign the old challenge", async () => {
+  for (const [options, expected] of [
+    [{ accountAfterPermission: "0x" + "3".repeat(40) }, /selected wallet changed/],
+    [{ chainAfterPermission: 11155111 }, /wallet network changed/],
+  ]) {
+    const { connectWallet, signWalletMessage, calls } = wallet({ requiresSigningPermission: true, ...options });
+    const signer = await connectWallet();
+    try {
+      await assert.rejects(() => signWalletMessage(signer, "FairPay sign-in", job.chainId), expected);
+      assert.equal(calls.filter(call => call.method === "personal_sign").length, 1);
+    } finally { signer.provider.destroy(); }
   }
 });

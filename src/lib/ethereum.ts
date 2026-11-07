@@ -91,6 +91,32 @@ export async function reconnectWallet() {
   return connectInjectedWallet(wallet, false);
 }
 
+// Recover a denied login signature on the same provider and for the same
+// account/chain. This never retries a transaction or bypasses a declined prompt.
+export async function signWalletMessage(
+  signer: JsonRpcSigner,
+  message: string,
+  chainId: number,
+  onPermissionRecovery: () => void = () => {},
+) {
+  const address = (await signer.getAddress()).toLowerCase();
+  try {
+    return await signer.signMessage(message);
+  } catch (error) {
+    if (!isWalletAuthorizationError(error)) throw error;
+  }
+
+  onPermissionRecovery();
+  await signer.provider.send("wallet_requestPermissions", [{ eth_accounts: {} }]);
+  const accounts: unknown = await signer.provider.send("eth_requestAccounts", []);
+  if (!Array.isArray(accounts) || typeof accounts[0] !== "string" || accounts[0].toLowerCase() !== address)
+    throw new Error("The selected wallet changed. Sign in again with the wallet you want to use.");
+  const currentChain = Number(await signer.provider.send("eth_chainId", []));
+  if (currentChain !== chainId)
+    throw new Error("The wallet network changed. Sign in again to request a matching message.");
+  return signer.signMessage(message);
+}
+
 async function requireSigner(expectedAddress: string, chainId: number) {
   // Job actions are user initiated. Renew account access before reading the
   // signer: MetaMask may revoke permissions while the workspace stays open.

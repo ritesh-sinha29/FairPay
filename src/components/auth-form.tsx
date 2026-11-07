@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
-import { connectWallet, readableError } from "@/lib/ethereum";
+import { connectWallet, reconnectWallet, signWalletMessage, readableError } from "@/lib/ethereum";
+import { isWalletAuthorizationError } from "@/lib/wallet-errors";
 import type { Role } from "@/lib/jobs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,8 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
   const [name, setName] = useState("");
   const [headline, setHeadline] = useState("");
   const [stage, setStage] = useState("");
+  const [needsReconnect, setNeedsReconnect] = useState(false);
+  const [walletError, setWalletError] = useState("");
 
   async function submitWallet(event?: React.FormEvent) {
     if (event) event.preventDefault();
@@ -49,8 +52,10 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
     let signer: Awaited<ReturnType<typeof connectWallet>> | undefined;
     let step = "Connecting wallet";
     try {
+      setWalletError("");
       setStage("Connecting wallet…");
-      signer = await connectWallet();
+      signer = await (needsReconnect ? reconnectWallet() : connectWallet());
+      setNeedsReconnect(false);
       const address = await signer.getAddress();
       const chainId = Number((await signer.provider.getNetwork()).chainId);
 
@@ -65,7 +70,9 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
 
       step = "Signing wallet message";
       setStage("Approve message in wallet…");
-      const signature = await signer.signMessage(challenge.message);
+      const signature = await signWalletMessage(signer, challenge.message, chainId, () => {
+        setStage("Review account permissions in MetaMask…");
+      });
 
       step = "Verifying sign-in";
       setStage("Verifying signature…");
@@ -85,6 +92,8 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
       router.refresh();
     } catch (err) {
       const errMsg = readableError(err);
+      setNeedsReconnect(isWalletAuthorizationError(err));
+      setWalletError(`${step}: ${errMsg}`);
       toast.error(`${step}: ${errMsg}`);
       setStage("");
     } finally {
@@ -124,7 +133,7 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
               <Wallet className="w-4 h-4 text-white transition-transform group-hover:scale-110" />
             )}
             <span className="text-xs font-medium tracking-tight">
-              {stage || "Continue with Web3 Wallet"}
+              {stage || (needsReconnect ? "Reconnect wallet & sign in" : "Continue with Web3 Wallet")}
             </span>
           </Button>
         ) : (
@@ -239,12 +248,25 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
                 />
               )}
               <span className="text-xs font-medium tracking-tight">
-                {stage || `Create ${selectedRole} account with Wallet`}
+                {stage || (needsReconnect ? "Reconnect wallet & create account" : `Create ${selectedRole} account with Wallet`)}
               </span>
             </Button>
           </form>
         )}
       </div>
+
+      {walletError && (
+        <div role="alert" className="space-y-2 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-xs leading-relaxed text-red-200">
+          <p>{walletError}</p>
+          {needsReconnect && (
+            <p className="text-neutral-300">
+              Click Reconnect wallet above and allow the intended account in MetaMask.
+              If signing is still blocked, open MetaMask’s connected-site permissions,
+              disconnect FairPay, then reconnect here. Keep the same wallet selected.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Toggle between Sign In and Sign Up */}
       <div className="text-center text-xs text-neutral-400">

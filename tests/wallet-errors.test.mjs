@@ -56,6 +56,9 @@ test("Revoked wallet permissions explain how to restore account access", () => {
   const error = { cause: { code: 4100 }, payload: { method: "eth_sendTransaction", params: [{ data: "do-not-display" }] } };
   assert.match(walletErrorMessage(error), /Denied request: eth_sendTransaction/);
   assert.doesNotMatch(walletErrorMessage(error), /do-not-display/);
+  const signing = { code: 4100, payload: { method: "personal_sign", params: ["private-sign-in-message"] } };
+  assert.match(walletErrorMessage(signing), /Denied request: personal_sign/);
+  assert.doesNotMatch(walletErrorMessage(signing), /private-sign-in-message/);
 });
 
 test("Opaque wallet errors offer the correct RPC settings without claiming a confirmed cause", () => {

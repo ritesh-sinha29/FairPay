@@ -5,6 +5,7 @@ import { role } from "./schema";
 export const issue = internalMutation({
   args: {
     address: v.string(),
+    chainId: v.optional(v.number()),
     message: v.string(),
     expiresAt: v.number(),
     flow: v.union(v.literal("signUp"), v.literal("signIn")),

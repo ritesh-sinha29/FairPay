@@ -38,7 +38,7 @@ function errorDetails(error: unknown) {
     const record = value as Record<string, unknown>;
     // Read only a known request name, never its parameters or transaction data.
     const method = record.method ?? (record.payload as Record<string, unknown> | undefined)?.method;
-    if (typeof method === "string" && /^(?:eth_(?:requestAccounts|accounts|chainId|estimateGas|sendTransaction)|wallet_(?:requestPermissions|switchEthereumChain))$/.test(method)) methods.add(method);
+    if (typeof method === "string" && /^(?:personal_sign|eth_(?:requestAccounts|accounts|chainId|call|getBalance|getTransactionReceipt|estimateGas|sendTransaction)|wallet_(?:requestPermissions|switchEthereumChain))$/.test(method)) methods.add(method);
     if (typeof record.code === "number" || typeof record.code === "string") codes.add(String(record.code));
     for (const key of ["originalError", "error", "cause", "data", "info"]) visit(record[key], depth + 1);
     for (const key of ["reason", "shortMessage", "message", "details"]) {

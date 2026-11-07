@@ -47,21 +47,27 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
     }
 
     let signer: Awaited<ReturnType<typeof connectWallet>> | undefined;
+    let step = "Connecting wallet";
     try {
       setStage("Connecting wallet…");
       signer = await connectWallet();
       const address = await signer.getAddress();
+      const chainId = Number((await signer.provider.getNetwork()).chainId);
 
+      step = "Preparing sign-in message";
       setStage("Preparing challenge…");
       const challenge = await begin({
         address,
+        chainId,
         flow: isSignUp ? "signUp" : "signIn",
         ...(isSignUp ? { role: selectedRole, name, headline } : {}),
       });
 
+      step = "Signing wallet message";
       setStage("Approve message in wallet…");
       const signature = await signer.signMessage(challenge.message);
 
+      step = "Verifying sign-in";
       setStage("Verifying signature…");
       await signIn("wallet", { challengeId: challenge.challengeId, signature });
 
@@ -79,7 +85,7 @@ export function AuthForm({ role: initialRole, mode }: AuthFormProps) {
       router.refresh();
     } catch (err) {
       const errMsg = readableError(err);
-      toast.error(errMsg);
+      toast.error(`${step}: ${errMsg}`);
       setStage("");
     } finally {
       signer?.provider.destroy();

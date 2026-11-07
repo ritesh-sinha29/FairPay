@@ -15,6 +15,8 @@ import type * as http from "../http.js";
 import type * as jobs from "../jobs.js";
 import type * as lib_access from "../lib/access.js";
 import type * as lib_arkivAward from "../lib/arkivAward.js";
+import type * as lib_userRecovery from "../lib/userRecovery.js";
+import type * as recovery from "../recovery.js";
 import type * as users from "../users.js";
 import type * as walletActions from "../walletActions.js";
 import type * as wallets from "../wallets.js";
@@ -33,6 +35,8 @@ declare const fullApi: ApiFromModules<{
   jobs: typeof jobs;
   "lib/access": typeof lib_access;
   "lib/arkivAward": typeof lib_arkivAward;
+  "lib/userRecovery": typeof lib_userRecovery;
+  recovery: typeof recovery;
   users: typeof users;
   walletActions: typeof walletActions;
   wallets: typeof wallets;

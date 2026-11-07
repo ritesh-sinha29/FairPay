@@ -14,10 +14,12 @@ import { internal } from "./_generated/api";
 import { v, ConvexError } from "convex/values";
 import { role } from "./schema";
 import type { Doc } from "./_generated/dataModel";
+import { ARC_TESTNET, SEPOLIA, paymentNetwork } from "../src/lib/payments";
 
 export const begin = action({
   args: {
     address: v.string(),
+    chainId: v.optional(v.number()),
     flow: v.union(v.literal("signUp"), v.literal("signIn")),
     role: v.optional(role),
     name: v.optional(v.string()),
@@ -30,6 +32,9 @@ export const begin = action({
     if (!isAddress(args.address))
       throw new ConvexError("Connect a valid Ethereum wallet.");
     const address = getAddress(args.address).toLowerCase();
+    const chainId = args.chainId ?? SEPOLIA.chainId;
+    if (chainId !== ARC_TESTNET.chainId && chainId !== SEPOLIA.chainId)
+      throw new ConvexError("Switch your wallet to Arc Testnet or Sepolia to sign in.");
     const name = args.name?.trim();
     if (
       args.flow === "signUp" &&
@@ -50,10 +55,11 @@ export const begin = action({
       args.flow === "signUp"
         ? `Create a FairPay ${args.role} account for ${name}.`
         : "Sign in to your FairPay account.";
-    const message = `${site.host} wants you to sign in with your Ethereum account:\n${getAddress(address)}\n\n${purpose}\n\nURI: ${site.origin}\nVersion: 1\nChain ID: 11155111\nNonce: ${randomBytes(16).toString("hex")}\nIssued At: ${new Date().toISOString()}\nExpiration Time: ${new Date(expiresAt).toISOString()}`;
+    const message = `${site.host} wants you to sign in with your Ethereum account:\n${getAddress(address)}\n\n${purpose}\n\nURI: ${site.origin}\nVersion: 1\nChain ID: ${chainId}\nNonce: ${randomBytes(16).toString("hex")}\nIssued At: ${new Date().toISOString()}\nExpiration Time: ${new Date(expiresAt).toISOString()}`;
     const challengeId = await ctx.runMutation(internal.wallets.issue, {
       ...args,
       address,
+      chainId,
       message,
       expiresAt,
       ...(name ? { name } : {}),
@@ -85,13 +91,17 @@ export const verify = internalAction({
     if (!isValid) {
       try {
         const hash = hashMessage(challenge.message);
+        const chainId = challenge.chainId ?? SEPOLIA.chainId;
+        const network = paymentNetwork(chainId);
         const rpcUrl =
-          process.env.SEPOLIA_RPC_URL ||
-          "https://ethereum-sepolia-rpc.publicnode.com";
-        const provider = new JsonRpcProvider(rpcUrl, 11155111, {
+          (chainId === ARC_TESTNET.chainId ? process.env.ARC_RPC_URL : process.env.SEPOLIA_RPC_URL) || network.rpcUrl;
+        const provider = new JsonRpcProvider(rpcUrl, chainId, {
           staticNetwork: true,
+          batchMaxCount: 1,
         });
         try {
+          if (Number(await provider.send("eth_chainId", [])) !== chainId)
+            throw new Error("Signature RPC returned the wrong chain.");
           const code = await provider.getCode(challenge.address);
           if (code && code !== "0x") {
             const contract = new Contract(
